@@ -1,0 +1,1 @@
+{"transaction_id":"a53701d1-75b9-4423-9e08-f07a2dd0375d","reference":"DLINK-54-1778613922","status":"pending","message":"STK push sent — awaiting customer authorization"}

@@ -1,0 +1,296 @@
+2026-05-12 15:14:44
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778591658","timestamp":"2026-05-12T13:14:39.784Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:14:44
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778591658","timestamp":"2026-05-12T13:14:39.784Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:17:11
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778591809","timestamp":"2026-05-12T13:17:12.201Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:18:06
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778591860","timestamp":"2026-05-12T13:18:04.659Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:27:44
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778592385","timestamp":"2026-05-12T13:26:57.196Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:29:30
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778592558","timestamp":"2026-05-12T13:29:25.912Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:51:21
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778593857","timestamp":"2026-05-12T13:51:17.465Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:53:14
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778593133","timestamp":"2026-05-12T13:39:15.485Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 15:56:45
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778593993","timestamp":"2026-05-12T13:53:34.491Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+2026-05-12 16:46:08
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778597141","timestamp":"2026-05-12T14:46:08.239Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04AAAH"}
+
+2026-05-12 16:46:57
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778597200","timestamp":"2026-05-12T14:46:55.999Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+2026-05-12 16:47:43
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778597250","timestamp":"2026-05-12T14:47:42.988Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+2026-05-12 16:48:04
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778597273","timestamp":"2026-05-12T14:48:04.049Z","result_desc":"The initiator information is invalid.","mpesa_receipt":null}
+
+2026-05-12 16:48:42
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778597313","timestamp":"2026-05-12T14:48:42.387Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+2026-05-12 17:01:20
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778598054","timestamp":"2026-05-12T15:01:20.293Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04AAPJ"}
+
+2026-05-12 17:02:11
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778598115","timestamp":"2026-05-12T15:02:11.576Z","result_desc":"Rule limited.","mpesa_receipt":null}
+
+2026-05-12 17:02:37
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778598149","timestamp":"2026-05-12T15:02:37.601Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+2026-05-12 17:03:06
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778598171","timestamp":"2026-05-12T15:03:06.024Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04A57M"}
+
+2026-05-12 17:12:23
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778598729","timestamp":"2026-05-12T15:12:22.832Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04AD8D"}
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778598729
+
+2026-05-12 17:17:33
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778599033","timestamp":"2026-05-12T15:17:33.284Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04AC1P"}
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778599033
+
+2026-05-12 17:18:08
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778599075","timestamp":"2026-05-12T15:18:08.243Z","result_desc":"The initiator information is invalid.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778599075 | The initiator information is invalid.
+
+2026-05-12 17:18:45
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778599116","timestamp":"2026-05-12T15:18:45.512Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778599116 | Request Cancelled by user.
+
+2026-05-12 17:19:16
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778599143","timestamp":"2026-05-12T15:19:15.967Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778599143 | Request Cancelled by user.
+
+2026-05-12 17:19:38
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778599172","timestamp":"2026-05-12T15:19:38.062Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778599172 | DS timeout user cannot be reached.
+
+2026-05-12 17:23:21
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778599394","timestamp":"2026-05-12T15:23:21.573Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778599394 | DS timeout user cannot be reached.
+
+2026-05-12 17:34:07
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778600038","timestamp":"2026-05-12T15:34:06.987Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778600038 | Request Cancelled by user.
+
+2026-05-12 17:34:32
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778600066","timestamp":"2026-05-12T15:34:32.774Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778600066 | DS timeout user cannot be reached.
+
+2026-05-12 17:35:20
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778600109","timestamp":"2026-05-12T15:35:20.156Z","result_desc":"The initiator information is invalid.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778600109 | The initiator information is invalid.
+
+2026-05-12 17:41:36
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778600485","timestamp":"2026-05-12T15:41:36.843Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778600485 | The balance is insufficient for the transaction.
+
+2026-05-12 17:54:55
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601282","timestamp":"2026-05-12T15:54:55.207Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601282 | The balance is insufficient for the transaction.
+
+2026-05-12 17:55:34
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601302","timestamp":"2026-05-12T15:55:33.943Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601302 | No response from user.
+
+2026-05-12 17:56:53
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601382","timestamp":"2026-05-12T15:56:52.912Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601382 | No response from user.
+
+2026-05-12 17:58:04
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778601467","timestamp":"2026-05-12T15:58:04.490Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04AMIY"}
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778601467
+
+2026-05-12 17:58:31
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601499","timestamp":"2026-05-12T15:58:31.070Z","result_desc":"The initiator information is invalid.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601499 | The initiator information is invalid.
+
+2026-05-12 17:58:59
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601530","timestamp":"2026-05-12T15:58:59.049Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601530 | Request Cancelled by user.
+
+2026-05-12 17:59:26
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601560","timestamp":"2026-05-12T15:59:26.440Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601560 | DS timeout user cannot be reached.
+
+2026-05-12 18:01:19
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601648","timestamp":"2026-05-12T16:01:19.507Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601648 | No response from user.
+
+2026-05-12 18:02:05
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601718","timestamp":"2026-05-12T16:02:04.972Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601718 | DS timeout user cannot be reached.
+
+2026-05-12 18:02:31
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601737","timestamp":"2026-05-12T16:02:31.739Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601737 | The balance is insufficient for the transaction.
+
+2026-05-12 18:04:49
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778601858","timestamp":"2026-05-12T16:04:49.491Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778601858 | No response from user.
+
+2026-05-12 18:05:07
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778601888","timestamp":"2026-05-12T16:05:07.560Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04ALX4"}
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778601888
+
+2026-05-12 18:09:22
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778602131","timestamp":"2026-05-12T16:09:22.535Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778602131 | No response from user.
+
+2026-05-12 18:10:37
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778602218","timestamp":"2026-05-12T16:10:37.459Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04APUK"}
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778602218
+
+2026-05-12 18:39:56
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778603979","timestamp":"2026-05-12T16:39:56.034Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778603979 | The balance is insufficient for the transaction.
+
+2026-05-12 19:15:32
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778606125","timestamp":"2026-05-12T17:15:32.496Z","result_desc":"DS timeout user cannot be reached.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778606125 | DS timeout user cannot be reached.
+
+2026-05-12 19:30:43
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778607019","timestamp":"2026-05-12T17:30:43.297Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04B2W4"}
+
+UPDATED USER SUBSCRIPTION: USER ID 54 | REF DLINK-54-1778607019
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778607019
+
+2026-05-12 19:35:40
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778607321","timestamp":"2026-05-12T17:35:40.561Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04B5QD"}
+
+UPDATED USER SUBSCRIPTION: USER ID 54 | REF DLINK-54-1778607321
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778607321
+
+2026-05-12 20:17:19
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"0769112320","timestamp":"2026-05-12T18:17:19.887Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: 0769112320 | No response from user.
+
+2026-05-12 20:58:38
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778612293","timestamp":"2026-05-12T18:58:38.175Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04BI51"}
+
+UPDATED USER SUBSCRIPTION: USER ID 54 | REF DLINK-54-1778612293
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778612293
+
+2026-05-12 21:03:25
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778612587","timestamp":"2026-05-12T19:03:25.284Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04BDYX"}
+
+UPDATED USER SUBSCRIPTION: USER ID 54 | REF DLINK-54-1778612587
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778612587
+
+2026-05-12 21:11:20
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613061","timestamp":"2026-05-12T19:11:20.163Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613061 | Request Cancelled by user.
+
+2026-05-12 21:12:24
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613114","timestamp":"2026-05-12T19:12:23.914Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613114 | Request Cancelled by user.
+
+2026-05-12 21:12:50
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613132","timestamp":"2026-05-12T19:12:50.878Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613132 | No response from user.
+
+2026-05-12 21:13:28
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613175","timestamp":"2026-05-12T19:13:28.190Z","result_desc":"No response from user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613175 | No response from user.
+
+2026-05-12 21:15:07
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613290","timestamp":"2026-05-12T19:15:06.791Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613290 | Request Cancelled by user.
+
+2026-05-12 21:16:53
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778613388","timestamp":"2026-05-12T19:16:53.186Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04BNEL"}
+
+UPDATED USER SUBSCRIPTION: USER ID 54 | REF DLINK-54-1778613388
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778613388
+
+2026-05-12 21:19:19
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613536","timestamp":"2026-05-12T19:19:18.849Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613536 | The balance is insufficient for the transaction.
+
+2026-05-12 21:19:38
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613567","timestamp":"2026-05-12T19:19:38.251Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613567 | Request Cancelled by user.
+
+2026-05-12 21:19:58
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613584","timestamp":"2026-05-12T19:19:58.345Z","result_desc":"The initiator information is invalid.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613584 | The initiator information is invalid.
+
+2026-05-12 21:20:29
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613613","timestamp":"2026-05-12T19:20:29.331Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613613 | The balance is insufficient for the transaction.
+
+2026-05-12 21:23:49
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613815","timestamp":"2026-05-12T19:23:49.618Z","result_desc":"Request Cancelled by user.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613815 | Request Cancelled by user.
+
+2026-05-12 21:24:20
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613838","timestamp":"2026-05-12T19:24:20.367Z","result_desc":"The balance is insufficient for the transaction.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613838 | The balance is insufficient for the transaction.
+
+2026-05-12 21:24:38
+{"fee":0,"phone":"254758788020","amount":1,"source":"api","status":"failed","reference":"DLINK-54-1778613866","timestamp":"2026-05-12T19:24:38.185Z","result_desc":"The initiator information is invalid.","mpesa_receipt":null}
+
+FAILED PAYMENT: DLINK-54-1778613866 | The initiator information is invalid.
+
+2026-05-12 21:25:41
+{"fee":0,"phone":"254769112320","amount":1,"source":"api","status":"success","reference":"DLINK-54-1778613922","timestamp":"2026-05-12T19:25:40.965Z","result_desc":"The service request is processed successfully.","mpesa_receipt":"UECM04BM7W"}
+
+UPDATED USER SUBSCRIPTION: USER ID 54 | REF DLINK-54-1778613922
+
+UPDATED SUCCESS PAYMENT: DLINK-54-1778613922
+
