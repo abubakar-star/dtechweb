@@ -5,26 +5,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// DB connection
-
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname     = "dlink_network";
-
-// DB connection
-/*
-$servername = "sql313.infinityfree.com";
-$db_username = "if0_39741603";
-$db_password = "mkala3771";
-$dbname     = "if0_39741603_dlink_network";
-*/
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+require 'db.php';
 // Check if user has an active subscription
 $stmt = $conn->prepare("
     SELECT COUNT(*) 
