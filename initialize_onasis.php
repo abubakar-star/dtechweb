@@ -93,7 +93,7 @@ $data = [
     "account_ref" => $accountNumber,
 
     "callback_url" =>
-    "https://4fcc-2c0f-fe38-232e-f837-6119-5789-1fd4-a9b7.ngrok-free.app/polling/FAIBA/onasis_callback.php"
+    "https://dtechweb.onrender.com/onasis_callback.php"
 ];
 
 $headers = [
