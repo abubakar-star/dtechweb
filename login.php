@@ -11,20 +11,14 @@ if (isset($_SESSION['user_id'])) {
 if (isset($_COOKIE['remember_user']) && isset($_COOKIE['remember_token'])) {
 // DB connection
 
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname     = "dlink_network";
 
-// DB connection
-/*
-$servername = "sql313.infinityfree.com";
-$db_username = "if0_39741603";
-$db_password = "mkala3771";
-$dbname     = "if0_39741603_dlink_network";
-*/
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
 
-    $conn = new mysqli($servername, $db_username, $db_password, $dbname);
+    $conn = new mysqli($host, $username, $password, $dbname, $port);
     if (!$conn->connect_error) {
         $username = $_COOKIE['remember_user'];
         $token = $_COOKIE['remember_token'];
@@ -51,20 +45,13 @@ $attempt = 0;
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // DB connection
 
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname     = "dlink_network";
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
 
-// DB connection
-/*
-$servername = "sql313.infinityfree.com";
-$db_username = "if0_39741603";
-$db_password = "mkala3771";
-$dbname     = "if0_39741603_dlink_network";
-*/
-
-    $conn = new mysqli($servername, $db_username, $db_password, $dbname);
+    $conn = new mysqli($host, $username, $password, $dbname, $port);
     if ($conn->connect_error) {
         $errorMessage = "Database connection failed";
         $attempt = 1;
