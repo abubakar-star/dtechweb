@@ -5,6 +5,9 @@ header('Content-Type: application/json');
 
 include 'onasis_config.php';
 
+/* =========================
+   DB CONNECTION
+========================= */
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -21,6 +24,9 @@ if ($conn->connect_error) {
     exit;
 }
 
+/* =========================
+   SESSION CHECK
+========================= */
 if (!isset($_SESSION['user_id'])) {
     echo json_encode([
         "success" => false,
@@ -30,9 +36,11 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-
 $invDteInv = $_POST['invoice_number'] ?? '';
 
+/* =========================
+   GET USER DETAILS
+========================= */
 $sql = "SELECT 
             users.id,
             users.phone_number,
@@ -51,7 +59,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows == 0) {
-
     echo json_encode([
         "success" => false,
         "message" => "User not found"
@@ -65,8 +72,14 @@ $phone = $user['phone_number'];
 $amount = $user['price'];
 $accountNumber = $user['account_number'];
 
+/* =========================
+   CREATE REFERENCE
+========================= */
 $reference = "DLINK-" . $user['id'] . "-" . time();
 
+/* =========================
+   SAVE PAYMENT (PENDING)
+========================= */
 $insert = $conn->prepare("
     INSERT INTO payments 
     (user_id, reference, amount, invoice_number, status)
@@ -80,20 +93,18 @@ $insert->bind_param(
     $amount,
     $invDteInv
 );
+
 $insert->execute();
 
+/* =========================
+   PREPARE STK REQUEST
+========================= */
 $data = [
     "phone" => $phone,
     "amount" => $amount,
-
-    // Internal transaction reference
     "reference" => $reference,
-
-    // Customer account reference
     "account_ref" => $accountNumber,
-
-    "callback_url" =>
-    "https://dtechweb.onrender.com/onasis_callback.php"
+    "callback_url" => "https://dtechweb.onrender.com/onasis_callback.php"
 ];
 
 $headers = [
@@ -102,6 +113,9 @@ $headers = [
     "Accept: application/json"
 ];
 
+/* =========================
+   CURL REQUEST
+========================= */
 $ch = curl_init();
 
 curl_setopt($ch, CURLOPT_URL, $ONASIS_BASE_URL . "/api/stk");
@@ -112,55 +126,58 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 $response = curl_exec($ch);
 
+/* =========================
+   CURL ERROR CHECK
+========================= */
 if ($response === false) {
-
     echo json_encode([
         "success" => false,
         "curl_error" => curl_error($ch),
         "curl_errno" => curl_errno($ch)
     ]);
-
+    curl_close($ch);
     exit;
 }
 
+/* =========================
+   RESPONSE HANDLING
+========================= */
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
 
-echo json_encode([
-    "http_code" => $httpCode,
-    "raw_response" => $response,
-    "payload_sent" => $data
-]);
+$result = json_decode($response, true);
+
+/* =========================
+   LOGGING (VERY IMPORTANT)
+========================= */
+file_put_contents(
+    "stk_log.txt",
+    date('c') . " " . $response . PHP_EOL,
+    FILE_APPEND
+);
+
+/* =========================
+   FINAL RESPONSE
+========================= */
+if ($httpCode == 200 && isset($result['status'])) {
+
+    echo json_encode([
+        "success" => true,
+        "http_code" => $httpCode,
+        "transaction_id" => $result['transaction_id'] ?? null,
+        "reference" => $reference,
+        "message" => "STK push sent — waiting for payment"
+    ]);
+
+} else {
+
+    echo json_encode([
+        "success" => false,
+        "http_code" => $httpCode,
+        "message" => "Payment initialization failed",
+        "response" => $result
+    ]);
+}
 
 exit;
-
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    $result = json_decode($response, true);
-
-    if (
-        $httpCode == 200 &&
-        isset($result['status']) &&
-        (
-            $result['status'] == 'pending' ||
-            $result['status'] == 'success'
-        )
-    ) {
-
-       echo json_encode([
-    "success" => true,
-    "reference" => $reference,
-    "message" => "Waiting for payment confirmation"
-]);
-
-    } else {
-
-        echo json_encode([
-            "success" => false,
-            "message" => "Payment initialization failed",
-            "response" => $result
-        ]);
-    }
-
-
-curl_close($ch);
 ?>
