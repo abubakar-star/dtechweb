@@ -137,6 +137,31 @@ $password = $_ENV['MYSQLPASSWORD'];
     @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
     @keyframes shake { 0% { transform: translateX(0);} 20% { transform: translateX(-5px);} 40% { transform: translateX(5px);} 60% { transform: translateX(-5px);} 80% { transform: translateX(5px);} 100% { transform: translateX(0);} }
     .shake { animation: shake 0.4s ease-in-out; }
+
+    .otp-box{
+  width:45px;
+  height:55px;
+  text-align:center;
+  font-size:24px;
+  border:2px solid #ccc;
+  border-radius:12px;
+  outline:none;
+  transition:0.2s;
+}
+
+.otp-box:focus{
+  border-color:#2563eb;
+}
+
+.otp-success{
+  border-color:green !important;
+  background:#dcfce7;
+}
+
+.otp-error{
+  border-color:red !important;
+  background:#fee2e2;
+}
   </style>
 </head>
 <body class="bg-cover bg-center bg-no-repeat h-screen flex items-center justify-center font-sans overflow-hidden"
@@ -217,7 +242,11 @@ $password = $_ENV['MYSQLPASSWORD'];
           <label for="remember" class="ml-2 block text-sm text-white/90">Remember me</label>
         </div>
         <div class="text-sm">
-          <a href="#" class="font-medium text-white/90 hover:text-white">Forgot your password?</a>
+          <a href="#"
+   id="forgotPasswordBtn"
+   class="font-medium text-white/90 hover:text-white">
+   Forgot your password?
+</a>
         </div>
       </div>
 
@@ -266,6 +295,73 @@ $password = $_ENV['MYSQLPASSWORD'];
     </p>
   </div>
 
+  <!-- OTP MODAL -->
+<div id="otpModal"
+     class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+  <div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl">
+
+    <h2 class="text-2xl font-bold text-center mb-2">
+      Verify OTP
+    </h2>
+
+    <p class="text-gray-500 text-center mb-5">
+      Enter the 6-digit code sent to your phone
+    </p>
+
+    <!-- OTP BOXES -->
+    <div class="flex justify-center gap-2 mb-5">
+      <input maxlength="1" class="otp-box" />
+      <input maxlength="1" class="otp-box" />
+      <input maxlength="1" class="otp-box" />
+      <input maxlength="1" class="otp-box" />
+      <input maxlength="1" class="otp-box" />
+      <input maxlength="1" class="otp-box" />
+    </div>
+
+    <button id="verifyOtpBtn"
+      class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">
+      Verify OTP
+    </button>
+
+    <p id="otpMessage"
+       class="text-center text-sm mt-3 hidden"></p>
+
+  </div>
+</div>
+
+
+<!-- NEW PASSWORD MODAL -->
+<div id="passwordModal"
+     class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+  <div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl">
+
+    <h2 class="text-2xl font-bold text-center mb-5">
+      Create New Password
+    </h2>
+
+    <input type="password"
+           id="newPassword"
+           placeholder="New password"
+           class="w-full border rounded-lg px-4 py-3 mb-4"/>
+
+    <input type="password"
+           id="confirmPassword"
+           placeholder="Confirm password"
+           class="w-full border rounded-lg px-4 py-3 mb-5"/>
+
+    <button id="changePasswordBtn"
+      class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold">
+      Change Password
+    </button>
+
+    <p id="passwordMessage"
+       class="text-center text-sm mt-3 hidden"></p>
+
+  </div>
+</div>
+
   <script>
        const togglePassword = document.getElementById('togglePassword');
   const passwordField = document.getElementById('password');
@@ -304,5 +400,187 @@ $password = $_ENV['MYSQLPASSWORD'];
       }
     });
   </script>
+  <script>
+
+let resetUsername = "";
+
+const forgotBtn = document.getElementById("forgotPasswordBtn");
+const otpModal = document.getElementById("otpModal");
+const passwordModal = document.getElementById("passwordModal");
+
+const otpBoxes = document.querySelectorAll(".otp-box");
+
+
+// AUTO MOVE OTP INPUTS
+otpBoxes.forEach((box, index) => {
+
+  box.addEventListener("input", () => {
+
+    if(box.value.length === 1 && index < otpBoxes.length - 1){
+      otpBoxes[index + 1].focus();
+    }
+
+  });
+
+});
+
+
+// OPEN FORGOT PASSWORD
+forgotBtn.addEventListener("click", async (e) => {
+
+  e.preventDefault();
+
+  const username = document.getElementById("username").value.trim();
+
+  if(!username){
+    alert("Enter username first");
+    return;
+  }
+
+  resetUsername = username;
+
+  const response = await fetch("send_otp.php", {
+
+    method: "POST",
+
+    headers:{
+      "Content-Type":"application/x-www-form-urlencoded"
+    },
+
+    body: "username=" + encodeURIComponent(username)
+
+  });
+
+  const result = await response.text();
+
+  if(result === "success"){
+
+    otpModal.classList.remove("hidden");
+    otpModal.classList.add("flex");
+
+  }else{
+
+    alert(result);
+
+  }
+
+});
+
+
+
+// VERIFY OTP
+document.getElementById("verifyOtpBtn")
+.addEventListener("click", async () => {
+
+  let otp = "";
+
+  otpBoxes.forEach(box => {
+    otp += box.value;
+  });
+
+  const response = await fetch("verify_otp.php", {
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/x-www-form-urlencoded"
+    },
+
+    body:
+      "username=" + encodeURIComponent(resetUsername)
+      + "&otp=" + encodeURIComponent(otp)
+
+  });
+
+  const result = await response.text();
+
+  const otpMessage = document.getElementById("otpMessage");
+
+  if(result === "success"){
+
+    otpBoxes.forEach(box => {
+      box.classList.add("otp-success");
+      box.classList.remove("otp-error");
+    });
+
+    otpMessage.innerHTML = "OTP verified";
+    otpMessage.className = "text-green-600 text-center mt-3";
+
+    setTimeout(() => {
+
+      otpModal.classList.add("hidden");
+      passwordModal.classList.remove("hidden");
+      passwordModal.classList.add("flex");
+
+    }, 1000);
+
+  }else{
+
+    otpBoxes.forEach(box => {
+      box.classList.add("otp-error");
+      box.classList.remove("otp-success");
+    });
+
+    otpMessage.innerHTML = "Invalid OTP";
+    otpMessage.className = "text-red-600 text-center mt-3";
+
+  }
+
+});
+
+
+
+
+// CHANGE PASSWORD
+document.getElementById("changePasswordBtn")
+.addEventListener("click", async () => {
+
+  const newPassword =
+    document.getElementById("newPassword").value;
+
+  const confirmPassword =
+    document.getElementById("confirmPassword").value;
+
+  const msg =
+    document.getElementById("passwordMessage");
+
+  if(newPassword !== confirmPassword){
+
+    msg.innerHTML = "Passwords do not match";
+    msg.className = "text-red-600 text-center mt-3";
+    return;
+
+  }
+
+  const response = await fetch("change_password.php", {
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/x-www-form-urlencoded"
+    },
+
+    body:
+      "username=" + encodeURIComponent(resetUsername)
+      + "&password=" + encodeURIComponent(newPassword)
+
+  });
+
+  const result = await response.text();
+
+  if(result === "success"){
+
+    window.location.href = "index.php";
+
+  }else{
+
+    msg.innerHTML = result;
+    msg.className = "text-red-600 text-center mt-3";
+
+  }
+
+});
+
+</script>
 </body>
 </html>
