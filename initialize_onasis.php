@@ -160,7 +160,7 @@ exit;
             "response" => $result
         ]);
     }
-}
+
 
 curl_close($ch);
 ?>
