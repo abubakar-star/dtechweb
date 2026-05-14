@@ -111,16 +111,27 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 $response = curl_exec($ch);
-//file_put_contents("init_response.txt", $response);
 
-if (curl_errno($ch)) {
-    
+if ($response === false) {
+
     echo json_encode([
         "success" => false,
-        "message" => curl_error($ch)
+        "curl_error" => curl_error($ch),
+        "curl_errno" => curl_errno($ch)
     ]);
 
-} else {
+    exit;
+}
+
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+echo json_encode([
+    "http_code" => $httpCode,
+    "raw_response" => $response,
+    "payload_sent" => $data
+]);
+
+exit;
 
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
