@@ -305,9 +305,10 @@ $password = $_ENV['MYSQLPASSWORD'];
       Verify OTP
     </h2>
 
-    <p class="text-gray-500 text-center mb-5">
-      Enter the 6-digit code sent to your phone
-    </p>
+<p id="otpPhoneText"
+   class="text-gray-500 text-center mb-5">
+   Enter the 6-digit code sent to your phone
+</p>
 
     <!-- OTP BOXES -->
     <div class="flex justify-center gap-2 mb-5">
@@ -448,12 +449,18 @@ forgotBtn.addEventListener("click", async (e) => {
 
   const result = await response.text();
 
-  if(result === "success"){
+if(result.startsWith("success|")){
 
-    otpModal.classList.remove("hidden");
-    otpModal.classList.add("flex");
+  const phone = result.split("|")[1];
 
-  }else{
+  document.getElementById("otpPhoneText")
+  .innerHTML =
+    `Enter the 6-digit code sent to <br><strong>${phone}</strong>`;
+
+  otpModal.classList.remove("hidden");
+  otpModal.classList.add("flex");
+
+}else{
 
     alert(result);
 
