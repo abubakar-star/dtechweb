@@ -234,33 +234,31 @@ $password = $_ENV['MYSQLPASSWORD'];
 
     <p class="text-center text-sm text-white/80">
 
-    <!-- Download APK Button -->
-<div class="text-center mt-4">
-  <a href="D-LINK.apk" download
-     class="inline-flex items-center gap-2 px-5 py-3 rounded-xl
-            bg-cyan-500/20 hover:bg-cyan-500/30
-            border border-cyan-300/30
-            text-white font-medium shadow-lg
-            transition duration-300">
-
-    <!-- Download Icon -->
-    <svg xmlns="http://www.w3.org/2000/svg"
-         class="h-5 w-5"
-         fill="none"
-         viewBox="0 0 24 24"
-         stroke="currentColor">
-      <path stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5m0 0l5-5m-5 5V4"/>
-    </svg>
-
-    Download App
-  </a>
-</div>
-
+    
       Can't access your account? <br>Contact 
       <a href="#" class="font-medium text-white hover:text-white/90">0758788020</a>
+      <br>
+
+<a href="D-LINK.apk"
+   download
+   class="inline-flex items-center gap-1 mt-2 text-cyan-300 hover:text-cyan-200 text-sm font-medium">
+
+  APK
+
+  <svg xmlns="http://www.w3.org/2000/svg"
+       class="h-4 w-4"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke="currentColor">
+
+    <path stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5m0 0l5-5m-5 5V4"/>
+
+  </svg>
+
+</a>
     </p>
   </div>
 
