@@ -111,7 +111,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 $response = curl_exec($ch);
-file_put_contents("init_response.txt", $response);
+//file_put_contents("init_response.txt", $response);
 
 if (curl_errno($ch)) {
     
