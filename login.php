@@ -319,11 +319,6 @@ $password = $_ENV['MYSQLPASSWORD'];
       <input maxlength="1" class="otp-box" />
     </div>
 
-    <button id="verifyOtpBtn"
-      class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">
-      Verify OTP
-    </button>
-
     <p id="otpMessage"
        class="text-center text-sm mt-3 hidden"></p>
 
@@ -468,63 +463,124 @@ forgotBtn.addEventListener("click", async (e) => {
 
 
 
-// VERIFY OTP
-document.getElementById("verifyOtpBtn")
-.addEventListener("click", async () => {
+otpBoxes.forEach((box, index) => {
 
-  let otp = "";
+  // INPUT
+  box.addEventListener("input", async () => {
 
-  otpBoxes.forEach(box => {
-    otp += box.value;
-  });
+    // NUMBERS ONLY
+    box.value = box.value.replace(/[^0-9]/g, '');
 
-  const response = await fetch("verify_otp.php", {
+    // AUTO MOVE
+    if(box.value.length === 1 && index < otpBoxes.length - 1){
+      otpBoxes[index + 1].focus();
+    }
 
-    method:"POST",
+    // BUILD OTP
+    let otp = "";
 
-    headers:{
-      "Content-Type":"application/x-www-form-urlencoded"
-    },
-
-    body:
-      "username=" + encodeURIComponent(resetUsername)
-      + "&otp=" + encodeURIComponent(otp)
-
-  });
-
-  const result = await response.text();
-
-  const otpMessage = document.getElementById("otpMessage");
-
-  if(result === "success"){
-
-    otpBoxes.forEach(box => {
-      box.classList.add("otp-success");
-      box.classList.remove("otp-error");
+    otpBoxes.forEach(b => {
+      otp += b.value;
     });
 
-    otpMessage.innerHTML = "OTP verified";
-    otpMessage.className = "text-green-600 text-center mt-3";
+    // AUTO VERIFY
+    if(otp.length === 6){
 
-    setTimeout(() => {
+      const response = await fetch("verify_otp.php", {
 
-      otpModal.classList.add("hidden");
-      passwordModal.classList.remove("hidden");
-      passwordModal.classList.add("flex");
+        method:"POST",
 
-    }, 1000);
+        headers:{
+          "Content-Type":"application/x-www-form-urlencoded"
+        },
 
-  }else{
+        body:
+          "username=" + encodeURIComponent(resetUsername)
+          + "&otp=" + encodeURIComponent(otp)
 
-    otpBoxes.forEach(box => {
-      box.classList.add("otp-error");
-      box.classList.remove("otp-success");
-    });
+      });
 
-    otpMessage.innerHTML = "Invalid OTP";
-    otpMessage.className = "text-red-600 text-center mt-3";
+      const result = await response.text();
 
-  }
+      const otpMessage =
+        document.getElementById("otpMessage");
+
+      if(result.trim() === "success"){
+
+        otpBoxes.forEach(box => {
+
+          box.classList.add("otp-success");
+          box.classList.remove("otp-error");
+
+          box.disabled = true;
+
+        });
+
+        otpMessage.innerHTML = "OTP verified";
+        otpMessage.className =
+          "text-green-600 text-center mt-3";
+
+        setTimeout(() => {
+
+          otpModal.classList.add("hidden");
+
+          passwordModal.classList.remove("hidden");
+          passwordModal.classList.add("flex");
+
+        }, 1000);
+
+      }else{
+
+        otpBoxes.forEach(box => {
+
+          box.classList.add("otp-error");
+          box.classList.remove("otp-success");
+
+        });
+
+        otpMessage.innerHTML = "Invalid OTP";
+        otpMessage.className =
+          "text-red-600 text-center mt-3";
+
+        // CLEAR WRONG OTP
+        setTimeout(() => {
+
+          otpBoxes.forEach(box => {
+
+            box.value = "";
+            box.disabled = false;
+
+            box.classList.remove(
+              "otp-error",
+              "otp-success"
+            );
+
+          });
+
+          otpBoxes[0].focus();
+
+        }, 1200);
+
+      }
+
+    }
+
+  });
+
+  // BACKSPACE
+  box.addEventListener("keydown", (e) => {
+
+    if(
+      e.key === "Backspace"
+      &&
+      box.value === ""
+      &&
+      index > 0
+    ){
+      otpBoxes[index - 1].focus();
+    }
+
+  });
 
 });
 
