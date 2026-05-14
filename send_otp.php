@@ -17,7 +17,7 @@ if ($conn->connect_error) {
 $username = trim($_POST['username']);
 
 $stmt = $conn->prepare(
-    "SELECT id, phone FROM users WHERE username=?"
+    "SELECT id, phone_number FROM users WHERE username=?"
 );
 
 $stmt->bind_param("s", $username);
@@ -59,7 +59,7 @@ $update->execute();
 
 
 // FORMAT PHONE
-$phone = trim($user['phone']);
+$phone = trim($user['phone_number']);
 
 if (substr($phone, 0, 1) === "0") {
     $phone = "254" . substr($phone, 1);
