@@ -135,16 +135,7 @@ exit;
 
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-
-if (strpos($contentType, 'application/json') !== false) {
     $result = json_decode($response, true);
-} else {
-    $result = [
-        "non_json_response" => true,
-        "body" => $response
-    ];
-}
 
     if (
         $httpCode == 200 &&
