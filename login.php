@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// Detect Android devices
+$isAndroid = preg_match('/Android/i', $_SERVER['HTTP_USER_AGENT']);
+
 // ✅ If user is already logged in, redirect
 if (isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -238,7 +241,7 @@ $password = $_ENV['MYSQLPASSWORD'];
       Can't access your account? <br>Contact 
       <a href="#" class="font-medium text-white hover:text-white/90">0758788020</a>
       <br>
-
+<?php if ($isAndroid): ?>
 <a href="D-LINK.apk"
    download
    class="inline-flex items-center gap-1 mt-2 text-cyan-300 hover:text-cyan-200 text-sm font-medium">
@@ -259,6 +262,7 @@ $password = $_ENV['MYSQLPASSWORD'];
   </svg>
 
 </a>
+<?php endif; ?>
     </p>
   </div>
 
