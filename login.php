@@ -313,6 +313,11 @@ $password = $_ENV['MYSQLPASSWORD'];
      class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
 
   <div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl relative">
+       <!-- CLOSE BUTTON -->
+<button id="closeOtpModal"
+        class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold leading-none">
+  &times;
+</button>
 
     <h2 class="text-2xl font-bold text-center mb-2">
       Verify OTP
@@ -345,11 +350,7 @@ $password = $_ENV['MYSQLPASSWORD'];
      class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
 
   <div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl">
-    <!-- CLOSE BUTTON -->
-<button id="closeOtpModal"
-        class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold leading-none">
-  &times;
-</button>
+ 
 
     <h2 class="text-2xl font-bold text-center mb-5">
       Create New Password
