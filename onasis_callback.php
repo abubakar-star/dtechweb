@@ -122,7 +122,7 @@ if (
     */
 
     $payStmt = $conn->prepare(
-        "SELECT user_id, invoice_number
+        "SELECT user_id, invoice_number, amount
          FROM payments
          WHERE reference = ?"
     );
@@ -141,6 +141,8 @@ if (
 
         $invoiceNumber = $payment['invoice_number'];
 
+        $amount = $payment['amount'];
+
 /*
 =========================================
 FETCH USER PHONE
@@ -151,7 +153,7 @@ $userPhone = '';
 $userName = 'Customer';
 
 $userPhoneStmt = $conn->prepare(
-    "SELECT phone_number, first_name
+    "SELECT phone_number, username
      FROM users
      WHERE id = ?"
 );
@@ -172,8 +174,8 @@ if (substr($userPhone, 0, 1) === "0") {
     $userPhone = "254" . substr($userPhone, 1);
 }
 
-    if (!empty($userData['first_name'])) {
-        $userName = $userData['first_name'];
+    if (!empty($userData['username'])) {
+        $userName = $userData['username'];
     }
 }
 
@@ -262,11 +264,14 @@ SEND PAYMENT SUCCESS SMS
 
 if (!empty($userPhone)) {
 
-    $smsMessage =
-        "Hello $userName, your payment has been received successfully. " .
-        "Invoice: $invoiceNumber. " .
-        "M-PESA Ref: $mpesa_receipt. " .
-        "Thank you for choosing our service.";
+$smsMessage =
+        "D-LINK NETWORK ✓ Payment Confirmed.\n" .
+        "Account: $userName\n" .
+        "Amount: KES $amount\n" .
+        "Invoice: $invoiceNumber\n" .
+        "M-PESA Ref: $mpesa_receipt\n" .
+        "Status: ACTIVE\n" .
+        "Thank you for choosing us.";
 
     sendSMS($userPhone, $smsMessage);
 }
