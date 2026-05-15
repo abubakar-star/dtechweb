@@ -175,6 +175,10 @@ $password = $_ENV['MYSQLPASSWORD'];
 #loadingOverlay {
   backdrop-filter: blur(5px);
 }
+
+body.swal2-shown {
+  padding-right: 0 !important;
+}
   </style>
 </head>
 <body class="bg-cover bg-center bg-no-repeat h-screen flex items-center justify-center font-sans overflow-hidden"
