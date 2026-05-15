@@ -15,7 +15,7 @@ function sendSMS($phone, $message)
 
     $data = [
         "recipient" => $phone,
-        "sender_id" => "TalkSasa",
+        "sender_id" => "TALKSASA",
         "message" => $message
     ];
 
@@ -34,6 +34,16 @@ function sendSMS($phone, $message)
     ]);
 
     $response = curl_exec($ch);
+
+$error = curl_error($ch);
+
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+file_put_contents(
+    "onasis_log.txt",
+    "SMS CODE: $httpCode\nERROR: $error\nRESPONSE: $response\n\n",
+    FILE_APPEND
+);
 
     if (curl_errno($ch)) {
         file_put_contents(
@@ -156,7 +166,11 @@ if ($userPhoneRes->num_rows > 0) {
 
     $userData = $userPhoneRes->fetch_assoc();
 
-    $userPhone = $userData['phone_number'];
+    $userPhone = trim($userData['phone_number']);
+
+if (substr($userPhone, 0, 1) === "0") {
+    $userPhone = "254" . substr($userPhone, 1);
+}
 
     if (!empty($userData['first_name'])) {
         $userName = $userData['first_name'];
