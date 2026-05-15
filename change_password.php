@@ -22,13 +22,6 @@ $username = $_POST['username'];
 
 $password = trim($_POST['password']);
 
-
-// HASH PASSWORD
-$hashed = password_hash(
-$password,
-PASSWORD_DEFAULT
-);
-
 $stmt = $conn->prepare(
 "UPDATE users
 SET password=?,
@@ -39,7 +32,7 @@ WHERE username=?"
 
 $stmt->bind_param(
 "ss",
-$hashed,
+$password,
 $username
 );
 
