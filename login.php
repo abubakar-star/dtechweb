@@ -384,7 +384,7 @@ $password = $_ENV['MYSQLPASSWORD'];
   <div class="loader"></div>
 
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
        const togglePassword = document.getElementById('togglePassword');
   const passwordField = document.getElementById('password');
@@ -462,7 +462,14 @@ forgotBtn.addEventListener("click", async (e) => {
   const username = document.getElementById("username").value.trim();
 
   if(!username){
-    alert("Enter username first");
+    Swal.fire({
+  icon: "warning",
+  title: "Username Required",
+  text: "Please enter your username first",
+  confirmButtonColor: "#2563eb",
+  background: "#ffffff",
+  color: "#111827"
+});
     return;
   }
 
