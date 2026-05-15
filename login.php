@@ -176,8 +176,14 @@ $password = $_ENV['MYSQLPASSWORD'];
   backdrop-filter: blur(5px);
 }
 
-body.swal2-shown {
+body.swal2-shown,
+html.swal2-shown {
   padding-right: 0 !important;
+  overflow: hidden !important;
+}
+
+.swal2-height-auto {
+  height: 100% !important;
 }
   </style>
 </head>
@@ -370,10 +376,18 @@ body.swal2-shown {
            placeholder="Confirm password"
            class="w-full border rounded-lg px-4 py-3 mb-5"/>
 
-    <button id="changePasswordBtn"
-      class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold">
-      Change Password
-    </button>
+ <button id="changePasswordBtn"
+  class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
+
+  <span id="changePasswordText">
+    Change Password
+  </span>
+
+  <span id="changePasswordLoader"
+        class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin">
+  </span>
+
+</button>
 
     <p id="passwordMessage"
        class="text-center text-sm mt-3 hidden"></p>
@@ -428,6 +442,15 @@ body.swal2-shown {
     });
   </script>
   <script>
+
+    const changePasswordBtn =
+  document.getElementById("changePasswordBtn");
+
+const changePasswordText =
+  document.getElementById("changePasswordText");
+
+const changePasswordLoader =
+  document.getElementById("changePasswordLoader");
 
 const closeOtpModal =
   document.getElementById("closeOtpModal");
@@ -706,6 +729,14 @@ document.getElementById("changePasswordBtn")
 
   }
 
+  // SHOW LOADER
+changePasswordBtn.disabled = true;
+
+changePasswordText.innerHTML =
+  "Updating...";
+
+changePasswordLoader.classList.remove("hidden");
+
   const response = await fetch("change_password.php", {
 
     method:"POST",
@@ -722,11 +753,22 @@ document.getElementById("changePasswordBtn")
 
   const result = await response.text();
 
-  if(result === "success"){
+if(result === "success"){
 
-    window.location.href = "index.php";
+  changePasswordText.innerHTML =
+    "Success";
 
-  }else{
+  window.location.href = "index.php";
+
+}else{
+
+  // HIDE LOADER
+  changePasswordBtn.disabled = false;
+
+  changePasswordText.innerHTML =
+    "Change Password";
+
+  changePasswordLoader.classList.add("hidden");
 
     msg.innerHTML = result;
     msg.className = "text-red-600 text-center mt-3";
