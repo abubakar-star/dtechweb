@@ -113,4 +113,10 @@ if ($error) {
     die("cURL Error: " . $error);
 }
 
-echo "success";
+// MASK PHONE NUMBER
+$maskedPhone =
+substr($phone, 0, 4)
+. "****"
+. substr($phone, -3);
+
+echo "success|" . $maskedPhone;
