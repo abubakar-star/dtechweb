@@ -784,7 +784,7 @@ payBtn.innerHTML = `
  
 setTimeout(() => {
     window.location.href = "index.php";
-}, 6500);
+}, 7500);
 
             } // CANCELLED
 else if (payment.status === 'cancelled') {
