@@ -796,7 +796,7 @@ if (statusBadge1) {
 
 setTimeout(() => {
     window.location.href = "index.php";
-}, 2500);
+}, 6000);
 
 
 payBtn.innerHTML = "Invoice Paid";
