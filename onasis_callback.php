@@ -270,7 +270,6 @@ $smsMessage =
         "Amount: KES $amount\n" .
         "Invoice: $invoiceNumber\n" .
         "M-PESA Ref: $mpesa_receipt\n" .
-        "Status: ACTIVE\n" .
         "\n" .
         "From D-LINK NETWORK INC.";
 
