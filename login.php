@@ -366,15 +366,110 @@ html.swal2-shown {
       Create New Password
     </h2>
 
-    <input type="password"
-           id="newPassword"
-           placeholder="New password"
-           class="w-full border rounded-lg px-4 py-3 mb-4"/>
+   <!-- NEW PASSWORD -->
+<div class="relative mb-4">
 
-    <input type="password"
-           id="confirmPassword"
-           placeholder="Confirm password"
-           class="w-full border rounded-lg px-4 py-3 mb-5"/>
+  <input type="text"
+         id="newPassword"
+         placeholder="New password"
+         class="w-full border rounded-lg px-4 py-3 pr-12"/>
+
+  <button type="button"
+          id="toggleNewPassword"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+
+    <!-- EYE OPEN -->
+    <svg id="newEyeOpen"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5
+               c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7
+               -4.477 0-8.268-2.943-9.542-7z"/>
+    </svg>
+
+    <!-- EYE CLOSED -->
+    <svg id="newEyeClosed"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5 hidden"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 3l18 18"/>
+    </svg>
+
+  </button>
+
+</div>
+
+
+<!-- CONFIRM PASSWORD -->
+<div class="relative mb-5">
+
+  <input type="text"
+         id="confirmPassword"
+         placeholder="Confirm password"
+         class="w-full border rounded-lg px-4 py-3 pr-12"/>
+
+  <button type="button"
+          id="toggleConfirmPassword"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+
+    <!-- EYE OPEN -->
+    <svg id="confirmEyeOpen"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5
+               c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7
+               -4.477 0-8.268-2.943-9.542-7z"/>
+    </svg>
+
+    <!-- EYE CLOSED -->
+    <svg id="confirmEyeClosed"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5 hidden"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 3l18 18"/>
+    </svg>
+
+  </button>
+
+</div>
 
  <button id="changePasswordBtn"
   class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
@@ -465,6 +560,73 @@ const otpModal = document.getElementById("otpModal");
 const passwordModal = document.getElementById("passwordModal");
 
 const otpBoxes = document.querySelectorAll(".otp-box");
+
+// NEW PASSWORD TOGGLE
+const toggleNewPassword =
+  document.getElementById("toggleNewPassword");
+
+const newPassword =
+  document.getElementById("newPassword");
+
+const newEyeOpen =
+  document.getElementById("newEyeOpen");
+
+const newEyeClosed =
+  document.getElementById("newEyeClosed");
+
+toggleNewPassword.addEventListener("click", () => {
+
+  if(newPassword.type === "text"){
+
+    newPassword.type = "password";
+
+    newEyeOpen.classList.add("hidden");
+    newEyeClosed.classList.remove("hidden");
+
+  }else{
+
+    newPassword.type = "text";
+
+    newEyeOpen.classList.remove("hidden");
+    newEyeClosed.classList.add("hidden");
+
+  }
+
+});
+
+
+// CONFIRM PASSWORD TOGGLE
+const toggleConfirmPassword =
+  document.getElementById("toggleConfirmPassword");
+
+const confirmPassword =
+  document.getElementById("confirmPassword");
+
+const confirmEyeOpen =
+  document.getElementById("confirmEyeOpen");
+
+const confirmEyeClosed =
+  document.getElementById("confirmEyeClosed");
+
+toggleConfirmPassword.addEventListener("click", () => {
+
+  if(confirmPassword.type === "text"){
+
+    confirmPassword.type = "password";
+
+    confirmEyeOpen.classList.add("hidden");
+    confirmEyeClosed.classList.remove("hidden");
+
+  }else{
+
+    confirmPassword.type = "text";
+
+    confirmEyeOpen.classList.remove("hidden");
+    confirmEyeClosed.classList.add("hidden");
+
+  }
+
+});
 
 
 // AUTO MOVE OTP INPUTS
