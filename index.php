@@ -753,7 +753,7 @@ payBtn.classList.remove(
 
 const statusBadge1 = document.getElementById("invoiceStatus");
 if (statusBadge1) {
-  statusBadge1.textContent = "INVOICE PAID";
+  statusBadge1.textContent = "PAID";
   statusBadge1.classList.remove("bg-yellow-200", "text-yellow-800");
   statusBadge1.classList.add("bg-green-200", "text-green-800");
 }
