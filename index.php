@@ -750,12 +750,55 @@ payBtn.classList.remove(
     "opacity-50",
     "cursor-not-allowed"
 );
- const statusBadge1 = document.getElementById("invoiceStatus");
-  if (statusBadge1) {
-    statusBadge1.textContent = "PAID";
-    statusBadge1.classList.remove("bg-yellow-200", "text-yellow-800");
-    statusBadge1.classList.add("bg-green-200", "text-green-800");
-  }
+
+const statusBadge1 = document.getElementById("invoiceStatus");
+
+if (statusBadge1) {
+
+  statusBadge1.innerHTML = `
+    <span class="flex items-center gap-2">
+      INVOICE PAID
+
+      <svg class="animate-spin h-4 w-4 text-green-700"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24">
+
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4">
+        </circle>
+
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+        </path>
+
+      </svg>
+    </span>
+  `;
+
+  statusBadge1.classList.remove(
+    "bg-yellow-200",
+    "text-yellow-800"
+  );
+
+  statusBadge1.classList.add(
+    "bg-green-200",
+    "text-green-800"
+  );
+}
+
+setTimeout(() => {
+    window.location.href = "index.php";
+}, 2500);
+
+
 payBtn.innerHTML = "Invoice Paid";
 
  document.getElementById("paidStamp").classList.remove("hidden");
