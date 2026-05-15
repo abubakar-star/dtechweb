@@ -265,13 +265,14 @@ SEND PAYMENT SUCCESS SMS
 if (!empty($userPhone)) {
 
 $smsMessage =
-        "D-LINK NETWORK ✓ Payment Confirmed.\n" .
+        "Payment Confirmed.\n" .
         "Account: $userName\n" .
         "Amount: KES $amount\n" .
         "Invoice: $invoiceNumber\n" .
         "M-PESA Ref: $mpesa_receipt\n" .
         "Status: ACTIVE\n" .
-        "Thank you for choosing us.";
+        "\n"
+        "From D-LINK NETWORK INC.";
 
     sendSMS($userPhone, $smsMessage);
 }
