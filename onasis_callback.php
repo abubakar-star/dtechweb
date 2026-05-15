@@ -2,6 +2,56 @@
 
 http_response_code(200);
 
+/*
+=========================================
+SEND SMS USING TALKSASA API
+=========================================
+*/
+function sendSMS($phone, $message)
+{
+    $token = "3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b";
+
+    $url = "https://bulksms.talksasa.com/api/v3/sms/send";
+
+    $data = [
+        "recipient" => $phone,
+        "sender_id" => "TalkSasa",
+        "message" => $message
+    ];
+
+    $payload = json_encode($data);
+
+    $ch = curl_init($url);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Bearer " . $token,
+        "Content-Type: application/json",
+        "Accept: application/json"
+    ]);
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        file_put_contents(
+            "onasis_log.txt",
+            "SMS ERROR: " . curl_error($ch) . "\n\n",
+            FILE_APPEND
+        );
+    } else {
+        file_put_contents(
+            "onasis_log.txt",
+            "SMS RESPONSE: " . $response . "\n\n",
+            FILE_APPEND
+        );
+    }
+
+    curl_close($ch);
+}
+
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -81,6 +131,39 @@ if (
 
         $invoiceNumber = $payment['invoice_number'];
 
+/*
+=========================================
+FETCH USER PHONE
+=========================================
+*/
+
+$userPhone = '';
+$userName = 'Customer';
+
+$userPhoneStmt = $conn->prepare(
+    "SELECT phone_number, first_name
+     FROM users
+     WHERE id = ?"
+);
+
+$userPhoneStmt->bind_param("i", $userId);
+
+$userPhoneStmt->execute();
+
+$userPhoneRes = $userPhoneStmt->get_result();
+
+if ($userPhoneRes->num_rows > 0) {
+
+    $userData = $userPhoneRes->fetch_assoc();
+
+    $userPhone = $userData['phone_number'];
+
+    if (!empty($userData['first_name'])) {
+        $userName = $userData['first_name'];
+    }
+}
+
+
         /*
         =========================================
         FETCH CURRENT USER STATUS
@@ -157,7 +240,22 @@ if (
             );
         }
     }
+/*
+=========================================
+SEND PAYMENT SUCCESS SMS
+=========================================
+*/
 
+if (!empty($userPhone)) {
+
+    $smsMessage =
+        "Hello $userName, your payment has been received successfully. " .
+        "Invoice: $invoiceNumber. " .
+        "M-PESA Ref: $mpesa_receipt. " .
+        "Thank you for choosing our service.";
+
+    sendSMS($userPhone, $smsMessage);
+}
     file_put_contents(
         "onasis_log.txt",
         "UPDATED SUCCESS PAYMENT: $reference\n\n",
