@@ -162,6 +162,19 @@ $password = $_ENV['MYSQLPASSWORD'];
   border-color:red !important;
   background:#fee2e2;
 }
+
+.loader {
+  width: 45px;
+  height: 45px;
+  border: 4px solid rgba(255,255,255,0.2);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+#loadingOverlay {
+  backdrop-filter: blur(5px);
+}
   </style>
 </head>
 <body class="bg-cover bg-center bg-no-repeat h-screen flex items-center justify-center font-sans overflow-hidden"
@@ -358,6 +371,14 @@ $password = $_ENV['MYSQLPASSWORD'];
   </div>
 </div>
 
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay"
+     class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[9999]">
+
+  <div class="loader"></div>
+
+</div>
+
   <script>
        const togglePassword = document.getElementById('togglePassword');
   const passwordField = document.getElementById('password');
@@ -398,6 +419,9 @@ $password = $_ENV['MYSQLPASSWORD'];
   </script>
   <script>
 
+    const loadingOverlay =
+  document.getElementById("loadingOverlay");
+
 let resetUsername = "";
 
 const forgotBtn = document.getElementById("forgotPasswordBtn");
@@ -435,19 +459,44 @@ forgotBtn.addEventListener("click", async (e) => {
 
   resetUsername = username;
 
-  const response = await fetch("send_otp.php", {
+  // SHOW LOADER
+loadingOverlay.classList.remove("hidden");
+loadingOverlay.classList.add("flex");
 
-    method: "POST",
+const startTime = Date.now();
 
-    headers:{
-      "Content-Type":"application/x-www-form-urlencoded"
-    },
+const response = await fetch("send_otp.php", {
 
-    body: "username=" + encodeURIComponent(username)
+  method: "POST",
 
-  });
+  headers:{
+    "Content-Type":"application/x-www-form-urlencoded"
+  },
 
-  const result = await response.text();
+  body: "username=" + encodeURIComponent(username)
+
+});
+
+const result = await response.text();
+
+
+// RELATIVE LOADING TIME
+const elapsed = Date.now() - startTime;
+
+const minimumTime = 1200;
+
+if(elapsed < minimumTime){
+
+  await new Promise(resolve =>
+    setTimeout(resolve, minimumTime - elapsed)
+  );
+
+}
+
+
+// HIDE LOADER
+loadingOverlay.classList.remove("flex");
+loadingOverlay.classList.add("hidden");
 
 if(result.startsWith("success|")){
 
