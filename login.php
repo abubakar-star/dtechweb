@@ -340,12 +340,37 @@ html.swal2-shown {
 
     <!-- OTP BOXES -->
     <div class="flex justify-center gap-2 mb-5">
-      <input maxlength="1" class="otp-box" />
-      <input maxlength="1" class="otp-box" />
-      <input maxlength="1" class="otp-box" />
-      <input maxlength="1" class="otp-box" />
-      <input maxlength="1" class="otp-box" />
-      <input maxlength="1" class="otp-box" />
+      <input id="otp1"
+      maxlength="6"
+       class="otp-box"
+       autocomplete="one-time-code"
+       inputmode="numeric" />
+     
+  <input id="otp2"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp3"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp4"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp5"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp6"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
     </div>
 
     <p id="otpMessage"
@@ -560,6 +585,31 @@ const otpModal = document.getElementById("otpModal");
 const passwordModal = document.getElementById("passwordModal");
 
 const otpBoxes = document.querySelectorAll(".otp-box");
+// AUTO PASTE OTP FROM PHONE SMS
+otpBoxes[0].addEventListener("input", (e) => {
+
+  const value = e.target.value;
+
+  // Detect full OTP pasted from SMS
+  if(value.length > 1){
+
+    const otpArray =
+      value.replace(/\D/g, '').split('');
+
+    otpBoxes.forEach((box, index) => {
+
+      box.value = otpArray[index] || '';
+
+    });
+
+    // Trigger verification automatically
+    otpBoxes[5].dispatchEvent(
+      new Event("input")
+    );
+
+  }
+
+});
 
 // NEW PASSWORD TOGGLE
 const toggleNewPassword =
