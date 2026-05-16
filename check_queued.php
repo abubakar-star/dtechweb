@@ -1,10 +1,12 @@
 <?php
-$conn = new mysqli(
-    "localhost",
-    "root",
-    "",
-    "dlink_network"
-);
+
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
+
+$conn = new mysqli($host, $username, $password, $dbname, $port);
 
 $res = $conn->query("
     SELECT id, username 
