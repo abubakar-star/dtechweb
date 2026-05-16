@@ -10,12 +10,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // DB connection — update credentials if needed
-$host   = "sql313.infinityfree.com";
-$dbuser = "if0_39741603";
-$dbpass = "mkala3771";
-$dbname = "if0_39741603_dlink_network";
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
 
-$conn = new mysqli($host, $dbuser, $dbpass, $dbname);
+$conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
     echo json_encode(['status' => 'error', 'message' => 'Database connection failed: ' . $conn->connect_error]);
     exit();
