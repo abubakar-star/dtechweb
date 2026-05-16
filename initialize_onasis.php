@@ -174,7 +174,7 @@ if ($httpCode == 200 && isset($result['status'])) {
     echo json_encode([
         "success" => false,
         "http_code" => $httpCode,
-        "message" => "Payment initialization failed",
+        "message" => "Payment Server Unreachable",
         "response" => $result
     ]);
 }
