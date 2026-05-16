@@ -6,7 +6,13 @@ date_default_timezone_set("Africa/Nairobi");
 /* ===============================
    DB CONNECTION
 ================================ */
-$conn = new mysqli("sql313.infinityfree.com", "if0_39741603", "mkala3771", "if0_39741603_dlink_network");
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
+
+$conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
     die("Database connection failed");
 }
