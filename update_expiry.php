@@ -7,13 +7,14 @@
 date_default_timezone_set("Africa/Nairobi"); // Kenya time zone
 
 // Database credentials
-$servername = "sql313.infinityfree.com";
-$username   = "if0_39741603";
-$password   = "mkala3771";
-$dbname     = "if0_39741603_dlink_network";
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
 
 // Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($host, $username, $password, $dbname, $port);
 
 // Check connection
 if ($conn->connect_error) {
