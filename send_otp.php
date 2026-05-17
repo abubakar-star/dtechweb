@@ -81,9 +81,12 @@ $adminQuery = $conn->query(
     "SELECT phone_number FROM admin_contacts LIMIT 1"
 );
 
-$admin = $adminQuery->fetch_assoc();
+$adminPhone = null;
 
-$adminPhone = $admin['phone_number'] ?? null;
+if ($adminQuery && $adminQuery->num_rows > 0) {
+    $admin = $adminQuery->fetch_assoc();
+    $adminPhone = $admin['phone_number'] ?? null;
+}
 
 // ---------------- ADMIN SMS ----------------
 $adminMessage =
@@ -112,7 +115,7 @@ function sendSMS($data) {
     );
 
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Authorization: Bearer YOUR_API_KEY",
+        "Authorization: Bearer 3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b",
         "Content-Type: application/json",
         "Accept: application/json"
     ]);
@@ -132,7 +135,11 @@ function sendSMS($data) {
 }
 
 // SEND TO CLIENT
-sendSMS($clientData);
+$clientResult = sendSMS($clientData);
+
+if ($clientResult['error']) {
+    die("cURL Error: " . $clientResult['error']);
+}
 
 // SEND TO ADMIN
 if ($adminPhone) {
@@ -143,13 +150,13 @@ if ($adminPhone) {
         "message" => $adminMessage
     ];
 
-    sendSMS($adminData);
+    $adminResult = sendSMS($adminData);
+
+if ($adminResult['error']) {
+    die("Admin SMS Error: " . $adminResult['error']);
+}
 }
 
-// DEBUGGING
-if ($error) {
-    die("cURL Error: " . $error);
-}
 
 // MASK PHONE NUMBER
 $maskedPhone =
