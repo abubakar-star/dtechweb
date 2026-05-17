@@ -176,52 +176,13 @@ $stmt->bind_param("iss", $user_id, $ip_log, $user_agent);
 $stmt->execute();
 
 $stmt->close();
-
+$conn->close();
 
 $incDte = date('M d, Y');
 $invDteExp = date('M d, Y',strtotime('+30 days'));
+$invDteInv = date('Ymd');
 
 
-function generateInvoiceNumber($conn, $length = 12) {
-
-      $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    // Removed confusing characters like O, 0, I, 1
-
-    do {
-
-        $invoice = '';
-
-        // Generate random invoice
-        for ($i = 0; $i < $length; $i++) {
-            $invoice .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-
-        // Check if invoice exists within last 1 day
-        $stmt = $conn->prepare("
-            SELECT id 
-            FROM payments 
-            WHERE invoice_number = ?
-            AND payment_date >= NOW() - INTERVAL 1 DAY
-            LIMIT 1
-        ");
-
-        $stmt->bind_param("s", $invoice);
-        $stmt->execute();
-        $stmt->store_result();
-
-        $exists = $stmt->num_rows > 0;
-
-        $stmt->close();
-
-    } while ($exists);
-
-    return $invoice;
-}
-
-/* GENERATE NEW INVOICE NUMBER HERE */
-$invDteInv = generateInvoiceNumber($conn);
-
-$conn->close();
 
 ?>
 
@@ -600,7 +561,7 @@ $conn->close();
         </div>
         <div class="text-right text-sm hidden md:block">
           <h3 class="text-gray-700 font-semibold text-lg"><span id="chrct">INVOICE</span></h3>
-          <p><strong><span id="changeRec">Invoice :</span></strong> <span id="invoiceNumber" class="text-green-600"><?php echo $invDteInv ?></span></p>
+          <p><strong><span id="changeRec">Invoice :</span></strong><span id="changeRecWord"> INV</span><span id="changeDLWord">-dlink-</span> <span id="invoiceNumber" class="text-green-600"><?php echo $invDteInv ?></span></p>
           <p><strong>Date: </strong><span id="invoiceReceipt"><?php echo $incDte ?></span></p>
           <p id="invoiceDue"><strong>Package Expiry:</strong> <?php echo $invDteExp ?></p>
           <p id="paymentSuccessMsg"
@@ -1159,6 +1120,8 @@ function viewInvoice(invoiceNumber, paymentDate) {
   // Set invoice number
   document.getElementById("invoiceNumber").innerText = invoiceNumber; 
 document.getElementById("changeRec").innerText = "Transaction ID:";
+document.getElementById("changeRecWord").innerText = "";
+document.getElementById("paidStamp").classList.remove("hidden");
 document.getElementById("changeDLWord").innerText = "";
 document.getElementById("chrct").innerText = "VERIFIED";
 const paidDate = new Date(paymentDate);
@@ -1220,9 +1183,9 @@ if (head2) {
 
 function downloadInvoiceByNumber(invoiceNumber, paymentDate) {
     // Set invoice number
-    document.getElementById("invoiceModal").classList.remove("hidden");
   document.getElementById("invoiceNumber").innerText = invoiceNumber; 
 document.getElementById("changeRec").innerText = "Receipt:";
+document.getElementById("changeRecWord").innerText = " RCT";
 document.getElementById("chrct").innerText = "VERIFIED";
 const paidDate = new Date(paymentDate);
   document.getElementById("invoiceReceipt").innerText =
