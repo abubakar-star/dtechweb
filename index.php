@@ -1159,8 +1159,6 @@ function viewInvoice(invoiceNumber, paymentDate) {
   // Set invoice number
   document.getElementById("invoiceNumber").innerText = invoiceNumber; 
 document.getElementById("changeRec").innerText = "Transaction ID:";
-document.getElementById("changeRecWord").innerText = "";
-document.getElementById("paidStamp").classList.remove("hidden");
 document.getElementById("changeDLWord").innerText = "";
 document.getElementById("chrct").innerText = "VERIFIED";
 const paidDate = new Date(paymentDate);
