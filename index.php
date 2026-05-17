@@ -600,7 +600,7 @@ $conn->close();
         </div>
         <div class="text-right text-sm hidden md:block">
           <h3 class="text-gray-700 font-semibold text-lg"><span id="chrct">INVOICE</span></h3>
-          <p><strong><span id="changeRec">Invoice :</span></strong><span id="changeRecWord"> INV</span><span id="changeDLWord">-dlink-</span> <span id="invoiceNumber" class="text-green-600"><?php echo $invDteInv ?></span></p>
+          <p><strong><span id="changeRec">Invoice :</span></strong><span id="invoiceNumber" class="text-green-600"><?php echo $invDteInv ?></span></p>
           <p><strong>Date: </strong><span id="invoiceReceipt"><?php echo $incDte ?></span></p>
           <p id="invoiceDue"><strong>Package Expiry:</strong> <?php echo $invDteExp ?></p>
           <p id="paymentSuccessMsg"
