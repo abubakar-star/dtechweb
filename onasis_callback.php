@@ -274,6 +274,46 @@ $smsMessage =
         "From D-LINK NETWORK INC.";
 
     sendSMS($userPhone, $smsMessage);
+
+    /*
+=========================================
+SEND ADMIN PAYMENT ALERT SMS
+=========================================
+*/
+
+$adminPhone = null;
+
+$adminQuery = $conn->query(
+    "SELECT phone_number
+     FROM admin_contacts
+     LIMIT 1"
+);
+
+if ($adminQuery && $adminQuery->num_rows > 0) {
+
+    $admin = $adminQuery->fetch_assoc();
+
+    $adminPhone = trim($admin['phone_number']);
+
+    // Format admin number
+    if (substr($adminPhone, 0, 1) === "0") {
+        $adminPhone =
+            "254" . substr($adminPhone, 1);
+    }
+}
+
+if (!empty($adminPhone)) {
+
+    $adminMessage =
+        "PAYMENT RECEIVED\n" .
+        "User: $userName\n" .
+        "Amount: KES $amount\n" .
+        "Invoice: $invoiceNumber\n" .
+        "M-PESA Ref: $mpesa_receipt";
+
+    sendSMS($adminPhone, $adminMessage);
+}
+
 }
     file_put_contents(
         "onasis_log.txt",
