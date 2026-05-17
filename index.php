@@ -176,11 +176,52 @@ $stmt->bind_param("iss", $user_id, $ip_log, $user_agent);
 $stmt->execute();
 
 $stmt->close();
-$conn->close();
 
 $incDte = date('M d, Y');
 $invDteExp = date('M d, Y',strtotime('+30 days'));
-$invDteInv = date('Ymd');
+
+
+
+function generateInvoiceNumber($conn, $length = 12) {
+
+      $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    // Removed confusing characters like O, 0, I, 1
+
+    do {
+
+        $invoice = '';
+
+        // Generate random invoice
+        for ($i = 0; $i < $length; $i++) {
+            $invoice .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        // Check if invoice exists within last 1 day
+        $stmt = $conn->prepare("
+            SELECT id 
+            FROM payments 
+            WHERE invoice_number = ?
+            AND payment_date >= NOW() - INTERVAL 1 DAY
+            LIMIT 1
+        ");
+
+        $stmt->bind_param("s", $invoice);
+        $stmt->execute();
+        $stmt->store_result();
+
+        $exists = $stmt->num_rows > 0;
+
+        $stmt->close();
+
+    } while ($exists);
+
+    return $invoice;
+}
+
+/* GENERATE NEW INVOICE NUMBER HERE */
+$invDteInv = generateInvoiceNumber($conn);
+
+$conn->close();
 
 
 
