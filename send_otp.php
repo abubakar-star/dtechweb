@@ -69,44 +69,82 @@ if (substr($phone, 0, 1) === "0") {
 // SMS MESSAGE
 $message = "Your D-LINK NETWORK OTP is: $otp";
 
-
-// TALKSASA API
-$data = [
+// ---------------- CLIENT SMS ----------------
+$clientData = [
     "recipient" => $phone,
     "sender_id" => "TALKSASA",
     "message" => $message
 ];
 
-$ch = curl_init();
-
-curl_setopt(
-    $ch,
-    CURLOPT_URL,
-    "https://bulksms.talksasa.com/api/v3/sms/send"
+// ---------------- GET ADMIN NUMBER ----------------
+$adminQuery = $conn->query(
+    "SELECT phone_number FROM admin_contacts LIMIT 1"
 );
 
-curl_setopt($ch, CURLOPT_POST, true);
+$admin = $adminQuery->fetch_assoc();
 
-curl_setopt(
-    $ch,
-    CURLOPT_POSTFIELDS,
-    json_encode($data)
-);
+$adminPhone = $admin['phone_number'] ?? null;
 
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "Authorization: Bearer 3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b",
-    "Content-Type: application/json",
-    "Accept: application/json"
-]);
+// ---------------- ADMIN SMS ----------------
+$adminMessage =
+"OTP Request Alert\n"
+. "User: $username\n"
+. "Phone: $phone\n"
+. "OTP: $otp";
 
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+// SEND FUNCTION
+function sendSMS($data) {
 
-$response = curl_exec($ch);
+    $ch = curl_init();
 
-$error = curl_error($ch);
+    curl_setopt(
+        $ch,
+        CURLOPT_URL,
+        "https://bulksms.talksasa.com/api/v3/sms/send"
+    );
 
-curl_close($ch);
+    curl_setopt($ch, CURLOPT_POST, true);
 
+    curl_setopt(
+        $ch,
+        CURLOPT_POSTFIELDS,
+        json_encode($data)
+    );
+
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Bearer YOUR_API_KEY",
+        "Content-Type: application/json",
+        "Accept: application/json"
+    ]);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    $error = curl_error($ch);
+
+    curl_close($ch);
+
+    return [
+        "response" => $response,
+        "error" => $error
+    ];
+}
+
+// SEND TO CLIENT
+sendSMS($clientData);
+
+// SEND TO ADMIN
+if ($adminPhone) {
+
+    $adminData = [
+        "recipient" => $adminPhone,
+        "sender_id" => "TALKSASA",
+        "message" => $adminMessage
+    ];
+
+    sendSMS($adminData);
+}
 
 // DEBUGGING
 if ($error) {
