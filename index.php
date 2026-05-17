@@ -1220,9 +1220,9 @@ if (head2) {
 
 function downloadInvoiceByNumber(invoiceNumber, paymentDate) {
     // Set invoice number
+    document.getElementById("invoiceModal").classList.remove("hidden");
   document.getElementById("invoiceNumber").innerText = invoiceNumber; 
 document.getElementById("changeRec").innerText = "Receipt:";
-document.getElementById("changeRecWord").innerText = " RCT";
 document.getElementById("chrct").innerText = "VERIFIED";
 const paidDate = new Date(paymentDate);
   document.getElementById("invoiceReceipt").innerText =
