@@ -184,7 +184,7 @@ $invDteExp = date('M d, Y',strtotime('+30 days'));
 
 function generateInvoiceNumber($conn, $length = 12) {
 
-      $chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     // Removed confusing characters like O, 0, I, 1
 
     do {
