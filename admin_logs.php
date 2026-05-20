@@ -25,8 +25,7 @@ $result = mysqli_query($conn, "
     <div class="p-5 border-b">
 
         <h1 class="text-2xl font-bold text-gray-800">
-            DTECH System Logs
-        </h1>
+            DTECH System Logs </h1>
 
         <p class="text-gray-500 mt-1">
             Monitor activity, security and payments.
@@ -72,4 +71,68 @@ $result = mysqli_query($conn, "
                 $color = $colors[$log['log_level']] ?? 'gray';
 
                 ?>
+
+                <tr class="border-b hover:bg-gray-50 transition">
+
+                    <td class="p-4 text-sm text-gray-500">
+                        <?= $log['created_at'] ?>
+                    </td>
+
+                    <td class="p-4">
+
+                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
+                            <?= strtoupper($log['log_category']) ?>
+                        </span>
+
+                    </td>
+
+                    <td class="p-4">
+
+                        <div class="font-semibold text-gray-800">
+                            <?= htmlspecialchars($log['log_action']) ?>
+                        </div>
+
+                        <div class="text-sm text-gray-500">
+                            <?= htmlspecialchars($log['description']) ?>
+                        </div>
+
+                    </td>
+
+                    <td class="p-4">
+
+                        <span class="bg-<?= $color ?>-100 text-<?= $color ?>-700 px-3 py-1 rounded-full text-xs font-bold">
+                            <?= strtoupper($log['log_level']) ?>
+                        </span>
+
+                    </td>
+
+                    <td class="p-4 text-sm">
+                        <?= $log['ip_address'] ?>
+                    </td>
+
+                    <td class="p-4 text-sm">
+                        <?= $log['browser'] ?>
+                    </td>
+
+                    <td class="p-4 text-sm">
+                        <?= $log['operating_system'] ?>
+                    </td>
+
+                    <td class="p-4 text-sm">
+                        <?= $log['device_type'] ?>
+                    </td>
+
+                </tr>
+
+            <?php endwhile; ?>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
 </html>
