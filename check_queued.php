@@ -1,4 +1,5 @@
 <?php
+include 'includes/logger.php';
 
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
@@ -7,6 +8,23 @@ $username = $_ENV['MYSQLUSER'];
 $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
+
+if ($conn->connect_error) {
+
+    createLog(
+        $conn,
+        null,
+        null,
+        'database',
+        'database_connection_failed',
+        'Database connection failed in check_queued.php',
+        'critical'
+    );
+
+    die(json_encode([
+        "latest_id" => 0
+    ]));
+}
 
 $res = $conn->query("
     SELECT id, username 
@@ -18,6 +36,17 @@ $res = $conn->query("
 
 if ($res && $res->num_rows > 0) {
     $row = $res->fetch_assoc();
+
+    createLog(
+    $conn,
+    $row['id'],
+    null,
+    'queue',
+    'queued_user_detected',
+    'Queued user detected: '.$row['username'],
+    'info'
+);
+
     echo json_encode([
         "latest_id" => (int)$row['id'],
         "username"  => $row['username']
