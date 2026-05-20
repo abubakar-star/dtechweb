@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+include 'includes/logger.php';
+
 // Detect Android devices
 $isAndroid = preg_match('/Android/i', $_SERVER['HTTP_USER_AGENT']);
 
@@ -77,6 +79,15 @@ $password = $_ENV['MYSQLPASSWORD'];
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['username'] = $row['username'];
 
+                createLog(
+    $conn,
+    'authentication',
+    'User Login',
+    'User logged in successfully',
+    'success',
+    $row['id']
+);
+
                 // ✅ Remember Me feature
                 if ($remember) {
                     $token = bin2hex(random_bytes(16)); // Secure random token
@@ -96,10 +107,26 @@ $password = $_ENV['MYSQLPASSWORD'];
                 header("Location: index.php");
                 exit();
             } else {
+              createLog(
+    $conn,
+    'security',
+    'Failed Login',
+    'Incorrect password entered',
+    'warning'
+);
+
                 $errorMessage = "Invalid password";
                 $attempt = 1;
             }
         } else {
+          createLog(
+    $conn,
+    'security',
+    'Failed Login',
+    'Username does not exist',
+    'warning'
+);
+
             $errorMessage = "Wrong credentials";
             $attempt = 1;
         }
