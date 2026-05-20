@@ -2,6 +2,8 @@
 
 session_start();
 
+include 'includes/logger.php';
+
 if(
 !isset($_SESSION['otp_verified'])
 ||
@@ -36,7 +38,48 @@ $password,
 $username
 );
 
-$stmt->execute();
+if($stmt->execute()){
+
+    // AUTO LOGIN
+    $get = $conn->prepare(
+    "SELECT id, username FROM users WHERE username=?"
+    );
+
+    $get->bind_param("s", $username);
+
+    $get->execute();
+
+    $user = $get->get_result()->fetch_assoc();
+
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['username'] = $user['username'];
+
+    createLog(
+        $conn,
+        $user['id'],
+        null,
+        'security',
+        'password_changed',
+        'User changed account password',
+        'success'
+    );
+
+    echo "success";
+
+}else{
+
+    createLog(
+        $conn,
+        null,
+        null,
+        'security',
+        'password_change_failed',
+        'Failed password change attempt for username: '.$username,
+        'error'
+    );
+
+    echo "failed";
+}
 
 
 // AUTO LOGIN
@@ -52,5 +95,15 @@ $user = $get->get_result()->fetch_assoc();
 
 $_SESSION['user_id'] = $user['id'];
 $_SESSION['username'] = $user['username'];
+
+createLog(
+    $conn,
+    $user['id'],
+    null,
+    'security',
+    'password_changed',
+    'User changed account password',
+    'success'
+);
 
 echo "success";
