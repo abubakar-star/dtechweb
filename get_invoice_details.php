@@ -1,12 +1,26 @@
 <?php
 // get_invoice_details.php
 session_start();
+
+include 'includes/logger.php';
+
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        null,
+        null,
+        null,
+        'security',
+        'unauthorized_invoice_access',
+        'Unauthorized access attempt to get_invoice_details.php',
+        'warning'
+    );
+
     http_response_code(403);
     echo json_encode(["error" => "Unauthorized"]);
     exit;
 }
-
+   
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -15,13 +29,29 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+
+    error_log(
+        "Database connection failed in get_invoice_details.php"
+    );
+
+    die("Database connection failed");
 }
 
 $user_id = $_SESSION['user_id'];
 $payment_date = $_GET['payment_date'] ?? null;
 
 if (!$payment_date) {
+
+    createLog(
+        $conn,
+        $_SESSION['user_id'],
+        null,
+        'invoice',
+        'missing_payment_date',
+        'Invoice request attempted without payment date',
+        'warning'
+    );
+
     echo json_encode(["error" => "Payment date required"]);
     exit;
 }
