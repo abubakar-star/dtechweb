@@ -85,7 +85,7 @@ function createLog(
             browser,
             operating_system,
             device_type
-}
+    )
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
