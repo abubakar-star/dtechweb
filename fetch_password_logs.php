@@ -1,8 +1,22 @@
 <?php
 session_start();
+
+include 'includes/logger.php';
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        $conn ?? null,
+        null,
+        null,
+        'security',
+        'unauthorized_password_log_access',
+        'Unauthorized access attempt to fetch_password_logs.php',
+        'warning'
+    );
+
     echo json_encode([]);
     exit;
 }
@@ -14,6 +28,11 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
+
+    error_log(
+        "Database connection failed in fetch_password_logs.php"
+    );
+
     echo json_encode([]);
     exit;
 }
@@ -53,7 +72,18 @@ while ($row = $res->fetch_assoc()) {
             $updateSql = "UPDATE users SET router_password = ? WHERE id = ?";
             $updateStmt = $conn->prepare($updateSql);
             $updateStmt->bind_param("si", $passRow['new_password'], $_SESSION['user_id']);
-            $updateStmt->execute();
+            if($updateStmt->execute()){
+
+    createLog(
+        $conn,
+        $_SESSION['user_id'],
+        null,
+        'router',
+        'router_password_synced',
+        'Router password synced successfully',
+        'success'
+    );
+}
         }
     }
 }
