@@ -2,6 +2,8 @@
 
 http_response_code(200);
 
+include 'includes/logger.php';
+
 /*
 =========================================
 SEND SMS USING TALKSASA API
@@ -80,6 +82,14 @@ file_put_contents(
 
 $data = json_decode($raw, true);
 
+createLog(
+    $conn,
+    'payment',
+    'Onasis callback received',
+    'Incoming callback received from payment gateway',
+    'info'
+);
+
 /* SUCCESS PAYMENT */
 if (
     isset($data['status']) &&
@@ -88,6 +98,14 @@ if (
 ) {
 
     $reference = $data['reference'];
+
+    createLog(
+    $conn,
+    'payment',
+    'Payment success callback',
+    'Reference: ' . $reference,
+    'success'
+);
 
     $mpesa_receipt = isset($data['mpesa_receipt'])
         ? $data['mpesa_receipt']
@@ -115,6 +133,28 @@ if (
 
     $stmt->execute();
 
+    if ($stmt->affected_rows > 0) {
+
+    createLog(
+        $conn,
+        'payment',
+        'Payment updated',
+        'Payment marked completed: ' . $reference,
+        'success'
+    );
+
+} else {
+
+    createLog(
+        $conn,
+        'payment',
+        'Payment update failed',
+        'No payment record updated for: ' . $reference,
+        'warning'
+    );
+
+}
+
     /*
     =========================================
     FETCH USER ID FROM PAYMENTS TABLE
@@ -138,6 +178,15 @@ if (
         $payment = $payRes->fetch_assoc();
 
         $userId = $payment['user_id'];
+
+        createLog(
+    $conn,
+    'payment',
+    'Payment linked to user',
+    'Reference: ' . $reference,
+    'info',
+    $userId
+);
 
         $invoiceNumber = $payment['invoice_number'];
 
@@ -229,6 +278,15 @@ if (substr($userPhone, 0, 1) === "0") {
                      WHERE id = $userId"
                 );
 
+                createLog(
+    $conn,
+    'subscription',
+    'Subscription renewed',
+    'Existing subscription extended by 30 days',
+    'success',
+    $userId
+);
+
             }
 
             /*
@@ -246,6 +304,15 @@ if (substr($userPhone, 0, 1) === "0") {
                         created_at = NOW()
                      WHERE id = $userId"
                 );
+
+                createLog(
+    $conn,
+    'subscription',
+    'Subscription activated',
+    'Expired subscription reactivated',
+    'success',
+    $userId
+);
 
             }
 
@@ -274,6 +341,15 @@ $smsMessage =
         "From D-LINK NETWORK INC.";
 
     sendSMS($userPhone, $smsMessage);
+
+    createLog(
+    $conn,
+    'notification',
+    'Customer SMS sent',
+    'Payment confirmation SMS sent',
+    'info',
+    $userId
+);
 
     /*
 =========================================
@@ -312,6 +388,15 @@ if (!empty($adminPhone)) {
         "M-PESA Ref: $mpesa_receipt";
 
     sendSMS($adminPhone, $adminMessage);
+
+    createLog(
+    $conn,
+    'notification',
+    'Admin SMS sent',
+    'Admin payment alert sent',
+    'info',
+    $userId
+);
 }
 
 }
@@ -330,6 +415,17 @@ if (
 ) {
 
     $reference = $data['reference'];
+    
+    createLog(
+    $conn,
+    'payment',
+    'Payment failed',
+    'Reference: ' .
+    $reference .
+    ' | Reason: ' .
+    $failure_reason,
+    'error'
+);
 
     $failure_reason = isset($data['result_desc'])
         ? $data['result_desc']
