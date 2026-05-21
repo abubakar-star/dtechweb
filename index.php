@@ -1,11 +1,27 @@
 <?php
 session_start();
+
+require 'db.php';
+
+include 'includes/logger.php';
+
 if (!isset($_SESSION['user_id'])) {
+
+createLog(
+        null,
+        null,
+        $_SERVER['REMOTE_ADDR'],
+        'security',
+        'unauthorized_dashboard_access',
+        'Unauthorized attempt to access dashboard',
+        'warning'
+    );
+
     header("Location: login.php");
     exit();
 }
 
-require 'db.php';
+
 // Check if user has an active subscription
 $stmt = $conn->prepare("
     SELECT COUNT(*) 
@@ -137,6 +153,22 @@ $stmt->execute();
 $paymentHistoryResult = $stmt->get_result();
 $payments = $paymentHistoryResult->fetch_all(MYSQLI_ASSOC);
 
+foreach ($payments as $payment) {
+
+    if (!in_array($payment['status'], ['completed', 'pending', 'failed', 'cancelled'])) {
+
+        createLog(
+            $_SESSION['user_id'],
+            $payment['transaction_id'] ?? null,
+            $_SERVER['REMOTE_ADDR'],
+            'security',
+            'invalid_payment_status',
+            'Unknown payment status detected: ' . $payment['status'],
+            'warning'
+        );
+    }
+}
+
 
 
 date_default_timezone_set('Africa/Nairobi'); // set your timezone
@@ -167,15 +199,6 @@ $user_id = $_SESSION['user_id'];
 $ip_log = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
 $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN';
 
-// 1. Increment visits counter
-$conn->query("UPDATE users SET visit_count = visit_count + 1 WHERE id = $user_id");
-
-// 2. Log the visit in user_visits table
-$stmt = $conn->prepare("INSERT INTO user_visits (user_id, ip_address, user_agent) VALUES (?, ?, ?)");
-$stmt->bind_param("iss", $user_id, $ip_log, $user_agent);
-$stmt->execute();
-
-$stmt->close();
 
 $incDte = date('M d, Y');
 $invDteExp = date('M d, Y',strtotime('+30 days'));
