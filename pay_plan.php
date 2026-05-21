@@ -1,6 +1,18 @@
 <?php
 session_start();
+
+include 'includes/logger.php';
+
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        $conn,
+        'security',
+        'Unauthorized pay plan access',
+        'Attempt to access pay_plan.php without login',
+        'warning'
+    );
+
     header("Location: login.php");
     exit();
 }
@@ -15,6 +27,15 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
+
+    createLog(
+        $conn,
+        'database',
+        'Database connection failed',
+        $conn->connect_error,
+        'critical'
+    );
+
     die("Connection failed: " . $conn->connect_error);
 }
 
@@ -26,6 +47,16 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
 $fullName = trim($user['first_name'] . ' ' . $user['last_name']);
+
+createLog(
+    $conn,
+    'payment',
+    'Plan payment page viewed',
+    'User opened custom plan payment page',
+    'info',
+    $_SESSION['user_id']
+);
+
 $phone = $user['phone_number'];
 $email = $user['email'];
 
@@ -126,6 +157,22 @@ $payments = $paymentHistoryResult->fetch_all(MYSQLI_ASSOC);
 
 
 $pack_price = $_GET['pack_price'] ?? null;
+
+if (
+    empty($pack_price) ||
+    !is_numeric(preg_replace('/[^0-9]/', '', $pack_price))
+) {
+
+    createLog(
+        $conn,
+        'security',
+        'Invalid package price',
+        'Invalid pack_price received: ' . $pack_price,
+        'warning',
+        $_SESSION['user_id']
+    );
+}
+
 $priceNumeric = preg_replace('/[^0-9]/', '', $pack_price); // "2000"
 
 
