@@ -1,6 +1,17 @@
 <?php
 session_start();
+include 'includes/logger.php';
+
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        $conn,
+        'security',
+        'Unauthorized payment page access',
+        'Attempt to access pay.php without login',
+        'warning'
+    );
+
     header("Location: login.php");
     exit();
 }
@@ -14,6 +25,15 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
+
+    createLog(
+        $conn,
+        'database',
+        'Database connection failed',
+        $conn->connect_error,
+        'critical'
+    );
+
     die("Connection failed: " . $conn->connect_error);
 }
 
@@ -24,7 +44,30 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
+if (!$user) {
+
+    createLog(
+        $conn,
+        'payment',
+        'User lookup failed',
+        'No user data found while loading payment page',
+        'error',
+        $_SESSION['user_id']
+    );
+
+}
+
 $fullName = trim($user['first_name'] . ' ' . $user['last_name']);
+
+createLog(
+    $conn,
+    'payment',
+    'Payment page viewed',
+    'User opened payment page',
+    'info',
+    $_SESSION['user_id']
+);
+
 $phone = $user['phone_number'];
 $email = $user['email'];
 
