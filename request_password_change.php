@@ -1,8 +1,20 @@
 <?php
 session_start();
+
+include 'includes/logger.php';
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
+
+createLog(
+    $conn,
+    'security',
+    'Unauthorized password request',
+    'Attempt to request router password change without login',
+    'warning'
+);
+
     echo json_encode(['success' => false, 'message' => 'Not logged in']);
     exit;
 }
@@ -15,12 +27,30 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
+
+createLog(
+    $conn,
+    'database',
+    'Database connection failed',
+    $conn->connect_error,
+    'critical'
+);
+
     echo json_encode(['success' => false, 'message' => 'DB error']);
     exit;
 }
 
 $newPassword = $_POST['new_password'] ?? '';
 if (strlen($newPassword) < 4) {
+    createLog(
+    $conn,
+    'security',
+    'Weak password request',
+    'Password change request rejected: too short',
+    'warning',
+    $_SESSION['user_id']
+);
+
     echo json_encode(['success' => false, 'message' => 'Password too short']);
     exit;
 }
@@ -40,6 +70,15 @@ $stmt->bind_param("iis", $_SESSION['user_id'], $router_id, $newPassword);
 $stmt->execute();
 
 $request_id = $stmt->insert_id;
+
+createLog(
+    $conn,
+    'account',
+    'Router password change requested',
+    'Request ID: ' . $request_id,
+    'info',
+    $_SESSION['user_id']
+);
 
 /* 3️⃣ GET USER DETAILS (FOR SMS) */
 $stmt = $conn->prepare("SELECT first_name, phone_number FROM users WHERE id = ?");
@@ -64,7 +103,31 @@ curl_setopt_array($ch, [
     CURLOPT_TIMEOUT        => 3   // VERY IMPORTANT: do not hang site
 ]);
 
-curl_exec($ch);
+$response = curl_exec($ch);
+
+if(curl_errno($ch)){
+
+    createLog(
+        $conn,
+        'integration',
+        'Password request SMS failed',
+        curl_error($ch),
+        'error',
+        $_SESSION['user_id']
+    );
+
+} else {
+
+    createLog(
+        $conn,
+        'integration',
+        'Password request SMS sent',
+        'Request ID: ' . $request_id,
+        'success',
+        $_SESSION['user_id']
+    );
+
+}
 curl_close($ch);
 
 /* 5️⃣ DONE */
