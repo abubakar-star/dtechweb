@@ -4,6 +4,7 @@ session_start();
 header('Content-Type: application/json');
 
 include 'onasis_config.php';
+include 'includes/logger.php';
 
 /* =========================
    DB CONNECTION
@@ -28,6 +29,15 @@ if ($conn->connect_error) {
    SESSION CHECK
 ========================= */
 if (!isset($_SESSION['user_id'])) {
+
+createLog(
+    $conn,
+    'security',
+    'Unauthorized payment initialization',
+    'Attempt to initialize STK without login session',
+    'warning'
+);
+
     echo json_encode([
         "success" => false,
         "message" => "User not logged in"
@@ -59,6 +69,16 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows == 0) {
+
+createLog(
+    $conn,
+    'payment',
+    'User lookup failed',
+    'No user found during STK initialization',
+    'error',
+    $user_id
+);
+
     echo json_encode([
         "success" => false,
         "message" => "User not found"
@@ -96,6 +116,16 @@ $insert->bind_param(
 
 $insert->execute();
 
+createLog(
+    $conn,
+    'payment',
+    'Pending payment created',
+    'Reference: ' . $reference .
+    ' | Amount: ' . $amount,
+    'info',
+    $user_id
+);
+
 /* =========================
    PREPARE STK REQUEST
 ========================= */
@@ -130,6 +160,16 @@ $response = curl_exec($ch);
    CURL ERROR CHECK
 ========================= */
 if ($response === false) {
+
+createLog(
+    $conn,
+    'payment',
+    'STK API connection failed',
+    curl_error($ch),
+    'error',
+    $user_id
+);
+
     echo json_encode([
         "success" => false,
         "curl_error" => curl_error($ch),
@@ -161,6 +201,15 @@ file_put_contents(
 ========================= */
 if ($httpCode == 200 && isset($result['status'])) {
 
+createLog(
+    $conn,
+    'payment',
+    'STK push sent',
+    'Reference: ' . $reference,
+    'success',
+    $user_id
+);
+
     echo json_encode([
         "success" => true,
         "http_code" => $httpCode,
@@ -170,6 +219,15 @@ if ($httpCode == 200 && isset($result['status'])) {
     ]);
 
 } else {
+
+createLog(
+    $conn,
+    'payment',
+    'Payment Server Unreachable',
+    json_encode($result),
+    'error',
+    $user_id
+);
 
     echo json_encode([
         "success" => false,
