@@ -1,8 +1,18 @@
 <?php
 session_start();
-
+require_once 'includes/logger.php';
 // Redirect if user not logged in
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        $conn,
+        'security',
+        'Unauthorized support access',
+        'Someone tried to access support.php without logging in',
+        'warning',
+        null
+    );
+
     header("Location: login.php");
     exit();
 }
@@ -11,6 +21,15 @@ if (!isset($_SESSION['user_id'])) {
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+createLog(
+    $conn,
+    'support',
+    'Support page opened',
+    'User opened support.php',
+    'info',
+    $_SESSION['user_id']
+);
 ?>
 <!DOCTYPE html>
 <html lang="en">
