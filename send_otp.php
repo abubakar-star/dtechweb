@@ -2,6 +2,8 @@
 
 session_start();
 
+include 'includes/logger.php';
+
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -11,6 +13,15 @@ $dbpass = $_ENV['MYSQLPASSWORD'];
 $conn = new mysqli($host, $dbuser, $dbpass, $dbname, $port);
 
 if ($conn->connect_error) {
+
+    createLog(
+        $conn,
+        'database',
+        'connection_failed',
+        'MySQL connection failed in send_otp.php',
+        'critical'
+    );
+
     die("Database connection failed");
 }
 
@@ -26,6 +37,15 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows !== 1) {
+
+    createLog(
+        $conn,
+        'otp',
+        'user_not_found',
+        "OTP request failed for username: $username",
+        'warning'
+    );
+
     die("User not found");
 }
 
@@ -55,7 +75,14 @@ $update->bind_param(
     $user['id']
 );
 
-$update->execute();
+createLog(
+    $conn,
+    'otp',
+    'otp_generated',
+    "OTP generated for user ID {$user['id']}",
+    'info',
+    $user['id']
+);
 
 
 // FORMAT PHONE
@@ -138,8 +165,26 @@ function sendSMS($data) {
 $clientResult = sendSMS($clientData);
 
 if ($clientResult['error']) {
+
+    createLog(
+        $conn,
+        'sms',
+        'client_sms_failed',
+        "OTP SMS failed for user ID {$user['id']}: {$clientResult['error']}",
+        'error',
+        $user['id']
+    );
+
     die("cURL Error: " . $clientResult['error']);
 }
+createLog(
+    $conn,
+    'sms',
+    'client_sms_sent',
+    "OTP SMS sent successfully to user ID {$user['id']}",
+    'info',
+    $user['id']
+);
 
 // SEND TO ADMIN
 if ($adminPhone) {
@@ -153,6 +198,15 @@ if ($adminPhone) {
     $adminResult = sendSMS($adminData);
 
 if ($adminResult['error']) {
+
+    createLog(
+        $conn,
+        'sms',
+        'admin_sms_failed',
+        "Admin OTP alert SMS failed: {$adminResult['error']}",
+        'error'
+    );
+
     die("Admin SMS Error: " . $adminResult['error']);
 }
 }
@@ -163,5 +217,14 @@ $maskedPhone =
 substr($phone, 0, 4)
 . "****"
 . substr($phone, -3);
+
+createLog(
+    $conn,
+    'otp',
+    'otp_sent',
+    "OTP successfully sent for user ID {$user['id']}",
+    'info',
+    $user['id']
+);
 
 echo "success|" . $maskedPhone;
