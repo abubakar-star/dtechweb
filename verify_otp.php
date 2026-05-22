@@ -2,6 +2,8 @@
 
 session_start();
 
+require_once 'includes/logger.php';
+
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -31,9 +33,27 @@ if($result->num_rows === 1){
     $_SESSION['otp_verified'] = true;
     $_SESSION['reset_user'] = $username;
 
+    createLog(
+        $conn,
+        'security',
+        'OTP verification successful',
+        'User successfully verified OTP for password reset: ' . $username,
+        'info',
+        null
+    );
+
     echo "success";
 
 }else{
+
+    createLog(
+        $conn,
+        'security',
+        'Invalid OTP attempt',
+        'Failed OTP verification attempt for username: ' . $username,
+        'warning',
+        null
+    );
 
     echo "invalid";
 
