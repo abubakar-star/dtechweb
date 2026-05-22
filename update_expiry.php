@@ -5,6 +5,7 @@
 // ===============================
 
 date_default_timezone_set("Africa/Nairobi"); // Kenya time zone
+require_once 'includes/logger.php';
 
 // Database credentials
 $host = $_ENV['MYSQLHOST'];
@@ -26,10 +27,38 @@ if ($conn->connect_error) {
 // ===============================
 
 // Assuming each subscription is 30 days
-$conn->query("
+$query = "
     UPDATE users
     SET status = 'inactive'
     WHERE status = 'active'
       AND DATE_ADD(created_at, INTERVAL 30 DAY) < CURDATE()
-");
+";
+
+$result = $conn->query($query);
+
+if ($result) {
+
+    $affected = $conn->affected_rows;
+
+    createLog(
+        $conn,
+        'system',
+        'Expiry update completed',
+        'Automatic expiry checker deactivated ' . $affected . ' user(s)',
+        'info',
+        null
+    );
+
+} else {
+
+    createLog(
+        $conn,
+        'system',
+        'Expiry update failed',
+        'Failed to update expired users: ' . $conn->error,
+        'error',
+        null
+    );
+
+}
 ?>
