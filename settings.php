@@ -1,11 +1,21 @@
 <?php
 // settings.php
 session_start();
+require_once 'includes/logger.php';
 
 // For local testing only you can uncomment the following line and set a user id.
 // $_SESSION['user_id'] = 1;
 
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        null,
+        'authentication',
+        'unauthorized_settings_access',
+        'Guest attempted to access settings.php',
+        'warning'
+    );
+
     header("Location: login.php");
     exit();
 }
@@ -22,6 +32,16 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
+
+    createLog(
+        $conn,
+        'database',
+        'connection_failed',
+        'Database connection failed in settings.php',
+        'critical',
+        $user_id
+    );
+
     die("DB Connection failed: " . $conn->connect_error);
 }
 
@@ -43,8 +63,18 @@ while ($r = $colRes->fetch_assoc()) {
 $colStmt->close();
 
 if ($pwd_col === null) {
-    // fallback: try to SELECT both (may error in some DBs) — but better to fail clearly
+
+    createLog(
+        $conn,
+        'database',
+        'missing_password_column',
+        'No password column found in users table',
+        'critical',
+        $user_id
+    );
+
     $conn->close();
+
     die("No password column ('password' or 'user_password') found in users table.");
 }
 
@@ -52,7 +82,18 @@ if ($pwd_col === null) {
 $sql = "SELECT id, username, first_name, last_name, phone_number, {$pwd_col} AS pwd FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
+
+    createLog(
+        $conn,
+        'database',
+        'prepare_failed',
+        "Settings query prepare failed: {$conn->error}",
+        'error',
+        $user_id
+    );
+
     $conn->close();
+
     die("Prepare failed: " . $conn->error);
 }
 $stmt->bind_param("i", $user_id);
@@ -85,6 +126,16 @@ if ($hour >= 5 && $hour < 12) {
 }
 
 if (!$user) {
+
+    createLog(
+        $conn,
+        'user',
+        'settings_user_not_found',
+        "User ID {$user_id} not found while opening settings",
+        'warning',
+        $user_id
+    );
+
     die("User not found.");
 }
 
