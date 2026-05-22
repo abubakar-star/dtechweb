@@ -1,6 +1,9 @@
 <?php
 session_start();
+
+require_once 'db.php';
 require_once 'includes/logger.php';
+
 // Redirect if user not logged in
 if (!isset($_SESSION['user_id'])) {
 
