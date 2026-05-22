@@ -2,6 +2,8 @@
 
 session_start();
 
+require_once 'includes/logger.php';
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -68,6 +70,15 @@ if (!$user) {
 /* Verify password */
 if ($password !== $user['password']) {
 
+    createLog(
+        $conn,
+        'security',
+        'Incorrect password during phone update',
+        'User entered incorrect password while attempting to update phone number',
+        'warning',
+        $user_id
+    );
+
     echo json_encode([
         "status" => "error",
         "message" => "Incorrect password"
@@ -89,7 +100,35 @@ $stmt->bind_param(
     $user_id
 );
 
-$stmt->execute();
+$updated = $stmt->execute();
+
+if (!$updated) {
+
+    createLog(
+        $conn,
+        'account',
+        'Phone update failed',
+        'Database failed to update phone number: ' . $conn->error,
+        'error',
+        $user_id
+    );
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Failed to update phone number"
+    ]);
+
+    exit;
+}
+
+createLog(
+    $conn,
+    'account',
+    'Phone number updated',
+    'User successfully updated phone number',
+    'info',
+    $user_id
+);
 
 echo json_encode([
     "status" => "success"
