@@ -1,11 +1,28 @@
 <?php
 // update_password.php
 session_start();
+
+require_once 'includes/logger.php';
+
 header('Content-Type: application/json');
 
 // Ensure user is logged in via session
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Unauthorized. Please log in.']);
+
+    createLog(
+        $conn ?? null,
+        'security',
+        'Unauthorized password update attempt',
+        'Someone attempted to access update_password.php without logging in',
+        'warning',
+        null
+    );
+
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Unauthorized. Please log in.'
+    ]);
+
     exit();
 }
 
@@ -52,7 +69,21 @@ $stmt->close();
 
 // Compare plaintext passwords
 if ($currentPassword !== $dbPassword) {
-    echo json_encode(['status' => 'error', 'message' => 'Current password is incorrect.']);
+
+    createLog(
+        $conn,
+        'security',
+        'Incorrect current password',
+        'User attempted password change with incorrect current password',
+        'warning',
+        $user_id
+    );
+
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Current password is incorrect.'
+    ]);
+
     exit();
 }
 
@@ -74,7 +105,21 @@ $ok = $updateStmt->execute();
 $updateStmt->close();
 
 if (!$ok) {
-    echo json_encode(['status' => 'error', 'message' => 'Failed to update password.']);
+
+    createLog(
+        $conn,
+        'security',
+        'Password update failed',
+        'Database failed to update user password: ' . $conn->error,
+        'error',
+        $user_id
+    );
+
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Failed to update password.'
+    ]);
+
     exit();
 }
 
@@ -87,6 +132,16 @@ if ($insertStmt) {
     $insertStmt->close();
 }
 // else: it's okay if user_passwords table doesn't exist; we silently ignore
+
+
+createLog(
+    $conn,
+    'security',
+    'Password updated',
+    'User successfully updated account password',
+    'info',
+    $user_id
+);
 
 $conn->close();
 
