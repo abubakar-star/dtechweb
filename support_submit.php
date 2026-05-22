@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 
+require_once 'includes/logger.php';
+
 // Database connection
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
@@ -23,14 +25,54 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt = $conn->prepare("INSERT INTO support (user_id, title, message, created_at) VALUES (?, ?, ?, NOW())");
         $stmt->bind_param("iss", $user_id, $title, $message);
 
-        if ($stmt->execute()) {
-            echo json_encode(["status" => "success", "message" => "Your report has been submitted successfully!"]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Failed to submit report."]);
-        }
+       if ($stmt->execute()) {
+
+    createLog(
+        $conn,
+        'support',
+        'Support ticket submitted',
+        'User submitted support request: ' . $title,
+        'info',
+        $user_id
+    );
+
+    echo json_encode([
+        "status" => "success",
+        "message" => "Your report has been submitted successfully!"
+    ]);
+
+} else {
+
+    createLog(
+        $conn,
+        'support',
+        'Support ticket submission failed',
+        'Database failed to save support request: ' . $conn->error,
+        'error',
+        $user_id
+    );
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Failed to submit report."
+    ]);
+}
         $stmt->close();
-    } else {
-        echo json_encode(["status" => "error", "message" => "Please fill in all fields."]);
-    }
+   } else {
+
+    createLog(
+        $conn,
+        'support',
+        'Incomplete support submission',
+        'User attempted to submit support form with missing fields',
+        'warning',
+        $user_id
+    );
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Please fill in all fields."
+    ]);
+}
 }
 $conn->close();
