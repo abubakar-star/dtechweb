@@ -1,6 +1,18 @@
 <?php
 session_start();
+
+require_once 'includes/logger.php';
+
 if (!isset($_SESSION['user_id'])) {
+
+    createLog(
+        null,
+        'authentication',
+        'unauthorized_subscription_access',
+        'Guest attempted to access subscription.php',
+        'warning'
+    );
+
     header("Location: login.php");
     exit();
 }
@@ -13,6 +25,16 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
+
+    createLog(
+        $conn,
+        'database',
+        'connection_failed',
+        'Database connection failed in subscription.php',
+        'critical',
+        $_SESSION['user_id']
+    );
+
     die("Connection failed: " . $conn->connect_error);
 }
 
@@ -63,7 +85,17 @@ if (!$hasPaid) {
 // Fetch all available packages from the database
 $packages = [];
 $pkg_sql = "SELECT id, package_name, speed, price FROM packages WHERE status = 'active'";
-$pkg_result = $conn->query($pkg_sql);
+if (!$pkg_result) {
+
+    createLog(
+        $conn,
+        'database',
+        'package_query_failed',
+        "Failed to fetch active packages: {$conn->error}",
+        'error',
+        $_SESSION['user_id']
+    );
+}
 if ($pkg_result && $pkg_result->num_rows > 0) {
     while ($row = $pkg_result->fetch_assoc()) {
         $packages[] = $row;
@@ -76,6 +108,20 @@ $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
+
+if (!$user) {
+
+    createLog(
+        $conn,
+        'user',
+        'user_details_missing',
+        "User details not found in subscription.php for user ID {$_SESSION['user_id']}",
+        'warning',
+        $_SESSION['user_id']
+    );
+
+    die("User not found.");
+}
 
 $fullName = trim($user['first_name'] . ' ' . $user['last_name']);
 $phone = $user['phone_number'];
@@ -101,6 +147,18 @@ $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $result = $stmt->get_result();
 $subscription = $result->fetch_assoc();
+
+if (!$subscription) {
+
+    createLog(
+        $conn,
+        'subscription',
+        'subscription_not_found',
+        "Subscription details missing for user ID {$_SESSION['user_id']}",
+        'warning',
+        $_SESSION['user_id']
+    );
+}
 
 $speed = $subscription['speed'] ?? 'N/A';
 $price = isset($subscription['price']) ? 'KES ' . number_format($subscription['price'], 0) : 'N/A';
