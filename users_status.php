@@ -5,6 +5,8 @@
 // ===============================
 date_default_timezone_set("Africa/Nairobi");
 
+require_once 'includes/logger.php';
+
 // ===============================
 // DB CONNECTION
 // ===============================
@@ -30,7 +32,33 @@ $expireSql = "
     AND DATE_ADD(created_at, INTERVAL 30 DAY) < NOW()
 ";
 
-$conn->query($expireSql);
+$expireResult = $conn->query($expireSql);
+
+if ($expireResult) {
+
+    $affected = $conn->affected_rows;
+
+    createLog(
+        $conn,
+        'system',
+        'Automatic expiry check completed',
+        'System marked ' . $affected . ' user(s) as inactive',
+        'info',
+        null
+    );
+
+} else {
+
+    createLog(
+        $conn,
+        'system',
+        'Automatic expiry check failed',
+        'Failed to update expired users: ' . $conn->error,
+        'error',
+        null
+    );
+
+}
 
 
 // ===============================
@@ -93,14 +121,51 @@ if(curl_errno($ch)){
 }
                 curl_close($ch);
 
+                createLog(
+    $conn,
+    'account',
+    'User activated',
+    'Admin activated queued user: ' . $user['username'],
+    'info',
+    $userId
+);
+
                 $message = "✅ User ID $userId activated successfully! " . $message;
             } else {
+
+            createLog(
+    $conn,
+    'account',
+    'User activation failed',
+    'Failed to activate user ID ' . $userId . ': ' . $conn->error,
+    'error',
+    $userId
+);
+
                 $message = "❌ Failed to activate user ID $userId: " . $conn->error;
             }
         } else {
+
+        createLog(
+    $conn,
+    'account',
+    'Invalid activation attempt',
+    'Attempted to activate user not in queued state: ' . $user['username'],
+    'warning',
+    $userId
+);
+
             $message = "⚠️ User ID $userId is already active or expired.";
         }
     } else {
+        createLog(
+    $conn,
+    'account',
+    'Activation failed - user not found',
+    'Attempted to activate non-existent user ID ' . $userId,
+    'warning',
+    $userId
+);
         $message = "❌ User not found.";
     }
 }
