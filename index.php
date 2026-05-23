@@ -9,6 +9,8 @@ if (!isset($_SESSION['user_id'])) {
 
 createLog(
     $conn,
+    null,
+    null,
     'security',
     'unauthorized_dashboard_access',
     'Unauthorized attempt to access dashboard',
@@ -157,11 +159,12 @@ foreach ($payments as $payment) {
 
        createLog(
     $conn,
+    $_SESSION['user_id'],
+    null,
     'security',
     'invalid_payment_status',
     'Unknown payment status detected: ' . $payment['status'],
-    'warning',
-    $_SESSION['user_id']
+    'warning'
 );
     }
 }
