@@ -56,12 +56,11 @@ if($stmt->execute()){
 
     createLog(
         $conn,
-        $user['id'],
-        null,
         'security',
         'password_changed',
         'User changed account password',
-        'success'
+        'success',
+        $user['id']
     );
 
     echo "success";
@@ -70,39 +69,13 @@ if($stmt->execute()){
 
     createLog(
         $conn,
-        null,
-        null,
         'security',
         'password_change_failed',
         'Failed password change attempt for username: '.$username,
-        'error'
+        'error',
+        null
     );
 
     echo "failed";
 }
-
-
-// AUTO LOGIN
-$get = $conn->prepare(
-"SELECT id, username FROM users WHERE username=?"
-);
-
-$get->bind_param("s", $username);
-
-$get->execute();
-
-$user = $get->get_result()->fetch_assoc();
-
-$_SESSION['user_id'] = $user['id'];
-$_SESSION['username'] = $user['username'];
-
-createLog(
-    $conn,
-    'security',
-    'password_changed',
-    'User changed account password',
-    'success',
-    $user['id']
-);
-
-echo "success";
+?>
