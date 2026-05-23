@@ -82,6 +82,12 @@ file_put_contents(
 
 $data = json_decode($raw, true);
 
+file_put_contents(
+    "onasis_secondlog.txt",
+    "PARSED STATUS: " . ($data['status'] ?? 'NO STATUS') . "\n\n",
+    FILE_APPEND
+);
+
 createLog(
     $conn,
     'payment',
@@ -415,6 +421,10 @@ if (
 ) {
 
     $reference = $data['reference'];
+
+     $failure_reason = isset($data['result_desc'])
+        ? $data['result_desc']
+        : 'Unknown error';
     
     createLog(
     $conn,
@@ -427,9 +437,7 @@ if (
     'error'
 );
 
-    $failure_reason = isset($data['result_desc'])
-        ? $data['result_desc']
-        : 'Unknown error';
+   
 
     $stmt = $conn->prepare(
         "UPDATE payments
