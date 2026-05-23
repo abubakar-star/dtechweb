@@ -1,8 +1,16 @@
 <?php
 session_start();
+
 include 'includes/logger.php';
+include 'db.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
+
+/*
+=========================================
+LOG USER LOGOUT
+=========================================
+*/
 
 if ($user_id) {
 
@@ -14,25 +22,61 @@ if ($user_id) {
         'info',
         $user_id
     );
-
 }
 
-// Clear all session variables
+/*
+=========================================
+CLEAR SESSION
+=========================================
+*/
+
 session_unset();
 session_destroy();
 
-// Delete cookies (both user and token)
+/*
+=========================================
+REMOVE REMEMBER TOKEN
+=========================================
+*/
+
 if (isset($_COOKIE["remember_user"])) {
-    include 'db.php';
+
     $username = $_COOKIE["remember_user"];
-    $conn->query("UPDATE users SET remember_token=NULL WHERE username='$username'");
-    $conn->close();
-}
-if (isset($_COOKIE["remember_token"])) {
-    setcookie("remember_token", "", time() - 3600, "/");
+
+    $stmt = $conn->prepare(
+        "UPDATE users 
+         SET remember_token = NULL 
+         WHERE username = ?"
+    );
+
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->close();
 }
 
-// Redirect to login
+/*
+=========================================
+DELETE COOKIES
+=========================================
+*/
+
+setcookie("remember_user", "", time() - 3600, "/");
+setcookie("remember_token", "", time() - 3600, "/");
+
+/*
+=========================================
+CLOSE DATABASE
+=========================================
+*/
+
+$conn->close();
+
+/*
+=========================================
+REDIRECT
+=========================================
+*/
+
 header("Location: login.php");
 exit();
 ?>
