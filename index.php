@@ -8,14 +8,12 @@ include 'includes/logger.php';
 if (!isset($_SESSION['user_id'])) {
 
 createLog(
-        null,
-        null,
-        $_SERVER['REMOTE_ADDR'],
-        'security',
-        'unauthorized_dashboard_access',
-        'Unauthorized attempt to access dashboard',
-        'warning'
-    );
+    $conn,
+    'security',
+    'unauthorized_dashboard_access',
+    'Unauthorized attempt to access dashboard',
+    'warning'
+);
 
     header("Location: login.php");
     exit();
