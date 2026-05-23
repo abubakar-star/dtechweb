@@ -6,18 +6,16 @@ include 'includes/logger.php';
 
 if (!isset($_SESSION['user_id'])) {
 
-    createLog(
-        null,
-        null,
-        null,
-        'security',
-        'unauthorized_invoice_access',
-        'Unauthorized access attempt to get_invoice_details.php',
-        'warning'
+    error_log(
+        'Unauthorized access attempt to get_invoice_details.php'
     );
 
     http_response_code(403);
-    echo json_encode(["error" => "Unauthorized"]);
+
+    echo json_encode([
+        "error" => "Unauthorized"
+    ]);
+
     exit;
 }
    
