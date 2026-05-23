@@ -33,12 +33,11 @@ if ($res && $res->num_rows > 0) {
 
     createLog(
     $conn,
-    $row['id'],
-    null,
     'queue',
     'queued_user_detected',
-    'Queued user detected: '.$row['username'],
-    'info'
+    'Queued user detected: ' . $row['username'],
+    'info',
+    $row['id']
 );
 
     echo json_encode([
