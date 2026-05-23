@@ -11,14 +11,8 @@ $conn = new mysqli($host, $username, $password, $dbname, $port);
 
 if ($conn->connect_error) {
 
-    createLog(
-        $conn,
-        null,
-        null,
-        'database',
-        'database_connection_failed',
-        'Database connection failed in check_queued.php',
-        'critical'
+    error_log(
+        'Database connection failed in check_queued.php'
     );
 
     die(json_encode([
