@@ -73,6 +73,11 @@ function createLog(
     $os = detectOS($user_agent);
     $device = detectDevice($user_agent);
 
+    if (!$conn) {
+    error_log("createLog(): Database connection missing");
+    return false;
+}
+
     $stmt = $conn->prepare("
         INSERT INTO system_logs (
             user_id,
