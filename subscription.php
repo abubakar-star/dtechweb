@@ -84,7 +84,15 @@ if (!$hasPaid) {
 
 // Fetch all available packages from the database
 $packages = [];
-$pkg_sql = "SELECT id, package_name, speed, price FROM packages WHERE status = 'active'";
+
+$pkg_sql = "
+    SELECT id, package_name, speed, price 
+    FROM packages 
+    WHERE status = 'active'
+";
+
+$pkg_result = $conn->query($pkg_sql);
+
 if (!$pkg_result) {
 
     createLog(
@@ -95,8 +103,9 @@ if (!$pkg_result) {
         'error',
         $_SESSION['user_id']
     );
-}
-if ($pkg_result && $pkg_result->num_rows > 0) {
+
+} else {
+
     while ($row = $pkg_result->fetch_assoc()) {
         $packages[] = $row;
     }
