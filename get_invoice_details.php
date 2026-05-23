@@ -40,15 +40,14 @@ $payment_date = $_GET['payment_date'] ?? null;
 
 if (!$payment_date) {
 
-    createLog(
-        $conn,
-        $_SESSION['user_id'],
-        null,
-        'invoice',
-        'missing_payment_date',
-        'Invoice request attempted without payment date',
-        'warning'
-    );
+   createLog(
+    $conn,
+    'invoice',
+    'missing_payment_date',
+    'Invoice request attempted without payment date',
+    'warning',
+    $_SESSION['user_id']
+);
 
     echo json_encode(["error" => "Payment date required"]);
     exit;
