@@ -77,8 +77,6 @@ $update->bind_param(
 
 $update->execute();
 
-echo "OTP: " . $otp;
-
 if($update->affected_rows > 0){
 
     createLog(
