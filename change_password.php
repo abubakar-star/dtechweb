@@ -98,12 +98,11 @@ $_SESSION['username'] = $user['username'];
 
 createLog(
     $conn,
-    $user['id'],
-    null,
     'security',
     'password_changed',
     'User changed account password',
-    'success'
+    'success',
+    $user['id']
 );
 
 echo "success";
