@@ -155,15 +155,14 @@ foreach ($payments as $payment) {
 
     if (!in_array($payment['status'], ['completed', 'pending', 'failed', 'cancelled'])) {
 
-        createLog(
-            $_SESSION['user_id'],
-            $payment['transaction_id'] ?? null,
-            $_SERVER['REMOTE_ADDR'],
-            'security',
-            'invalid_payment_status',
-            'Unknown payment status detected: ' . $payment['status'],
-            'warning'
-        );
+       createLog(
+    $conn,
+    'security',
+    'invalid_payment_status',
+    'Unknown payment status detected: ' . $payment['status'],
+    'warning',
+    $_SESSION['user_id']
+);
     }
 }
 
