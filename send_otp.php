@@ -75,6 +75,35 @@ $update->bind_param(
     $user['id']
 );
 
+$update->execute();
+
+echo "OTP: " . $otp;
+
+if($update->affected_rows > 0){
+
+    createLog(
+        $conn,
+        'otp',
+        'otp_saved',
+        "OTP saved successfully for user ID {$user['id']}",
+        'success',
+        $user['id']
+    );
+
+}else{
+
+    createLog(
+        $conn,
+        'otp',
+        'otp_save_failed',
+        "Failed to save OTP for user ID {$user['id']}",
+        'error',
+        $user['id']
+    );
+
+    die("Failed to save OTP");
+}
+
 createLog(
     $conn,
     'otp',
