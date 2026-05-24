@@ -15,8 +15,6 @@ if ($conn->connect_error) {
 
 createLog(
     $conn,
-    null,
-    null,
     'database',
     'database_connection_failed',
     'Database connection failed in check_payment_status.php',
@@ -36,8 +34,6 @@ if (empty($reference)) {
 
 createLog(
     $conn,
-    null,
-    null,
     'payment',
     'missing_payment_reference',
     'Payment status check attempted without reference',
@@ -69,8 +65,6 @@ if ($result->num_rows > 0) {
 
     createLog(
     $conn,
-    null,
-    null,
     'payment',
     'payment_status_checked',
     'Payment status checked for reference: '.$reference,
@@ -87,12 +81,10 @@ if ($result->num_rows > 0) {
 
 createLog(
     $conn,
-    null,
-    null,
     'payment',
-    'payment_not_found',
-    'Payment not found for reference: '.$reference,
-    'warning'
+    'payment_pending',
+    'Payment still pending for reference: '.$reference,
+    'info'
 );
 
     echo json_encode([
