@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('Africa/Nairobi');
+
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -17,4 +19,8 @@ if ($conn->connect_error) {
 
     die("Database connection failed");
 }
+
+/* MYSQL TIMEZONE */
+$conn->query("SET time_zone = '+03:00'");
+
 ?>
