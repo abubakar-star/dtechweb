@@ -629,10 +629,30 @@ $conn->close();
         </div>
 
         <div class="flex justify-between items-center mt-6 flex-wrap gap-4">
-          <button id="payNowBtn" <?php echo count($extraCharges) > 0 ? 'disabled' : ''; ?> onclick="payWithPaystack()"  
-    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
-    Pay Now
-</button> 
+        <?php if(count($extraCharges) > 0): ?>
+
+<button
+disabled
+class="w-full md:w-auto bg-gray-400 text-white px-6 py-2 rounded shadow cursor-not-allowed">
+Pay Subscription
+</button>
+
+<button
+id="payExtraChargesBtn"
+class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded shadow bounce-hover mt-2 md:mt-0">
+Pay Extra Charges
+</button>
+
+<?php else: ?>
+
+<button
+id="payNowBtn"
+onclick="payWithPaystack()"
+class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
+Pay Subscription
+</button>
+
+<?php endif; ?> 
 <div class="hidden md:block bg-gray-100 p-4 rounded w-64 text-sm">
             <div class="flex justify-between"><span>Subtotal:</span><span class="font-semibold" id="subtotal"><?php echo $subtotalFormatted; ?></span></div>
             <div class="flex justify-between mt-2 text-base font-bold text-orange-600">
@@ -921,6 +941,19 @@ totalDueSpan.textContent = `Ksh ${totalDue.toFixed(2)}`;
   mobileMenuBtn?.addEventListener('click', openSidebar);
   closeSidebarBtn?.addEventListener('click', closeSidebar);
   mobileOverlay?.addEventListener('click', closeSidebar);
+
+  const payExtraChargesBtn =
+document.getElementById('payExtraChargesBtn');
+
+if(payExtraChargesBtn){
+
+payExtraChargesBtn.addEventListener('click', () => {
+
+    alert('Extra charges payment page coming next.');
+
+});
+
+}
 
   // Close sidebar on ESC (mobile)
   document.addEventListener('keydown', (e) => {
