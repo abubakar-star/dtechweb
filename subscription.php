@@ -52,33 +52,31 @@ $stmt->close();
 
 $hasPaid = $paymentCount > 0;
 
+$extraCharges = [];
+$totalExtraCharges = 0;
+
+$sql = "
+SELECT id, charge_name, amount, status
+FROM extra_charges
+WHERE user_id = ?
+AND status = 'pending'
+";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    $extraCharges[] = $row;
+    $totalExtraCharges += (float)$row['amount'];
+}
+
+$stmt->close();
+
 $installationFee = 0.00;
 
-if (!$hasPaid) {
-    // Use dynamic installation fee per user or all
-    $userId = $_SESSION['user_id'];
-
-    $sql = "
-    SELECT amount
-    FROM installation_fees
-    WHERE is_active = 1
-    AND (
-          (applies_to = 'user' AND user_id = ?)
-       OR (applies_to = 'all')
-    )
-    ORDER BY applies_to = 'user' DESC
-    LIMIT 1
-    ";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $res = $stmt->get_result();
-
-    $installationFee = $res->num_rows ? (float)$res->fetch_assoc()['amount'] : 0;
-
-    $stmt->close();
-}
 
 
 
@@ -193,7 +191,7 @@ if (!empty($user) && isset($user['price']) && is_numeric($user['price'])) {
 $priceFormatted      = 'KES ' . number_format($packagePriceNumber, 2);
 $quantity            = 1;
 $subtotal            = $packagePriceNumber * $quantity;
-$totalDue = $subtotal + $installationFee;
+$totalDue = $subtotal + $totalExtraCharges;
 $subtotalFormatted   = 'KES ' . number_format($subtotal, 2);
 $totalDueFormatted = 'KES ' . number_format($totalDue, 2);
 
@@ -605,24 +603,34 @@ $conn->close();
                 <td class="px-4 py-2 whitespace-nowrap" id="invoiceTotal"><?php echo $priceFormatted; ?></td>
               </tr>
 
-  <?php if ($installationFee > 0): ?>
-  <tr class="border-t text-orange-600 font-semibold">
-    <td class="px-4 py-2">Installation Fee (One-time)</td>
-    <td class="px-4 py-2">KES <?php echo number_format($installationFee, 2); ?></td>
-    <td class="hidden md:block px-4 py-2">1</td>
-    <td class="px-4 py-2 whitespace-nowrap">
-      KES <?php echo number_format($installationFee, 2); ?>
+<?php foreach ($extraCharges as $charge): ?>
+<tr class="border-t text-orange-600 font-semibold">
+    <td class="px-4 py-2">
+        <?php echo htmlspecialchars($charge['charge_name']); ?>
     </td>
-  </tr>
-  <?php endif; ?>
+
+    <td class="px-4 py-2">
+        KES <?php echo number_format($charge['amount'], 2); ?>
+    </td>
+
+    <td class="hidden md:block px-4 py-2">
+        1
+    </td>
+
+    <td class="px-4 py-2 whitespace-nowrap">
+        KES <?php echo number_format($charge['amount'], 2); ?>
+    </td>
+</tr>
+<?php endforeach; ?>
+
 </tbody>
 
           </table>
         </div>
 
         <div class="flex justify-between items-center mt-6 flex-wrap gap-4">
-          <button id="payNowBtn" onclick="payWithPaystack()"  
-    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover" disabled>
+          <button id="payNowBtn" <?php echo count($extraCharges) > 0 ? 'disabled' : ''; ?> onclick="payWithPaystack()"  
+    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
     Pay Now
 </button> 
 <div class="hidden md:block bg-gray-100 p-4 rounded w-64 text-sm">
