@@ -595,116 +595,41 @@ $conn->close();
                 <th class="px-4 py-2 font-semibold">Total</th>
               </tr>
             </thead>
-        ```php
-<tbody id="invoiceItemsBody">
+           <tbody>
+     <tr class="border-t">
+                <td class="px-4 py-2" id="invoiceDescription">Package Subscription (<?php echo htmlspecialchars($planSpeed); ?>)</td>
+                <td class="px-4 py-2" id="invoicePrice"><?php echo $priceFormatted; ?></td>
+               <td class="hidden md:block px-4 py-2"><?php echo $quantity; ?></td>
+                <td class="px-4 py-2 whitespace-nowrap" id="invoiceTotal"><?php echo $priceFormatted; ?></td>
+              </tr>
 
-<!-- SUBSCRIPTION ROW -->
-<tr
-    class="border-t invoice-item selected cursor-pointer hover:bg-gray-50 transition"
-    data-id="subscription"
-    data-type="subscription"
-    data-amount="<?php echo $subtotal; ?>"
->
-
-    <td class="px-4 py-3">
-
-        <div class="flex items-center gap-3">
-
-            <input
-                type="checkbox"
-                class="invoice-checkbox h-4 w-4"
-                checked
-            >
-
-            <div>
-                <div class="font-semibold text-gray-800">
-                    Package Subscription
-                    (<?php echo htmlspecialchars($planSpeed); ?>)
-                </div>
-
-                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    SERVICE
-                </span>
-            </div>
-
-        </div>
-
-    </td>
-
-    <td class="px-4 py-3">
-        <?php echo $priceFormatted; ?>
-    </td>
-
-    <td class="hidden md:block px-4 py-3">
-        <?php echo $quantity; ?>
-    </td>
-
-    <td class="px-4 py-3 whitespace-nowrap font-semibold">
-        <?php echo $priceFormatted; ?>
-    </td>
-
-</tr>
-
-
-<!-- EXTRA CHARGES -->
 <?php foreach ($extraCharges as $charge): ?>
-
-<tr
-    class="border-t invoice-item selected cursor-pointer hover:bg-orange-50 transition"
-    data-id="<?php echo $charge['id']; ?>"
-    data-type="extra_charge"
-    data-amount="<?php echo $charge['amount']; ?>"
->
-
-    <td class="px-4 py-3">
-
-        <div class="flex items-center gap-3">
-
-            <input
-                type="checkbox"
-                class="invoice-checkbox h-4 w-4"
-                checked
-            >
-
-            <div>
-                <div class="font-semibold text-orange-600">
-                    <?php echo htmlspecialchars($charge['charge_name']); ?>
-                </div>
-
-                <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
-                    FEE
-                </span>
-            </div>
-
-        </div>
-
+<tr class="border-t text-orange-600 font-semibold">
+    <td class="px-4 py-2">
+        <?php echo htmlspecialchars($charge['charge_name']); ?>
     </td>
 
-    <td class="px-4 py-3">
+    <td class="px-4 py-2">
         KES <?php echo number_format($charge['amount'], 2); ?>
     </td>
 
-    <td class="hidden md:block px-4 py-3">
+    <td class="hidden md:block px-4 py-2">
         1
     </td>
 
-    <td class="px-4 py-3 whitespace-nowrap font-semibold">
+    <td class="px-4 py-2 whitespace-nowrap">
         KES <?php echo number_format($charge['amount'], 2); ?>
     </td>
-
 </tr>
-
 <?php endforeach; ?>
 
 </tbody>
-```
-
 
           </table>
         </div>
 
         <div class="flex justify-between items-center mt-6 flex-wrap gap-4">
-          <button id="payNowBtn"  onclick="payWithPaystack()"  
+          <button id="payNowBtn" <?php echo count($extraCharges) > 0 ? 'disabled' : ''; ?> onclick="payWithPaystack()"  
     class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
     Pay Now
 </button> 
