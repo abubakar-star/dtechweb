@@ -629,30 +629,10 @@ $conn->close();
         </div>
 
         <div class="flex justify-between items-center mt-6 flex-wrap gap-4">
-        <?php if(count($extraCharges) > 0): ?>
-
-<button
-disabled
-class="w-full md:w-auto bg-gray-400 text-white px-6 py-2 rounded shadow cursor-not-allowed">
-Pay Subscription
-</button>
-
-<button
-id="payExtraChargesBtn"
-class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded shadow bounce-hover mt-2 md:mt-0">
-Pay Extra Charges
-</button>
-
-<?php else: ?>
-
-<button
-id="payNowBtn"
-onclick="payWithPaystack()"
-class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
-Pay Subscription
-</button>
-
-<?php endif; ?> 
+          <button id="payNowBtn" <?php echo count($extraCharges) > 0 ? 'disabled' : ''; ?> onclick="payWithPaystack()"  
+    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
+    Pay Now
+</button> 
 <div class="hidden md:block bg-gray-100 p-4 rounded w-64 text-sm">
             <div class="flex justify-between"><span>Subtotal:</span><span class="font-semibold" id="subtotal"><?php echo $subtotalFormatted; ?></span></div>
             <div class="flex justify-between mt-2 text-base font-bold text-orange-600">
@@ -692,71 +672,166 @@ document.onreadystatechange = function () {
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
 
-function payWithPaystack() { 
+function payWithPaystack() {
+
     if (!price) {
-        alert("No plan selected yet.");
+        showToast("No plan selected yet.", "error");
         return;
     }
 
     const payBtn = document.getElementById("payNowBtn");
-    const originalText = "Retry Payment";
 
-    // 🔹 Show spinner + gray disabled state
     payBtn.disabled = true;
     payBtn.classList.add("opacity-50", "cursor-not-allowed");
+
     payBtn.innerHTML = `
-        <svg class="animate-spin h-5 w-5 text-white inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        <svg class="animate-spin h-5 w-5 text-white inline-block mr-2"
+             xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24">
+          <circle class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"></circle>
+          <path class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
         </svg>
         Processing...
     `;
 
-    // Clean and convert amount
-   let planAmount = parseFloat(price.replace(/[^0-9.]/g, ''));
-let installationFee = <?php echo json_encode($installationFee ?? 0); ?>;
+    // Generate invoice number
+    const today = new Date();
 
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
 
-let totalAmount = planAmount + installationFee;
-totalAmount = totalAmount * 100;
+    const invoiceNumber = `INV-dlinknetwork-${y}${m}${d}`;
 
-
-    fetch("initialize_sub.php", {
+    // Send request to Onasis initializer
+    fetch("initialize_sub_onasis.php", {
         method: "POST",
-       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "amount=" + encodeURIComponent(totalAmount) + "&package_id=" + encodeURIComponent(planSelect.value)
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body:
+            "package_id=" + encodeURIComponent(planSelect.value) +
+            "&invoice_number=" + encodeURIComponent(invoiceNumber)
     })
-    .then(response => response.text())
-    .then(url => {
-        if (url.startsWith("http")) {
-            // ✅ Open Paystack checkout in a new tab
-            const win = window.open(url, "_blank");
 
-            // 🔹 Poll every 500ms to detect if Paystack tab is closed
-            const checkClosed = setInterval(() => {
-                if (win.closed) {
-                    clearInterval(checkClosed);
+    .then(response => response.json())
 
-                    // 🔹 Restore button after Paystack closes
-                    payBtn.disabled = false;
-                    payBtn.classList.remove("opacity-50", "cursor-not-allowed");
-                    payBtn.innerHTML = originalText;
-                }
-            }, 500);
-        } else {
-            alert("Payment initialization failed: " + url);
+    .then(data => {
+
+        if (!data.success) {
+
+            showToast(data.message || "Failed to initialize payment", "error");
+
             payBtn.disabled = false;
             payBtn.classList.remove("opacity-50", "cursor-not-allowed");
-            payBtn.innerHTML = originalText;
+            payBtn.innerHTML = "Retry Payment";
+
+            return;
         }
+
+        showToast("STK push sent to your phone");
+
+        // Start checking payment status
+        pollPaymentStatus(data.reference);
+
     })
-    .catch(err => {
-        console.error("Error:", err);
+
+    .catch(error => {
+
+        console.error(error);
+
+        showToast("Something went wrong", "error");
+
         payBtn.disabled = false;
         payBtn.classList.remove("opacity-50", "cursor-not-allowed");
-        payBtn.innerHTML = originalText;
-        alert("Something went wrong while initializing payment.");
+        payBtn.innerHTML = "Retry Payment";
+
     });
+}
+
+function pollPaymentStatus(reference) {
+
+    const payBtn = document.getElementById("payNowBtn");
+
+    let attempts = 0;
+
+    const interval = setInterval(() => {
+
+        attempts++;
+
+        fetch("check_payment_sub_status.php?reference=" + encodeURIComponent(reference))
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            if (!data.success) {
+                return;
+            }
+
+            // PAYMENT SUCCESS
+            if (data.status === "completed") {
+
+                clearInterval(interval);
+
+                showToast("Payment successful");
+
+                payBtn.disabled = false;
+                payBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                payBtn.innerHTML = "Paid";
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+
+            }
+
+            // PAYMENT FAILED
+            else if (data.status === "failed") {
+
+                clearInterval(interval);
+
+                showToast(
+                    data.failure_reason || "Payment failed",
+                    "error"
+                );
+
+                payBtn.disabled = false;
+                payBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                payBtn.innerHTML = "Retry Payment";
+
+            }
+
+        })
+
+        .catch(error => {
+            console.error(error);
+        });
+
+        // Stop polling after 2 minutes
+        if (attempts >= 60) {
+
+            clearInterval(interval);
+
+            showToast(
+                "Payment confirmation timeout. Please refresh later.",
+                "error"
+            );
+
+            payBtn.disabled = false;
+            payBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            payBtn.innerHTML = "Retry Payment";
+        }
+
+    }, 2000);
 }
 
 
@@ -941,19 +1016,6 @@ totalDueSpan.textContent = `Ksh ${totalDue.toFixed(2)}`;
   mobileMenuBtn?.addEventListener('click', openSidebar);
   closeSidebarBtn?.addEventListener('click', closeSidebar);
   mobileOverlay?.addEventListener('click', closeSidebar);
-
-  const payExtraChargesBtn =
-document.getElementById('payExtraChargesBtn');
-
-if(payExtraChargesBtn){
-
-payExtraChargesBtn.addEventListener('click', () => {
-
-    alert('Extra charges payment page coming next.');
-
-});
-
-}
 
   // Close sidebar on ESC (mobile)
   document.addEventListener('keydown', (e) => {
