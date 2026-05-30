@@ -183,6 +183,14 @@ $payStmt = $conn->prepare(
 
     $payRes = $payStmt->get_result();
 
+    file_put_contents(
+    "payres_debug.txt",
+    "REFERENCE={$reference}\nROWS=" .
+    $payRes->num_rows .
+    "\n\n",
+    FILE_APPEND
+);
+
     if ($payRes->num_rows > 0) {
 
         $payment = $payRes->fetch_assoc();
