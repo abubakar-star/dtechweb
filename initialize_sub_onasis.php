@@ -225,7 +225,7 @@ $data = [
     "amount" => $amount,
     "reference" => $reference,
     "account_ref" => $accountNumber,
-    "callback_url" => "https://dtechweb.onrender.com/onasis_callback.php"
+    "callback_url" => "https://dtechweb.onrender.com/onasis_sub_callback.php"
 ];
 
 $headers = [
