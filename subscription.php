@@ -703,45 +703,78 @@ function payWithPaystack() {
         Processing...
     `;
 
-    // Generate invoice number
     const today = new Date();
 
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
 
-    const invoiceNumber = `INV-dlinknetwork-${y}${m}${d}`;
+    const invoiceNumber =
+        `INV-dlinknetwork-${y}${m}${d}`;
 
-    // Send request to Onasis initializer
-    fetch("initialize_sub_onasis.php", {
+    // FIRST PAY EXTRA CHARGES
+    if (parseFloat(totalExtraCharges) > 0) {
+
+        showToast(
+            "Paying outstanding charges first..."
+        );
+
+        initializeExtraCharges(
+            invoiceNumber,
+            payBtn
+        );
+
+    } else {
+
+        initializeSubscription(
+            invoiceNumber,
+            payBtn
+        );
+
+    }
+}
+
+function initializeExtraCharges(
+    invoiceNumber,
+    payBtn
+) {
+
+    fetch("initialize_extra_charges.php", {
         method: "POST",
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type":
+                "application/x-www-form-urlencoded"
         },
         body:
-            "package_id=" + encodeURIComponent(planSelect.value) +
-            "&invoice_number=" + encodeURIComponent(invoiceNumber)
+            "invoice_number=" +
+            encodeURIComponent(invoiceNumber)
     })
 
-    .then(response => response.json())
+    .then(r => r.json())
 
     .then(data => {
 
         if (!data.success) {
 
-            showToast(data.message || "Failed to initialize payment", "error");
+            showToast(
+                data.message ||
+                "Failed to initialize extra charges",
+                "error"
+            );
 
-            payBtn.disabled = false;
-            payBtn.classList.remove("opacity-50", "cursor-not-allowed");
-            payBtn.innerHTML = "Retry Payment";
-
+            resetPayButton(payBtn);
             return;
         }
 
-        showToast("STK push sent to your phone");
+        showToast(
+            "Extra charges STK sent"
+        );
 
-        // Start checking payment status
-        pollPaymentStatus(data.reference);
+        pollExtraChargeStatus(
+            data.reference,
+            invoiceNumber,
+            payBtn
+        );
 
     })
 
@@ -749,13 +782,156 @@ function payWithPaystack() {
 
         console.error(error);
 
-        showToast("Something went wrong", "error");
+        showToast(
+            "Extra charges payment error",
+            "error"
+        );
 
-        payBtn.disabled = false;
-        payBtn.classList.remove("opacity-50", "cursor-not-allowed");
-        payBtn.innerHTML = "Retry Payment";
+        resetPayButton(payBtn);
 
     });
+}
+
+function pollExtraChargeStatus(
+    reference,
+    invoiceNumber,
+    payBtn
+) {
+
+    let attempts = 0;
+
+    const interval = setInterval(() => {
+
+        attempts++;
+
+        fetch(
+            "check_payment_sub_status.php?reference=" +
+            encodeURIComponent(reference)
+        )
+
+        .then(r => r.json())
+
+        .then(data => {
+
+            if (!data.success) {
+                return;
+            }
+
+            if (data.status === "completed") {
+
+                clearInterval(interval);
+
+                showToast(
+                    "Extra charges paid"
+                );
+
+                initializeSubscription(
+                    invoiceNumber,
+                    payBtn
+                );
+            }
+
+            if (data.status === "failed") {
+
+                clearInterval(interval);
+
+                showToast(
+                    data.failure_reason ||
+                    "Extra charges payment failed",
+                    "error"
+                );
+
+                resetPayButton(payBtn);
+            }
+
+        });
+
+        if (attempts >= 60) {
+
+            clearInterval(interval);
+
+            showToast(
+                "Extra charges timeout",
+                "error"
+            );
+
+            resetPayButton(payBtn);
+        }
+
+    }, 2000);
+}
+
+function initializeSubscription(
+    invoiceNumber,
+    payBtn
+) {
+
+    showToast(
+        "Sending subscription STK..."
+    );
+
+    fetch("initialize_sub_onasis.php", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type":
+                "application/x-www-form-urlencoded"
+        },
+
+        body:
+            "package_id=" +
+            encodeURIComponent(planSelect.value) +
+            "&invoice_number=" +
+            encodeURIComponent(invoiceNumber)
+    })
+
+    .then(r => r.json())
+
+    .then(data => {
+
+        if (!data.success) {
+
+            showToast(
+                data.message ||
+                "Subscription initialization failed",
+                "error"
+            );
+
+            resetPayButton(payBtn);
+            return;
+        }
+
+        pollPaymentStatus(
+            data.reference
+        );
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        showToast(
+            "Subscription payment error",
+            "error"
+        );
+
+        resetPayButton(payBtn);
+
+    });
+}
+
+function resetPayButton(payBtn) {
+
+    payBtn.disabled = false;
+
+    payBtn.classList.remove(
+        "opacity-50",
+        "cursor-not-allowed"
+    );
+
+    payBtn.innerHTML = "Retry Payment";
 }
 
 function pollPaymentStatus(reference) {
