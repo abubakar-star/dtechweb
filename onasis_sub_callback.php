@@ -2,6 +2,10 @@
 
 http_response_code(200);
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 include 'includes/logger.php';
 
 /*
@@ -139,6 +143,12 @@ if (
 
     $stmt->execute();
 
+    file_put_contents(
+    "step1.txt",
+    "Reached after payment update\n",
+    FILE_APPEND
+);
+
     if ($stmt->affected_rows > 0) {
 
     createLog(
@@ -166,6 +176,13 @@ if (
     FETCH USER ID FROM PAYMENTS TABLE
     =========================================
     */
+
+    file_put_contents(
+    "step2.txt",
+    "Preparing payment lookup\n",
+    FILE_APPEND
+);
+
 $payStmt = $conn->prepare(
     "SELECT
         user_id,
@@ -180,6 +197,12 @@ $payStmt = $conn->prepare(
     $payStmt->bind_param("s", $reference);
 
     $payStmt->execute();
+
+    file_put_contents(
+    "step3.txt",
+    "Payment lookup executed\n",
+    FILE_APPEND
+);
 
     $payRes = $payStmt->get_result();
 
