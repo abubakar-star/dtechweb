@@ -105,7 +105,7 @@ if (
     isset($data['status']) &&
     $data['status'] === 'success' &&
     isset($data['reference'])
-) {
+) 
 
     $reference = $data['reference'];
 
