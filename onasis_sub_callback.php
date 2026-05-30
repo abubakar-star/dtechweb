@@ -105,7 +105,7 @@ if (
     isset($data['status']) &&
     $data['status'] === 'success' &&
     isset($data['reference'])
-) 
+) {
 
     $reference = $data['reference'];
 
@@ -494,6 +494,7 @@ if (!empty($adminPhone)) {
         "UPDATED SUCCESS PAYMENT: $reference\n\n",
         FILE_APPEND
     );
+}
 }
 
 /* FAILED PAYMENT */
