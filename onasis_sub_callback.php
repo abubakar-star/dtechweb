@@ -262,14 +262,21 @@ if (substr($userPhone, 0, 1) === "0") {
     $chargeStmt->bind_param("i", $userId);
     $chargeStmt->execute();
 
-    createLog(
-        $conn,
-        'billing',
-        'Extra charges paid',
-        'All pending extra charges marked paid',
-        'success',
-        $userId
-    );
+file_put_contents(
+    "extra_charge_debug.txt",
+    "USER ID: {$userId}\n" .
+    "AFFECTED ROWS: {$chargeStmt->affected_rows}\n\n",
+    FILE_APPEND
+);
+
+createLog(
+    $conn,
+    'billing',
+    'Extra charges paid',
+    'All pending extra charges marked paid',
+    'success',
+    $userId
+);
 
 }
 
