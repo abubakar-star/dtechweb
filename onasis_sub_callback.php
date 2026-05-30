@@ -166,16 +166,16 @@ if (
     FETCH USER ID FROM PAYMENTS TABLE
     =========================================
     */
-
-    $payStmt = $conn->prepare(
-        "SELECT 
-    user_id,
-    package_id,
-    invoice_number,
-    amount
- FROM payments
- WHERE reference = ?"
-    );
+$payStmt = $conn->prepare(
+    "SELECT
+        user_id,
+        package_id,
+        invoice_number,
+        amount,
+        payment_type
+     FROM payments
+     WHERE reference = ?"
+);
 
     $payStmt->bind_param("s", $reference);
 
@@ -203,6 +203,8 @@ if (
         $invoiceNumber = $payment['invoice_number'];
 
         $amount = $payment['amount'];
+
+        $paymentType = $payment['payment_type'];
 
 /*
 =========================================
@@ -246,6 +248,32 @@ if (substr($userPhone, 0, 1) === "0") {
         FETCH CURRENT USER STATUS
         =========================================
         */
+        if ($paymentType === 'extra_charge') {
+
+    $chargeStmt = $conn->prepare(
+        "UPDATE extra_charges
+         SET
+            status = 'paid',
+            paid_at = NOW()
+         WHERE user_id = ?
+         AND status = 'pending'"
+    );
+
+    $chargeStmt->bind_param("i", $userId);
+    $chargeStmt->execute();
+
+    createLog(
+        $conn,
+        'billing',
+        'Extra charges paid',
+        'All pending extra charges marked paid',
+        'success',
+        $userId
+    );
+
+}
+
+        if ($paymentType === 'subscription') {
 
         $userRes = $conn->query(
             "SELECT status, created_at
@@ -338,6 +366,8 @@ if (substr($userPhone, 0, 1) === "0") {
             );
         }
     }
+    
+
 /*
 =========================================
 SEND PAYMENT SUCCESS SMS
