@@ -629,10 +629,11 @@ $conn->close();
         </div>
 
         <div class="flex justify-between items-center mt-6 flex-wrap gap-4">
-          <button id="payNowBtn" <?php echo count($extraCharges) > 0 ? 'disabled' : ''; ?> onclick="payWithPaystack()"  
-    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
-    Pay Now
-</button> 
+          <button id="payNowBtn"
+onclick="payWithPaystack()"
+class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow bounce-hover">
+Pay Now
+</button>
 <div class="hidden md:block bg-gray-100 p-4 rounded w-64 text-sm">
             <div class="flex justify-between"><span>Subtotal:</span><span class="font-semibold" id="subtotal"><?php echo $subtotalFormatted; ?></span></div>
             <div class="flex justify-between mt-2 text-base font-bold text-orange-600">
@@ -835,7 +836,8 @@ function pollPaymentStatus(reference) {
 }
 
 
- 
+ const totalExtraCharges =
+<?php echo json_encode($totalExtraCharges); ?>;
 const currentPackageId = <?php echo json_encode($userPackageId); ?>;
   const currentExpiry = <?php echo json_encode($subscription['Expiry'] ?? null); ?>;
 
