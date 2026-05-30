@@ -180,9 +180,20 @@ $reference = "DLINK-" . $user['id'] . "-" . time();
    SAVE PAYMENT (PENDING)
 ========================= */
 $insert = $conn->prepare("
-    INSERT INTO payments 
-(user_id, package_id, reference, amount, invoice_number, status)
-VALUES (?, ?, ?, ?, ?, 'pending')
+INSERT INTO payments
+(
+    user_id,
+    package_id,
+    reference,
+    amount,
+    payment_type,
+    invoice_number,
+    status
+)
+VALUES
+(
+    ?, ?, ?, ?, 'subscription', ?, 'pending'
+)
 ");
 
 $insert->bind_param(
