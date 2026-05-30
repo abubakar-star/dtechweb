@@ -205,6 +205,12 @@ $payStmt = $conn->prepare(
         $amount = $payment['amount'];
 
         $paymentType = $payment['payment_type'];
+        file_put_contents(
+    "payment_type_debug.txt",
+    "REFERENCE: {$reference}\n" .
+    "PAYMENT TYPE: [{$paymentType}]\n\n",
+    FILE_APPEND
+);
 
 /*
 =========================================
