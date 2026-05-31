@@ -819,17 +819,49 @@ function pollExtraChargeStatus(
 
             if (data.status === "completed") {
 
-                clearInterval(interval);
+    clearInterval(interval);
 
-                showToast(
-                    "Extra charges paid"
-                );
+    showToast(
+        "Extra charges paid successfully. Waiting 60 seconds before subscription payment..."
+    );
 
-                initializeSubscription(
-                    invoiceNumber,
-                    payBtn
-                );
-            }
+    payBtn.disabled = true;
+
+payBtn.classList.add(
+    "opacity-50",
+    "cursor-not-allowed"
+);
+
+    let countdown = 60;
+
+    const countdownInterval = setInterval(() => {
+
+        payBtn.innerHTML =
+            `Subscription payment in ${countdown}s`;
+
+        countdown--;
+if (countdown < 0) {
+
+    clearInterval(countdownInterval);
+
+    payBtn.disabled = false;
+
+    payBtn.classList.remove(
+        "opacity-50",
+        "cursor-not-allowed"
+    );
+
+    payBtn.innerHTML =
+        "Sending Subscription STK...";
+
+    initializeSubscription(
+        invoiceNumber,
+        payBtn
+    );
+}
+
+    }, 1000);
+}
 
             if (data.status === "failed") {
 
