@@ -844,13 +844,6 @@ if (countdown < 0) {
 
     clearInterval(countdownInterval);
 
-    payBtn.disabled = false;
-
-    payBtn.classList.remove(
-        "opacity-50",
-        "cursor-not-allowed"
-    );
-
     payBtn.innerHTML =
         "Sending Subscription STK...";
 
@@ -860,7 +853,7 @@ if (countdown < 0) {
     );
 }
 
-    }, 1000);
+    }, 500);
 }
 
             if (data.status === "failed") {
