@@ -604,7 +604,7 @@ $conn->close();
               </tr>
 
 <?php foreach ($extraCharges as $charge): ?>
-<tr class="border-t font-semibold extra-charge-row"> data-status="<?php echo $charge['status']; ?>">
+<tr class="border-t text-orange-600 font-semibold">
     <td class="px-4 py-2">
         <?php echo htmlspecialchars($charge['charge_name']); ?>
     </td>
@@ -672,20 +672,6 @@ document.onreadystatechange = function () {
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-  function markExtraChargesPaid() {
-
-    document.querySelectorAll(".extra-charge-row")
-        .forEach(row => {
-
-            row.classList.remove("text-orange-600");
-
-            row.classList.add(
-                "text-green-600",
-                "bg-green-50"
-            );
-
-        });
-}
 
 function payWithPaystack() {
 
@@ -870,8 +856,6 @@ function pollExtraChargeStatus(
             if (data.status === "completed") {
 
     clearInterval(interval);
-
-    markExtraChargesPaid();
 
     showToast(
         "Extra charges paid successfully. Waiting 60 seconds before subscription payment..."
