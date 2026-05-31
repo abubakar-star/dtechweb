@@ -348,8 +348,6 @@ $smsMessage =
 
     sendSMS($userPhone, $smsMessage);
 
-    sendSMS($userPhone, $smsMessage);
-
     createLog(
     $conn,
     'notification',
@@ -389,13 +387,15 @@ if ($adminQuery && $adminQuery->num_rows > 0) {
 if (!empty($adminPhone)) {
 
     $adminMessage =
-        "PAYMENT RECEIVED\n" .
-        "User: $userName\n" .
+          "Payment Confirmed.\n" .
+        "Account: $userName\n" .
         "Amount: KES $amount\n" .
         "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt";
+        "M-PESA Ref: $mpesa_receipt\n" .
+        "\n" .
+        "From D-LINK NETWORK INC.";
 
-   
+    sendSMS($adminPhone, $adminMessage);
 
     createLog(
     $conn,
