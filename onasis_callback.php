@@ -342,7 +342,9 @@ $smsMessage =
         "User: $userName\n" .
         "Amount: KES $amount\n" .
         "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt";
+        "M-PESA Ref: $mpesa_receipt".
+        "\n" .
+        "From D-LINK NETWORK INC.";
 
     sendSMS($userPhone, $smsMessage);
 
