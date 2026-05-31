@@ -596,7 +596,11 @@ $conn->close();
               </tr>
             </thead>
            <tbody>
-     <tr class="border-t">
+     <?php
+$isPaid = $hasPaid; // already defined earlier
+?>
+
+<tr class="border-t subscription-row <?php echo $isPaid ? 'text-green-600 bg-green-50' : ''; ?>">
                 <td class="px-4 py-2" id="invoiceDescription">Package Subscription (<?php echo htmlspecialchars($planSpeed); ?>)</td>
                 <td class="px-4 py-2" id="invoicePrice"><?php echo $priceFormatted; ?></td>
                <td class="hidden md:block px-4 py-2"><?php echo $quantity; ?></td>
@@ -688,6 +692,16 @@ document.onreadystatechange = function () {
             );
 
         });
+}
+
+function markSubscriptionPaid() {
+    const row = document.querySelector(".subscription-row");
+
+    if (!row) return;
+
+    row.classList.remove("text-orange-600", "bg-yellow-50");
+
+    row.classList.add("text-green-600", "bg-green-50");
 }
 
 function payWithPaystack() {
@@ -1040,6 +1054,8 @@ function pollPaymentStatus(reference) {
                 clearInterval(interval);
 
                 showToast("Payment successful");
+
+                markSubscriptionPaid();
 
                 payBtn.disabled = false;
                 payBtn.classList.remove("opacity-50", "cursor-not-allowed");
