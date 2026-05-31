@@ -395,7 +395,7 @@ if (!empty($adminPhone)) {
         "Invoice: $invoiceNumber\n" .
         "M-PESA Ref: $mpesa_receipt";
 
-    sendSMS();
+   
 
     createLog(
     $conn,
