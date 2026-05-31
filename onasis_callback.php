@@ -338,11 +338,15 @@ SEND PAYMENT SUCCESS SMS
 if (!empty($userPhone)) {
 
 $smsMessage =
-     "PAYMENT CONFIRMED\n" .
+     "PAYMENT RECEIVED\n" .
         "User: $userName\n" .
         "Amount: KES $amount\n" .
         "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt";
+        "M-PESA Ref: $mpesa_receipt".    .
+        "\n" .
+        "From D-LINK NETWORK INC.";
+
+    sendSMS($userPhone, $smsMessage);
 
     sendSMS($userPhone, $smsMessage);
 
@@ -391,7 +395,7 @@ if (!empty($adminPhone)) {
         "Invoice: $invoiceNumber\n" .
         "M-PESA Ref: $mpesa_receipt";
 
-    sendSMS($adminPhone, $adminMessage);
+    sendSMS();
 
     createLog(
     $conn,
