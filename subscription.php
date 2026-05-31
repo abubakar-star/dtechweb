@@ -713,7 +713,28 @@ function payWithPaystack() {
         `INV-dlinknetwork-${y}${m}${d}`;
 
     // FIRST PAY EXTRA CHARGES
-    if (parseFloat(totalExtraCharges) > 0) {
+   fetch("check_pending_extra_charges.php")
+
+.then(response => response.json())
+
+.then(result => {
+
+    if (!result.success) {
+
+        showToast(
+            "Unable to verify outstanding charges",
+            "error"
+        );
+
+        resetPayButton(payBtn);
+        return;
+    }
+
+    if (
+        parseFloat(
+            result.total_extra_charges
+        ) > 0
+    ) {
 
         showToast(
             "Paying outstanding charges first..."
@@ -732,6 +753,21 @@ function payWithPaystack() {
         );
 
     }
+
+})
+
+.catch(error => {
+
+    console.error(error);
+
+    showToast(
+        "Unable to verify charges",
+        "error"
+    );
+
+    resetPayButton(payBtn);
+
+});
 }
 
 function initializeExtraCharges(
@@ -853,7 +889,7 @@ if (countdown < 0) {
     );
 }
 
-    }, 500);
+    }, 1000);
 }
 
             if (data.status === "failed") {
