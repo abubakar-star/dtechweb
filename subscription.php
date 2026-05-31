@@ -596,11 +596,7 @@ $conn->close();
               </tr>
             </thead>
            <tbody>
-     <?php
-$isPaid = $hasPaid; // already defined earlier
-?>
-
-<tr class="border-t subscription-row <?php echo $isPaid ? 'text-green-600 bg-green-50' : ''; ?>">
+     <tr class="border-t subscription-row">
                 <td class="px-4 py-2" id="invoiceDescription">Package Subscription (<?php echo htmlspecialchars($planSpeed); ?>)</td>
                 <td class="px-4 py-2" id="invoicePrice"><?php echo $priceFormatted; ?></td>
                <td class="hidden md:block px-4 py-2"><?php echo $quantity; ?></td>
