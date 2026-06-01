@@ -188,6 +188,16 @@ if ($hour >= 5 && $hour < 12) {
              </svg>';
 }
 
+echo "<pre>";
+print_r([
+    'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'] ?? '',
+    'HTTP_X_FORWARDED_FOR' => $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '',
+    'HTTP_X_REAL_IP' => $_SERVER['HTTP_X_REAL_IP'] ?? '',
+    'HTTP_CF_CONNECTING_IP' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''
+]);
+echo "</pre>";
+exit;
+
 $ip = $_SERVER['REMOTE_ADDR'];
 
 $user_id = $_SESSION['user_id']; 
