@@ -1186,7 +1186,7 @@ else if (payment.status === 'timeout') {
 function viewInvoice(invoiceNumber, paymentDate) {
   // Set invoice number
   document.getElementById("invoiceNumber").innerText = invoiceNumber; 
-document.getElementById("changeRec").innerText = "Transaction ID:";
+document.getElementById("changeRec").innerText = "M-pesa REF:";
 document.getElementById("changeRecWord").innerText = "";
 document.getElementById("paidStamp").classList.remove("hidden");
 document.getElementById("changeDLWord").innerText = "";
