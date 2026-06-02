@@ -1107,7 +1107,8 @@ else if (payment.status === 'timeout') {
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(element).save();
+    window.location.href =
+    "download_invoice.php?id=" + document.getElementById("invoiceNumber").innerText;
   }
 
   invoiceBtn?.addEventListener('click', function () {
@@ -1316,7 +1317,8 @@ if (head2) {
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
   };
-  html2pdf().set(opt).from(element).save();
+  window.location.href =
+    "download_invoice.php?id=" + document.getElementById("invoiceNumber").innerText;
 }
 </script>
 <script>
