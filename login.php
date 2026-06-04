@@ -143,7 +143,7 @@ $password = $_ENV['MYSQLPASSWORD'];
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login</title>
   <link rel="icon" href="tt.png" type="x-icon" />
-    <link rel="manifest" href="/manifest.json">
+   <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#2563eb">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
