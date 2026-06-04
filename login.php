@@ -1019,5 +1019,25 @@ if(result === "success"){
 });
 
 </script>
+
+    <script>
+if ('serviceWorker' in navigator) {
+
+    window.addEventListener('load', () => {
+
+        navigator.serviceWorker.register('/sw.js')
+
+        .then(() => {
+            console.log('Service Worker Registered');
+        })
+
+        .catch(error => {
+            console.error(error);
+        });
+
+    });
+
+}
+</script>
 </body>
 </html>
