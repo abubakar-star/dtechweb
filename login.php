@@ -551,6 +551,22 @@ html.swal2-shown {
   <div class="loader"></div>
 
 </div>
+
+<div id="installBanner">
+
+    <img src="/images/dlink-logo.png" alt="D-LINK">
+
+    <div class="banner-text">
+        <h4>Install D-LINK</h4>
+        <p>Get faster access from your desktop.</p>
+    </div>
+
+    <button id="installBtn">
+        Install
+    </button>
+
+</div>
+    
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
        const togglePassword = document.getElementById('togglePassword');
