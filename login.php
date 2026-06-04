@@ -1146,16 +1146,37 @@ window.addEventListener(
 
         deferredPrompt = e;
 
+        const hiddenTime =
+    localStorage.getItem(
+        'dlink_install_hidden'
+    );
+
+if (hiddenTime) {
+
+    const daysPassed =
+        (Date.now() - hiddenTime) /
+        (1000 * 60 * 60 * 24);
+
+    if (daysPassed < 30) {
+        return;
+    }
+}
+
         const banner =
             document.getElementById('installBanner');
 
         banner.style.display = 'flex';
 
-        setTimeout(() => {
+      setTimeout(() => {
 
-            banner.style.display = 'none';
+    banner.style.display = 'none';
 
-        }, 10000);
+    localStorage.setItem(
+        'dlink_install_hidden',
+        Date.now()
+    );
+
+}, 10000);
     }
 );
 
@@ -1166,6 +1187,11 @@ document
     async () => {
 
         if (!deferredPrompt) return;
+
+        localStorage.setItem(
+            'dlink_install_hidden',
+            Date.now()
+        );
 
         deferredPrompt.prompt();
 
