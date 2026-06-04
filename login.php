@@ -201,6 +201,74 @@ $password = $_ENV['MYSQLPASSWORD'];
   animation: spin 0.8s linear infinite;
 }
 
+      #installBanner{
+    position:fixed;
+    top:20px;
+    right:20px;
+
+    width:340px;
+
+    background:#ffffff;
+
+    border-radius:16px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+    padding:16px;
+
+    display:none;
+
+    align-items:center;
+
+    gap:12px;
+
+    z-index:99999;
+
+    animation:slideIn .3s ease;
+}
+
+#installBanner img{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+}
+
+.banner-text{
+    flex:1;
+}
+
+.banner-text h4{
+    margin:0;
+    font-size:15px;
+}
+
+.banner-text p{
+    margin:3px 0 0;
+    color:#64748b;
+    font-size:13px;
+}
+
+#installBtn{
+    border:none;
+    background:#2563eb;
+    color:white;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+@keyframes slideIn{
+    from{
+        opacity:0;
+        transform:translateY(-10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
 #loadingOverlay {
   backdrop-filter: blur(5px);
 }
@@ -1054,6 +1122,63 @@ if ('serviceWorker' in navigator) {
     });
 
 }
+</script>
+
+    <script>
+
+let deferredPrompt;
+
+function isDesktop() {
+    return !/Android|iPhone|iPad|iPod/i.test(
+        navigator.userAgent
+    );
+}
+
+window.addEventListener(
+    'beforeinstallprompt',
+    (e) => {
+
+        if (!isDesktop()) {
+            return;
+        }
+
+        e.preventDefault();
+
+        deferredPrompt = e;
+
+        const banner =
+            document.getElementById('installBanner');
+
+        banner.style.display = 'flex';
+
+        setTimeout(() => {
+
+            banner.style.display = 'none';
+
+        }, 10000);
+    }
+);
+
+document
+.getElementById('installBtn')
+.addEventListener(
+    'click',
+    async () => {
+
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+
+        await deferredPrompt.userChoice;
+
+        document
+            .getElementById('installBanner')
+            .style.display = 'none';
+
+        deferredPrompt = null;
+    }
+);
+
 </script>
 </body>
 </html>
