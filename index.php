@@ -369,6 +369,50 @@ $conn->close();
 }
 #net-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 #net-toast .dot { width:10px; height:10px; border-radius:50%; }
+
+#installBanner{
+  position:fixed;
+  top:20px;
+  right:20px;
+  width:340px;
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+  padding:16px;
+  display:none;
+  align-items:center;
+  gap:12px;
+  z-index:99999;
+}
+
+#installBanner img{
+  width:48px;
+  height:48px;
+  border-radius:10px;
+}
+
+.banner-text{
+  flex:1;
+}
+
+.banner-text h4{
+  margin:0;
+}
+
+.banner-text p{
+  margin:3px 0 0;
+  font-size:13px;
+  color:#666;
+}
+
+#installBtn{
+  border:none;
+  background:#2563eb;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
       
   </style>
 </head>
@@ -696,6 +740,19 @@ $conn->close();
 </div>
 
 <div id="net-toast"></div>
+
+<div id="installBanner" style="display:none;">
+    <img src="tt.png" alt="D-LINK" width="48">
+
+    <div class="banner-text">
+        <h4>Install D-LINK</h4>
+        <p>Add D-LINK to your desktop for faster access.</p>
+    </div>
+
+    <button id="installBtn">
+        Install
+    </button>
+</div>
 
 <!-- LOADING SPINNER OVERLAY -->
 <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -1336,6 +1393,84 @@ function showNetToast(status) {
 }
 window.addEventListener('online',  () => showNetToast('online'));
 window.addEventListener('offline', () => showNetToast('offline'));
+</script>
+<script>
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+
+    // Don't show on phones
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        return;
+    }
+
+    e.preventDefault();
+
+    deferredPrompt = e;
+
+    const hiddenTime =
+        localStorage.getItem(
+            'dlink_install_hidden'
+        );
+
+    if (hiddenTime) {
+
+        const daysPassed =
+            (Date.now() - hiddenTime) /
+            (1000 * 60 * 60 * 24);
+
+        if (daysPassed < 30) {
+            return;
+        }
+    }
+
+    const banner =
+        document.getElementById(
+            'installBanner'
+        );
+
+    banner.style.display = 'flex';
+
+    setTimeout(() => {
+
+        banner.style.display = 'none';
+
+        localStorage.setItem(
+            'dlink_install_hidden',
+            Date.now()
+        );
+
+    }, 10000);
+
+});
+
+document
+.getElementById('installBtn')
+.addEventListener(
+    'click',
+    async () => {
+
+        if (!deferredPrompt) return;
+
+        localStorage.setItem(
+            'dlink_install_hidden',
+            Date.now()
+        );
+
+        deferredPrompt.prompt();
+
+        await deferredPrompt.userChoice;
+
+        document
+            .getElementById('installBanner')
+            .style.display = 'none';
+
+        deferredPrompt = null;
+
+    }
+);
+
 </script>
 </body>
 </html>
