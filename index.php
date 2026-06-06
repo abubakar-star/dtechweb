@@ -923,7 +923,13 @@ const installPopup = document.getElementById('install-popup');
 const closeBtn = document.getElementById('close-popup');
 
 window.addEventListener('load', () => {
+
 const isAndroid = /Android/i.test(navigator.userAgent);
+
+// Don't show if user already closed it in this session
+if (sessionStorage.getItem('install_popup_closed')) {
+    return;
+}
 
 // Only show on Android
 if (isAndroid) {
@@ -943,6 +949,12 @@ if (isAndroid) {
 });
 // Close button
 closeBtn.addEventListener('click', () => {
+
+    sessionStorage.setItem(
+        'install_popup_closed',
+        '1'
+    );
+
     hideInstallPopup();
 });
 
