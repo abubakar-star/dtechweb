@@ -363,7 +363,7 @@ $conn->close();
   position: fixed; top: 20px; left: 50%;
   transform: translateX(-50%) translateY(-80px);
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 20px; border-radius: 12px;card
+  padding: 12px 20px; border-radius: 12px;
   border: 1px solid #ddd; background: #fff;
   font-size: 14px; font-weight: 500;
   transition: transform .4s ease, opacity .3s ease;
@@ -978,6 +978,41 @@ document.onreadystatechange = function () {
     }
 
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const links = document.querySelectorAll('a[href]');
+
+    links.forEach(link => {
+
+        link.addEventListener('click', function () {
+
+            const href = this.getAttribute('href');
+
+            // Ignore anchors, javascript links and external actions
+            if (
+                href &&
+                !href.startsWith('#') &&
+                !href.startsWith('javascript:') &&
+                !this.hasAttribute('target')
+            ) {
+
+                const loader = document.getElementById('topLoader');
+
+                loader.style.display = 'block';
+                loader.style.width = '30%';
+
+                setTimeout(() => {
+                    loader.style.width = '70%';
+                }, 100);
+
+            }
+
+        });
+
+    });
+
+});
 
 </script>
     
