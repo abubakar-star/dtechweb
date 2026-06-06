@@ -888,15 +888,18 @@ border:1px solid rgba(255,255,255,0.1);
 const installPopup = document.getElementById('install-popup');
 const closeBtn = document.getElementById('close-popup');
 
+window.addEventListener('load', () => {
 const isAndroid = /Android/i.test(navigator.userAgent);
 
 // Only show on Android
 if (isAndroid) {
-    installPopup.classList.add('show');
+   setTimeout(() => {
+            installPopup.classList.add('show');
+        }, 2000); // 2 seconds
 } else {
     installPopup.classList.remove('show');
 }
-
+});
 // Close button
 closeBtn.addEventListener('click', function () {
     installPopup.classList.remove('show');
