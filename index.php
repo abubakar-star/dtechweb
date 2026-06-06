@@ -446,7 +446,8 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
     width:90%;
      max-width:320px; /* or 350px */
 padding-bottom: calc(14px + env(safe-area-inset-bottom));
-    background:#fff;
+     background:#111827; /* dark gray */
+    color:#fff;
     border-radius:18px;
 
     padding:14px;
@@ -479,11 +480,12 @@ padding-bottom: calc(14px + env(safe-area-inset-bottom));
     margin:0;
     font-size:14px;
     font-weight:600;
+    color:#fff;
 }
 
 .install-content p{
     margin:2px 0 0;
-    color:#666;
+    color:#9ca3af; /* light gray */
     font-size:11px;
 }
 
@@ -501,7 +503,7 @@ padding-bottom: calc(14px + env(safe-area-inset-bottom));
 .close-btn{
     background:none;
     border:none;
-    color:#888;
+     color:#d1d5db;
     font-size:16px;
     cursor:pointer;
     padding:0 4px;
