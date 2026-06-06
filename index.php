@@ -961,6 +961,8 @@ function hideInstallPopup() {
         installPopup.classList.remove('show');
         installPopup.classList.remove('hiding');
 
+             installCard.style.transform = '';
+        installCard.style.opacity = '';
 
     }, 450);
 
