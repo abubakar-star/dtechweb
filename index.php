@@ -924,6 +924,10 @@ const closeBtn = document.getElementById('close-popup');
 
 window.addEventListener('load', () => {
 
+console.log(
+    sessionStorage.getItem('install_popup_closed')
+);
+
 const isAndroid = /Android/i.test(navigator.userAgent);
 
 // Don't show if user already closed it in this session
@@ -954,7 +958,7 @@ closeBtn.addEventListener('click', () => {
         'install_popup_closed',
         '1'
     );
-
+ console.log('saved');
     hideInstallPopup();
 });
 
