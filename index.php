@@ -363,7 +363,7 @@ $conn->close();
   position: fixed; top: 20px; left: 50%;
   transform: translateX(-50%) translateY(-80px);
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 20px; border-radius: 12px;
+  padding: 12px 20px; border-radius: 12px;card
   border: 1px solid #ddd; background: #fff;
   font-size: 14px; font-weight: 500;
   transition: transform .4s ease, opacity .3s ease;
@@ -418,27 +418,26 @@ $conn->close();
 
 .install-popup{
     position:fixed;
-    left:15px;
-    right:15px;
-    bottom:20px;
+    left:10px;
+    right:10px;
+    bottom:10px;
     z-index:9999;
 }
 
 .install-card{
-    background:#111827;
-    color:white;
-    border-radius:20px;
-    padding:16px;
+    background:#ffffff;
+    border-radius:16px;
+    padding:12px;
     display:flex;
     align-items:center;
-    gap:12px;
-    box-shadow:0 5px 25px rgba(0,0,0,.4);
+    gap:10px;
+    box-shadow:0 4px 15px rgba(0,0,0,.15);
 }
 
 .install-icon{
-    width:48px;
-    height:48px;
-    border-radius:12px;
+    width:40px;
+    height:40px;
+    border-radius:10px;
 }
 
 .install-content{
@@ -447,30 +446,34 @@ $conn->close();
 
 .install-content h3{
     margin:0;
-    font-size:18px;
+    font-size:14px;
+    font-weight:600;
 }
 
 .install-content p{
-    margin:4px 0 0;
-    color:#b3b3b3;
-    font-size:14px;
+    margin:2px 0 0;
+    color:#666;
+    font-size:11px;
 }
 
 .install-btn{
-    background:#0d6efd;
+    background:#2563eb;
     color:white;
-    padding:10px 18px;
-    border-radius:10px;
+    padding:8px 14px;
+    border-radius:8px;
     text-decoration:none;
+    font-size:13px;
     font-weight:600;
+    white-space:nowrap;
 }
 
 .close-btn{
     background:none;
     border:none;
-    color:#999;
-    font-size:18px;
+    color:#888;
+    font-size:16px;
     cursor:pointer;
+    padding:0 4px;
 }
       
   </style>
@@ -833,7 +836,7 @@ $conn->close();
 
         <div class="install-content">
             <h3>Install DTECH App</h3>
-            <p>Get the app — faster launches, full-screen experience.</p>
+            <p>Install the DTECH app</p>
         </div>
 
         <a href="https://dtechweb.onrender.com/download/v1.0/D-LINK.apk"
