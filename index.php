@@ -418,10 +418,18 @@ $conn->close();
 
 .install-popup{
     position:fixed;
-    left:10px;
-    right:10px;
-    bottom:10px;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
     z-index:9999;
+
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+
+    background:rgba(0,0,0,0.6); /* 👈 DARK BACKGROUND */
+    padding:20px;
 }
 
 .install-card{
