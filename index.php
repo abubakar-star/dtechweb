@@ -442,6 +442,17 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
     pointer-events:auto;
 }
 
+.drag-handle{
+    position:absolute;
+    top:8px;
+    left:50%;
+    transform:translateX(-50%);
+    width:40px;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,255,255,.25);
+}
+
 .install-card{
     width:90%;
     max-width:320px;
@@ -449,6 +460,9 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 
     background:#111827;
     color:#fff;
+
+ position:relative;
+    touch-action:none;
 
     border-radius:16px;
     border:1px solid rgba(255,255,255,.1);
@@ -883,6 +897,7 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 
 <div id="install-popup" class="install-popup">
     <div class="install-card">
+      <div class="drag-handle"></div>
 
         <img src="images/icon-192.png" class="install-icon">
 
@@ -946,9 +961,73 @@ function hideInstallPopup() {
         installPopup.classList.remove('show');
         installPopup.classList.remove('hiding');
 
+             installCard.style.transform = '';
+        installCard.style.opacity = '';
+
     }, 450);
 
 }
+
+const installCard =
+    document.querySelector('.install-card');
+
+    let startY = 0;
+let currentY = 0;
+let dragging = false;
+
+installCard.addEventListener('touchstart', (e) => {
+
+    startY = e.touches[0].clientY;
+    dragging = true;
+
+    installCard.style.transition = 'none';
+
+});
+
+installCard.addEventListener('touchmove', (e) => {
+
+    if (!dragging) return;
+
+    currentY =
+        e.touches[0].clientY - startY;
+
+    // Only drag downward
+    if (currentY < 0) currentY = 0;
+
+    installCard.style.transform =
+        `translateY(${currentY}px) scale(${1 - currentY / 1000})`;
+
+});
+
+installCard.addEventListener('touchend', () => {
+
+    dragging = false;
+
+    installCard.style.transition =
+        'transform .3s ease';
+
+    // dismiss threshold
+    if (currentY > 120) {
+
+        installCard.style.transform =
+            'translateY(400px) scale(.7)';
+
+        installCard.style.opacity = '0';
+
+        setTimeout(() => {
+            hideInstallPopup();
+        }, 250);
+
+    } else {
+
+        installCard.style.transform =
+            'translateY(0) scale(1)';
+    }
+
+    currentY = 0;
+
+});
+
 </script>
 
     <script>
