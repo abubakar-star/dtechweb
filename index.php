@@ -418,17 +418,22 @@ $conn->close();
 
 .install-popup{
     position:fixed;
-    width: auto;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
     z-index:9999;
- bottom: 20px;
-      left: 50%;
-    transform: translateX(-50%);
+
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 
 
     opacity:0;
     pointer-events:none;
 
-    transition:opacity .3s ease;
+    transition:opacity 0.3s ease;
 }
 
 /* when active */
