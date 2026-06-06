@@ -1615,8 +1615,29 @@ if (head2) {
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
   };
-  window.location.href =
-    "download_invoice.php?id=" + document.getElementById("invoiceNumber").innerText;
+Swal.fire({
+    title: 'Preparing Receipt...',
+    html: 'Please wait',
+    allowOutsideClick: false,
+    didOpen: () => {
+        Swal.showLoading();
+    }
+});
+
+setTimeout(() => {
+
+    window.location.href =
+        "download_invoice.php?id=" + document.getElementById("invoiceNumber").innerText;
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Download Started',
+        text: 'Your receipt is being downloaded.',
+        timer: 2000,
+        showConfirmButton: false
+    });
+
+}, 1000);
 }
 </script>
 <script>
