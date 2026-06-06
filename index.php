@@ -418,28 +418,21 @@ $conn->close();
 
 .install-popup{
     position:fixed;
-    left:0;
-    right:0;
-    top:0;
-    bottom:0;
+    left:10px;
+    right:10px;
+    bottom:10px;
     z-index:9999;
-
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
-
-    background:rgba(0,0,0,0.6); /* 👈 DARK BACKGROUND */
-    padding:20px;
 }
 
 .install-card{
-    background:#ffffff;
+    background:#111827; /* dark card */
+    color:#fff;
     border-radius:16px;
     padding:12px;
     display:flex;
     align-items:center;
     gap:10px;
-    box-shadow:0 4px 15px rgba(0,0,0,.15);
+    box-shadow:0 10px 25px rgba(0,0,0,.4);
 }
 
 .install-icon{
