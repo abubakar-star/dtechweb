@@ -428,7 +428,6 @@ $conn->close();
     align-items:flex-end;
     justify-content:center;
 
-    background:rgba(0,0,0,0.6);
 
     opacity:0;
     pointer-events:none;
@@ -445,7 +444,7 @@ $conn->close();
 .install-card{
     width:100%;
     max-width:420px;
-
+padding-bottom: calc(14px + env(safe-area-inset-bottom));
     background:#ffffff;
     border-radius:18px 18px 0 0;
 
@@ -456,14 +455,13 @@ $conn->close();
     gap:10px;
 
     box-shadow:0 -10px 25px rgba(0,0,0,.25);
-
-    transform:translateY(100%);
+transform: translateY(100%) scale(0.98);
     transition:transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* slide up when visible */
 .install-popup.show .install-card{
-    transform:translateY(0);
+    transform: translateY(0) scale(1);
 }
 
 .install-icon{
@@ -899,6 +897,12 @@ if (isAndroid) {
 // Close button
 closeBtn.addEventListener('click', function () {
     installPopup.classList.remove('show');
+});
+
+installPopup.addEventListener('click', function (e) {
+    if (e.target === installPopup) {
+        installPopup.classList.remove('show');
+    }
 });
 </script>
 
