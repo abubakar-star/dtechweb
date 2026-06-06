@@ -900,8 +900,15 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 // Only show on Android
 if (isAndroid) {
    setTimeout(() => {
-            installPopup.classList.add('show');
-        }, 1000); // 1 seconds
+
+    installPopup.classList.add('show');
+
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        installPopup.classList.remove('show');
+    }, 10000);
+
+}, 1000); // 1 seconds
 } else {
     installPopup.classList.remove('show');
 }
