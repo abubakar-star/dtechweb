@@ -443,11 +443,11 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 }
 
 .install-card{
-    width:100%;
-    max-width:420px;
+    width:90%;
+     max-width:320px; /* or 350px */
 padding-bottom: calc(14px + env(safe-area-inset-bottom));
     background:#fff;
-    border-radius:18px 18px 0 0;
+    border-radius:18px;
 
     padding:14px;
 
