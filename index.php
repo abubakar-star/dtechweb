@@ -457,7 +457,7 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
     width:90%;
     max-width:320px;
     padding-bottom:calc(14px + env(safe-area-inset-bottom));
-
+will-change: transform, opacity;
     background:#111827;
     color:#fff;
 
@@ -988,14 +988,23 @@ installCard.addEventListener('touchmove', (e) => {
 
     if (!dragging) return;
 
-    currentY =
-        e.touches[0].clientY - startY;
+    currentY = e.touches[0].clientY - startY;
 
     // Only drag downward
     if (currentY < 0) currentY = 0;
 
+    // Shrink while dragging
+    const scale =
+        Math.max(0.85, 1 - currentY / 1000);
+
+    // Fade while dragging
+    const opacity =
+        Math.max(0.3, 1 - currentY / 250);
+
     installCard.style.transform =
-        `translateY(${currentY}px) scale(${1 - currentY / 1000})`;
+        `translateY(${currentY}px) scale(${scale})`;
+
+    installCard.style.opacity = opacity;
 
 });
 
@@ -1007,22 +1016,30 @@ installCard.addEventListener('touchend', () => {
         'transform .3s ease';
 
     // dismiss threshold
-    if (currentY > 120) {
+ if (currentY > 120) {
 
-        installCard.style.transform =
-            'translateY(400px) scale(.7)';
+    installCard.style.transition =
+        'transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease';
 
-        installCard.style.opacity = '0';
+    installCard.style.transform =
+        'translateY(900px) scale(.55)';
 
-        setTimeout(() => {
-            hideInstallPopup();
-        }, 250);
+    installCard.style.opacity = '0';
 
-    } else {
+    setTimeout(() => {
+        hideInstallPopup();
+    }, 450);
 
-        installCard.style.transform =
-            'translateY(0) scale(1)';
-    }
+} else {
+
+    installCard.style.transition =
+        'transform .35s cubic-bezier(.22,1,.36,1), opacity .35s ease';
+
+    installCard.style.transform =
+        'translateY(0) scale(1)';
+
+    installCard.style.opacity = '1';
+}
 
     currentY = 0;
 
