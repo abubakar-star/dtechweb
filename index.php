@@ -720,11 +720,11 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
                         View
                       </button>
                       |
-                      <button 
-                        class="text-green-600 hover:underline"
-                        onclick="downloadInvoiceByNumber('<?php echo $payment['transaction_id']; ?>','<?php echo $payment['payment_date']; ?>')">
-                        Download
-                      </button>
+                     <button 
+  class="text-green-600 hover:underline"
+  onclick="confirmDownloadReceipt('<?php echo $payment['transaction_id']; ?>','<?php echo $payment['payment_date']; ?>')">
+  Download
+</button>
                   <?php else: ?>
                       <span class="text-gray-400">N/A</span>
                   <?php endif; ?>
@@ -947,6 +947,28 @@ function hideInstallPopup() {
         installPopup.classList.remove('hiding');
 
     }, 450);
+
+}
+
+function confirmDownloadReceipt(invoiceNumber, paymentDate) {
+
+    Swal.fire({
+        title: 'Download Receipt?',
+        text: 'Your receipt will be downloaded as a PDF.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Download',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#16a34a'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            downloadInvoiceByNumber(invoiceNumber, paymentDate);
+
+        }
+
+    });
 
 }
 </script>
