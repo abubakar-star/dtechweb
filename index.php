@@ -448,15 +448,15 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 padding-bottom: calc(14px + env(safe-area-inset-bottom));
      background:#111827; /* dark gray */
     color:#fff;
-    border-radius:18px;
-
+    border-radius:16px;
+border:1px solid rgba(255,255,255,0.1);
     padding:14px;
 
     display:flex;
     align-items:center;
     gap:10px;
 
-    box-shadow:0 -10px 25px rgba(0,0,0,.25);
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
  transform: translateY(10px);  /* 👈 slight lift effect */
     transition:transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
