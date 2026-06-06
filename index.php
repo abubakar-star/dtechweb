@@ -418,21 +418,52 @@ $conn->close();
 
 .install-popup{
     position:fixed;
-    left:10px;
-    right:10px;
-    bottom:10px;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
     z-index:9999;
+
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+
+    background:rgba(0,0,0,0.6);
+
+    opacity:0;
+    pointer-events:none;
+
+    transition:opacity 0.3s ease;
+}
+
+/* when active */
+.install-popup.show{
+    opacity:1;
+    pointer-events:auto;
 }
 
 .install-card{
-    background:#111827; /* dark card */
-    color:#fff;
-    border-radius:16px;
-    padding:12px;
+    width:100%;
+    max-width:420px;
+
+    background:#ffffff;
+    border-radius:18px 18px 0 0;
+
+    padding:14px;
+
     display:flex;
     align-items:center;
     gap:10px;
-    box-shadow:0 10px 25px rgba(0,0,0,.4);
+
+    box-shadow:0 -10px 25px rgba(0,0,0,.25);
+
+    transform:translateY(100%);
+    transition:transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* slide up when visible */
+.install-popup.show .install-card{
+    transform:translateY(0);
 }
 
 .install-icon{
@@ -853,26 +884,22 @@ $conn->close();
 </div>
 
 <script>
+const installPopup = document.getElementById('install-popup');
+const closeBtn = document.getElementById('close-popup');
 
-const isAndroid =
-/Android/i.test(navigator.userAgent);
+const isAndroid = /Android/i.test(navigator.userAgent);
 
-if(!isAndroid){
-    document
-    .getElementById('install-popup')
-    .style.display='none';
+// Only show on Android
+if (isAndroid) {
+    installPopup.classList.add('show');
+} else {
+    installPopup.classList.remove('show');
 }
 
-document
-.getElementById('close-popup')
-.addEventListener('click', function(){
-
-    document
-    .getElementById('install-popup')
-    .style.display='none';
-
+// Close button
+closeBtn.addEventListener('click', function () {
+    installPopup.classList.remove('show');
 });
-
 </script>
 
     <script>
