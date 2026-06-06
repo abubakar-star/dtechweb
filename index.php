@@ -491,8 +491,8 @@ will-change: transform, opacity;
 
 /* HIDE ANIMATION */
 .install-popup.hiding .install-card{
-     transform: translateY(0) scale(0.1);
-    opacity: 0;
+    transform:translateY(20px) scale(.65);
+    opacity:0;
 }
 
 .install-popup.hiding{
@@ -953,8 +953,7 @@ installPopup.addEventListener('click', (e) => {
 });
 
 function hideInstallPopup() {
-   installCard.style.transition =
-        'transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease';
+
     installPopup.classList.add('hiding');
 
     setTimeout(() => {
