@@ -421,10 +421,8 @@ $conn->close();
     width: auto;
     z-index:9999;
  bottom: 20px;
-     left:auto;
+      left: 50%;
     transform: translateX(-50%);
-right:20px;
-   top:auto;
 
 
     opacity:0;
