@@ -457,13 +457,19 @@ border:1px solid rgba(255,255,255,0.1);
     gap:10px;
 
   box-shadow:0 10px 30px rgba(0,0,0,.5);
- transform: translateY(10px);  /* 👈 slight lift effect */
-    transition:transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+
+ transform: translateY(120px);  /* 👈 lift effect */
+
+       opacity:0;
+    transition:
+        transform .45s cubic-bezier(0.22,1,0.36,1),
+        opacity .45s ease;
 }
 
 /* slide up when visible */
 .install-popup.show .install-card{
     transform: translateY(0);
+    opacity:1;
 }
 
 .install-icon{
