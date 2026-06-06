@@ -305,24 +305,16 @@ $conn->close();
   animation: bounceHover 0.5s;
 }
       
-      #topLoader {
-
+#topLoader {
     position: fixed;
-
     top: 0;
-
     left: 0;
-
     width: 0%;
-
     height: 3px;
-
-    background: #1a73e8; /* Change color */
-
+    background: #1a73e8;
     z-index: 99999;
-
-    transition: width 0.4s ease;
-
+    transition: width 0.3s ease;
+    display: none;
 }
 
 
@@ -953,31 +945,53 @@ function hideInstallPopup() {
 
     <script>
 
-document.onreadystatechange = function () {
+let loaderInterval;
 
-    var loader = document.getElementById("topLoader");
+function startLoader() {
+    const loader = document.getElementById('topLoader');
 
-    if (document.readyState === "loading") {
+    loader.style.display = 'block';
+    loader.style.width = '0%';
 
-        loader.style.width = "30%";
+    let progress = 0;
 
-    }
+    loaderInterval = setInterval(() => {
 
-    if (document.readyState === "interactive") {
+        if (progress < 20) {
+            progress += 10;
+        } else if (progress < 40) {
+            progress += 5;
+        } else if (progress < 65) {
+            progress += 3;
+        } else if (progress < 80) {
+            progress += 2;
+        } else if (progress < 90) {
+            progress += 1;
+        }
 
-        loader.style.width = "70%";
+        loader.style.width = progress + '%';
 
-    }
+    }, 200);
+}
 
-    if (document.readyState === "complete") {
+function finishLoader() {
+    const loader = document.getElementById('topLoader');
 
-        loader.style.width = "100%";
+    clearInterval(loaderInterval);
 
-        setTimeout(() => loader.style.display = "none", 400);
+    loader.style.width = '100%';
 
-    }
+    setTimeout(() => {
+        loader.style.display = 'none';
+        loader.style.width = '0%';
+    }, 300);
+}
 
-};
+startLoader();
+
+window.addEventListener('load', function () {
+    finishLoader();
+});
 
 </script>
     
