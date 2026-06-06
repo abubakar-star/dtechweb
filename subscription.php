@@ -671,6 +671,40 @@ document.onreadystatechange = function () {
         setTimeout(() => loader.style.display = "none", 400);
     }
 };
+    document.addEventListener('DOMContentLoaded', function () {
+
+    const links = document.querySelectorAll('a[href]');
+
+    links.forEach(link => {
+
+        link.addEventListener('click', function () {
+
+            const href = this.getAttribute('href');
+
+            // Ignore anchors, javascript links and external actions
+            if (
+                href &&
+                !href.startsWith('#') &&
+                !href.startsWith('javascript:') &&
+                !this.hasAttribute('target')
+            ) {
+
+                const loader = document.getElementById('topLoader');
+
+                loader.style.display = 'block';
+                loader.style.width = '30%';
+
+                setTimeout(() => {
+                    loader.style.width = '70%';
+                }, 100);
+
+            }
+
+        });
+
+    });
+
+});
 </script>
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
