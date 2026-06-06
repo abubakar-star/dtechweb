@@ -415,6 +415,63 @@ $conn->close();
   border-radius:8px;
   cursor:pointer;
 }
+
+.install-popup{
+    position:fixed;
+    left:15px;
+    right:15px;
+    bottom:20px;
+    z-index:9999;
+}
+
+.install-card{
+    background:#111827;
+    color:white;
+    border-radius:20px;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    box-shadow:0 5px 25px rgba(0,0,0,.4);
+}
+
+.install-icon{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+}
+
+.install-content{
+    flex:1;
+}
+
+.install-content h3{
+    margin:0;
+    font-size:18px;
+}
+
+.install-content p{
+    margin:4px 0 0;
+    color:#b3b3b3;
+    font-size:14px;
+}
+
+.install-btn{
+    background:#0d6efd;
+    color:white;
+    padding:10px 18px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.close-btn{
+    background:none;
+    border:none;
+    color:#999;
+    font-size:18px;
+    cursor:pointer;
+}
       
   </style>
 </head>
@@ -768,6 +825,51 @@ $conn->close();
     <p class="text-white mt-3 text-sm">Loading invoice...</p>
   </div>
 </div>
+
+<div id="install-popup" class="install-popup">
+    <div class="install-card">
+
+        <img src="images/dlink_logo.png" class="install-icon">
+
+        <div class="install-content">
+            <h3>Install DTECH App</h3>
+            <p>Get the app — faster launches, full-screen experience.</p>
+        </div>
+
+        <a href="https://dtechweb.onrender.com/download/v1.0/D-LINK.apk"
+           class="install-btn">
+            Install
+        </a>
+
+        <button id="close-popup" class="close-btn">
+            ✕
+        </button>
+
+    </div>
+</div>
+
+<script>
+
+const isAndroid =
+/Android/i.test(navigator.userAgent);
+
+if(!isAndroid){
+    document
+    .getElementById('install-popup')
+    .style.display='none';
+}
+
+document
+.getElementById('close-popup')
+.addEventListener('click', function(){
+
+    document
+    .getElementById('install-popup')
+    .style.display='none';
+
+});
+
+</script>
 
     <script>
 
