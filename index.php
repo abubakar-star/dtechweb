@@ -462,7 +462,7 @@ will-change: transform, opacity;
     color:#fff;
 
  position:relative;
-    touch-action:none;
+   touch-action: pan-y;
 
     border-radius:16px;
     border:1px solid rgba(255,255,255,.1);
@@ -491,8 +491,8 @@ will-change: transform, opacity;
 
 /* HIDE ANIMATION */
 .install-popup.hiding .install-card{
-    transform:translateY(20px) scale(.65);
-    opacity:0;
+     transform: translateY(0) scale(0.1);
+    opacity: 0;
 }
 
 .install-popup.hiding{
@@ -953,7 +953,8 @@ installPopup.addEventListener('click', (e) => {
 });
 
 function hideInstallPopup() {
-
+   installCard.style.transition =
+        'transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease';
     installPopup.classList.add('hiding');
 
     setTimeout(() => {
@@ -1016,24 +1017,27 @@ installCard.addEventListener('touchend', () => {
         'transform .3s ease';
 
     // dismiss threshold
- if (currentY > 120) {
+const dismissThreshold =
+    installCard.offsetHeight * 0.25;
 
-    installCard.style.transition =
-        'transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease';
+if (currentY > dismissThreshold) {
 
-    installCard.style.transform =
-        'translateY(900px) scale(.55)';
+ installCard.style.transition =
+        'transform .35s cubic-bezier(.22,1,.36,1), opacity .35s ease';
+
+      installCard.style.transform =
+        'translateY(180px) scale(0)';
 
     installCard.style.opacity = '0';
 
     setTimeout(() => {
         hideInstallPopup();
-    }, 450);
+    }, 350);
 
 } else {
 
-    installCard.style.transition =
-        'transform .35s cubic-bezier(.22,1,.36,1), opacity .35s ease';
+     installCard.style.transition =
+        'transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease';
 
     installCard.style.transform =
         'translateY(0) scale(1)';
