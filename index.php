@@ -895,7 +895,7 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 if (isAndroid) {
    setTimeout(() => {
             installPopup.classList.add('show');
-        }, 2000); // 2 seconds
+        }, 1000); // 1 seconds
 } else {
     installPopup.classList.remove('show');
 }
