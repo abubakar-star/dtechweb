@@ -865,7 +865,7 @@ border:1px solid rgba(255,255,255,0.1);
 <div id="install-popup" class="install-popup">
     <div class="install-card">
 
-        <img src="images/dlink_logo.png" class="install-icon">
+        <img src="images/icon-192.png" class="install-icon">
 
         <div class="install-content">
             <h3>Install DTECH App</h3>
