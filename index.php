@@ -427,6 +427,7 @@ $conn->close();
     display:flex;
     align-items:flex-end;
     justify-content:center;
+padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 
 
     opacity:0;
@@ -445,7 +446,7 @@ $conn->close();
     width:100%;
     max-width:420px;
 padding-bottom: calc(14px + env(safe-area-inset-bottom));
-    background:#ffffff;
+    background:#fff;
     border-radius:18px 18px 0 0;
 
     padding:14px;
@@ -455,13 +456,13 @@ padding-bottom: calc(14px + env(safe-area-inset-bottom));
     gap:10px;
 
     box-shadow:0 -10px 25px rgba(0,0,0,.25);
-transform: translateY(100%) scale(0.98);
+ transform: translateY(10px);  /* 👈 slight lift effect */
     transition:transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* slide up when visible */
 .install-popup.show .install-card{
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
 }
 
 .install-icon{
