@@ -444,32 +444,45 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 
 .install-card{
     width:90%;
-     max-width:320px; /* or 350px */
-padding-bottom: calc(14px + env(safe-area-inset-bottom));
-     background:#111827; /* dark gray */
+    max-width:320px;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom));
+
+    background:#111827;
     color:#fff;
+
     border-radius:16px;
-border:1px solid rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,.1);
+
     padding:14px;
 
     display:flex;
     align-items:center;
     gap:10px;
 
-  box-shadow:0 10px 30px rgba(0,0,0,.5);
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
 
- transform: translateY(120px);  /* 👈 lift effect */
+    transform:translateY(120px) scale(.9);
+    opacity:0;
 
-       opacity:0;
     transition:
         transform .45s cubic-bezier(0.22,1,0.36,1),
         opacity .45s ease;
 }
 
-/* slide up when visible */
+/* SHOW */
 .install-popup.show .install-card{
-    transform: translateY(0);
+    transform:translateY(0) scale(1);
     opacity:1;
+}
+
+/* HIDE ANIMATION */
+.install-popup.hiding .install-card{
+    transform:translateY(20px) scale(.65);
+    opacity:0;
+}
+
+.install-popup.hiding{
+    opacity:0;
 }
 
 .install-icon{
@@ -905,24 +918,37 @@ if (isAndroid) {
 
     // Auto-hide after 10 seconds
     setTimeout(() => {
-        installPopup.classList.remove('show');
+      hideInstallPopup();
     }, 10000);
 
 }, 1000); // 1 seconds
 } else {
-    installPopup.classList.remove('show');
+    hideInstallPopup();
 }
 });
 // Close button
-closeBtn.addEventListener('click', function () {
-    installPopup.classList.remove('show');
+closeBtn.addEventListener('click', () => {
+    hideInstallPopup();
 });
 
-installPopup.addEventListener('click', function (e) {
+installPopup.addEventListener('click', (e) => {
     if (e.target === installPopup) {
-        installPopup.classList.remove('show');
+        hideInstallPopup();
     }
 });
+
+function hideInstallPopup() {
+
+    installPopup.classList.add('hiding');
+
+    setTimeout(() => {
+
+        installPopup.classList.remove('show');
+        installPopup.classList.remove('hiding');
+
+    }, 450);
+
+}
 </script>
 
     <script>
