@@ -477,14 +477,16 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 }
 
 .drag-handle{
-    position:absolute;
-    top:8px;
-    left:50%;
-    transform:translateX(-50%);
-    width:45px;
-    height:5px;
-    background:#6b7280;
-    border-radius:999px;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 32px;
+    height: 2px;
+
+    background: rgba(255,255,255,0.3);
+    border-radius: 999px;
 }
 
 /* SHOW */
