@@ -927,32 +927,58 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 const installPopup = document.getElementById('install-popup');
 const closeBtn = document.getElementById('close-popup');
 
+const HIDE_DURATION = 1 * 60 * 60 * 1000; // 1 hours
+
 window.addEventListener('load', () => {
-const isAndroid = /Android/i.test(navigator.userAgent);
 
-// Only show on Android
-if (isAndroid) {
-   setTimeout(() => {
+    const isAndroid = /Android/i.test(navigator.userAgent);
 
-    installPopup.classList.add('show');
+    if (!isAndroid) {
+        hideInstallPopup();
+        return;
+    }
 
-    // Auto-hide after 10 seconds
+    // Check when popup was last closed
+    const hiddenUntil = localStorage.getItem('install_popup_hidden_until');
+
+    if (hiddenUntil && Date.now() < parseInt(hiddenUntil)) {
+        return; // Still within 12 hours
+    }
+
     setTimeout(() => {
-      hideInstallPopup();
-    }, 10000);
 
-}, 1000); // 1 seconds
-} else {
-    hideInstallPopup();
-}
+        installPopup.classList.add('show');
+
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+            hideInstallPopup();
+        }, 10000);
+
+    }, 1000);
+
 });
+
 // Close button
 closeBtn.addEventListener('click', () => {
+
+    // Hide for 12 hours
+    localStorage.setItem(
+        'install_popup_hidden_until',
+        Date.now() + HIDE_DURATION
+    );
+
     hideInstallPopup();
+
 });
 
 installPopup.addEventListener('click', (e) => {
     if (e.target === installPopup) {
+
+        localStorage.setItem(
+            'install_popup_hidden_until',
+            Date.now() + HIDE_DURATION
+        );
+
         hideInstallPopup();
     }
 });
@@ -1021,9 +1047,13 @@ installCard.addEventListener("touchend", () => {
     dragging = false;
 
     installCard.style.transition = "transform .3s ease";
-
-    // Always dismiss when released
     installCard.style.transform = "translateY(100vh)";
+
+    // Hide for 12 hours
+    localStorage.setItem(
+        'install_popup_hidden_until',
+        Date.now() + HIDE_DURATION
+    );
 
     setTimeout(() => {
         hideInstallPopup();
