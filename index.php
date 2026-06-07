@@ -971,6 +971,46 @@ function confirmDownloadReceipt(invoiceNumber, paymentDate) {
     });
 
 }
+
+const installCard = document.querySelector(".install-card");
+
+let startY = 0;
+let currentY = 0;
+let dragging = false;
+
+installCard.addEventListener("touchstart", (e) => {
+    dragging = true;
+    startY = e.touches[0].clientY;
+    installCard.style.transition = "none";
+});
+
+installCard.addEventListener("touchmove", (e) => {
+
+    if (!dragging) return;
+
+    currentY = e.touches[0].clientY - startY;
+
+    if (currentY > 0) {
+        installCard.style.transform = `translateY(${currentY}px)`;
+    }
+
+});
+
+installCard.addEventListener("touchend", () => {
+
+    dragging = false;
+
+    installCard.style.transition = "transform .3s ease";
+
+    // Always dismiss when released
+    installCard.style.transform = "translateY(100vh)";
+
+    setTimeout(() => {
+        hideInstallPopup();
+        installCard.style.transform = "";
+    }, 300);
+
+});
 </script>
 
     <script>
