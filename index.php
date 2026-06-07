@@ -446,10 +446,12 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
     width:90%;
     max-width:320px;
     padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  touch-action:none;
+    cursor:grab;
 
     background:#111827;
     color:#fff;
-
+   position:relative;
     border-radius:16px;
     border:1px solid rgba(255,255,255,.1);
 
@@ -467,6 +469,22 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
     transition:
         transform .45s cubic-bezier(0.22,1,0.36,1),
         opacity .45s ease;
+}
+
+
+.install-card:active{
+    cursor:grabbing;
+}
+
+.drag-handle{
+    position:absolute;
+    top:8px;
+    left:50%;
+    transform:translateX(-50%);
+    width:45px;
+    height:5px;
+    background:#6b7280;
+    border-radius:999px;
 }
 
 /* SHOW */
@@ -883,7 +901,7 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 
 <div id="install-popup" class="install-popup">
     <div class="install-card">
-
+<div class="drag-handle"></div>
         <img src="images/icon-192.png" class="install-icon">
 
         <div class="install-content">
