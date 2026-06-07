@@ -996,6 +996,12 @@ function hideInstallPopup() {
 
 }
 
+if (window.DTECH_APP) {
+    // User is already inside the Android app
+    hideInstallPopup();
+    return;
+}
+
 function confirmDownloadReceipt(invoiceNumber, paymentDate) {
 
     Swal.fire({
