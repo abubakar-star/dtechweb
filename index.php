@@ -160,11 +160,13 @@ if (!$hasPaid && $dashboardOverride === 'on') {
 
 } else {
 
-   $displayTotalPaid
+   $displayTotalPaid = $planPriceuser;
 
 }
 
-$paidAmountNumber = floatval(str_replace(['KES ', ','], '', $totalPaid));
+$paidAmountNumber = floatval(
+    str_replace(['KES ', ',', 'NIL'], '', $displayTotalPaid)
+);
 
 // Fetch payment history
 $sql = "SELECT transaction_id, amount, payment_date, status 
