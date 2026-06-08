@@ -2,6 +2,7 @@
 // settings.php
 session_start();
 require_once 'includes/logger.php';
+require 'includes/payment_guard.php';
 
 // For local testing only you can uncomment the following line and set a user id.
 // $_SESSION['user_id'] = 1;
@@ -32,7 +33,7 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
-require 'includes/payment_guard.php';
+
     createLog(
         $conn,
         'database',
