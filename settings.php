@@ -32,7 +32,7 @@ $password = $_ENV['MYSQLPASSWORD'];
 
 $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
-
+require 'includes/payment_guard.php';
     createLog(
         $conn,
         'database',
