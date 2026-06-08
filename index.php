@@ -35,7 +35,7 @@ $stmt->close();
 $hasPaid = $paymentCount > 0;
 
 // Redirect unpaid users
-if (!$hasPaid) {
+if (!$hasPaid && $dashboardOverride !== 'on') {
     header("Location: subscription.php");
     exit();
 }
@@ -64,7 +64,8 @@ $sql = "SELECT
             p.package_name, 
             p.speed, 
             p.price,
-            u.Expiry
+            u.Expiry,
+            u.dashboard_override
         FROM users u
         LEFT JOIN routers r ON u.router_id = r.id
         LEFT JOIN packages p ON u.package_id = p.id
@@ -76,6 +77,7 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
 // Assign variables
+$dashboardOverride = $user['dashboard_override'] ?? 'off';
 $fullName   = trim($user['first_name'] . ' ' . $user['last_name']);
 $ipAddress  = $user['ip_address'] ?? 'N/A';
 $macAddress = $user['mac_address'] ?? 'N/A';
