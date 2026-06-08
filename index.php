@@ -18,7 +18,23 @@ createLog(
     header("Location: login.php");
     exit();
 }
+$dashboardOverride = 'off';
 
+$stmt = $conn->prepare("
+    SELECT dashboard_override
+    FROM users
+    WHERE id = ?
+");
+
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+
+$result = $stmt->get_result();
+$overrideData = $result->fetch_assoc();
+
+$dashboardOverride = $overrideData['dashboard_override'] ?? 'off';
+
+$stmt->close();
 
 // Check if user has an active subscription
 $stmt = $conn->prepare("
@@ -35,7 +51,7 @@ $stmt->close();
 $hasPaid = $paymentCount > 0;
 
 // Redirect unpaid users
-if (!$hasPaid) {
+if (!$hasPaid && $dashboardOverride !== 'on') {
     header("Location: subscription.php");
     exit();
 }
@@ -123,13 +139,13 @@ if (!empty($payments) && !empty($payments[0]['invoice_number'])) {
 */
 
 // Fetch total paid from payments table
-$sql = "SELECT COALESCE(SUM(amount), 0) AS total_paid         
-FROM payments         
-WHERE user_id = ? AND status = 'completed'"; 
-$stmt = $conn->prepare($sql); 
-$stmt->bind_param("i", $_SESSION['user_id']); 
-$stmt->execute(); 
-$result = $stmt->get_result(); 
+$sql = "SELECT COALESCE(SUM(amount), 0) AS total_paid 
+        FROM payments 
+        WHERE user_id = ? AND status = 'completed'";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$result = $stmt->get_result();
 $paymentData = $result->fetch_assoc();
 if ($expiryDate && strtotime($expiryDate) <= time()) {
     // Expired — total paid is zero
@@ -674,7 +690,7 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
       </div>
       <div class="bg-white p-4 rounded-xl shadow">
         <h3 class="text-sm text-gray-500">Total Paid</h3>
-        <p class="text-xl font-bold text-blue-700"><?php echo $displayTotalPaid; ?></p>
+        <p class="text-xl font-bold text-blue-700"><?php echo $planPriceuser; ?></p>
       </div>
       <div class="p-4 rounded-xl shadow <?php echo ($paidAmountNumber == 0) ? 'bg-red-600 text-white' : 'bg-white'; ?>">
         <h3 class="text-sm <?php echo ($paidAmountNumber == 0) ? 'text-white' : 'text-gray-500'; ?>">Next Payment Due</h3>
