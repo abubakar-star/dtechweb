@@ -1645,6 +1645,9 @@ if (head2) {
 
 function downloadInvoiceByNumber(invoiceNumber, paymentDate) {
     // Set invoice number
+    function downloadInvoiceByNumber(invoiceNumber, paymentDate) {
+    console.log("Download clicked", invoiceNumber, paymentDate);
+    
   document.getElementById("invoiceNumber").innerText = invoiceNumber; 
 document.getElementById("changeRec").innerText = "Receipt:";
 document.getElementById("changeRecWord").innerText = " RCT";
