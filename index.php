@@ -147,12 +147,21 @@ $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $result = $stmt->get_result();
 $paymentData = $result->fetch_assoc();
-if ($expiryDate && strtotime($expiryDate) <= time()) {
-    // Expired — total paid is zero
+
+if (!$hasPaid && $dashboardOverride === 'on') {
+
+    $totalPaid = 'NIL';
+
+} elseif ($expiryDate && strtotime($expiryDate) <= time()) {
+
     $totalPaid = 'KES 0.00';
+
 } else {
+
     $totalPaid = 'KES ' . number_format($paymentData['total_paid'], 2);
+
 }
+
 $paidAmountNumber = floatval(str_replace(['KES ', ','], '', $totalPaid));
 
 // Fetch payment history
@@ -690,12 +699,24 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
       </div>
       <div class="bg-white p-4 rounded-xl shadow">
         <h3 class="text-sm text-gray-500">Total Paid</h3>
-        <p class="text-xl font-bold text-blue-700"><?php echo $planPriceuser; ?></p>
+        <p class="text-xl font-bold text-blue-700"><?php echo $totalPaid; ?></p>
       </div>
       <div class="p-4 rounded-xl shadow <?php echo ($paidAmountNumber == 0) ? 'bg-red-600 text-white' : 'bg-white'; ?>">
         <h3 class="text-sm <?php echo ($paidAmountNumber == 0) ? 'text-white' : 'text-gray-500'; ?>">Next Payment Due</h3>
         <p class="text-xl font-bold <?php echo ($paidAmountNumber == 0) ? 'text-white' : 'text-red-600'; ?>">
-          <?php echo $expiryDate ? date("M j, Y", strtotime($expiryDate)) : 'N/A'; ?>
+          <?php
+if (!$hasPaid && $dashboardOverride === 'on') {
+
+    echo 'NIL';
+
+} else {
+
+    echo $expiryDate
+        ? date("M j, Y", strtotime($expiryDate))
+        : 'N/A';
+
+}
+?>
         </p>
       </div>
     </div>
