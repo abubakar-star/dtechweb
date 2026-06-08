@@ -18,7 +18,7 @@ createLog(
     header("Location: login.php");
     exit();
 }
-
+$dashboardOverride = 'off';
 
 // Check if user has an active subscription
 $stmt = $conn->prepare("
