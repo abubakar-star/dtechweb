@@ -931,6 +931,12 @@ const HIDE_DURATION = 1 * 60 * 60 * 1000; // 1 hours
 
 window.addEventListener('load', () => {
 
+
+    if (window.DTECH_APP) {
+        hideInstallPopup();
+        return;
+    }
+    
     const isAndroid = /Android/i.test(navigator.userAgent);
 
     if (!isAndroid) {
@@ -994,11 +1000,6 @@ function hideInstallPopup() {
 
     }, 450);
 
-}
-
-if (window.DTECH_APP) {
-    // User is already inside the Android app
-    hideInstallPopup();
 }
 
 function confirmDownloadReceipt(invoiceNumber, paymentDate) {
