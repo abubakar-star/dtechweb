@@ -49,6 +49,7 @@ $stmt->fetch();
 $stmt->close();
 
 $hasPaid = $paymentCount > 0;
+$isInactive = (!$hasPaid && $dashboardOverride === 'on');
 
 // Redirect unpaid users
 if (!$hasPaid && $dashboardOverride !== 'on') {
@@ -69,6 +70,10 @@ $phone = $user['phone_number'];
 $first_name = $user['first_name'];
 $email = $user['email'];
 $userStatus = $user['status'];
+
+if (!$hasPaid && $dashboardOverride === 'on') {
+    $userStatus = 'inactive';
+}
 $payd = $user['created_at'];
 
 // Fetch user + router + package info
@@ -1436,9 +1441,25 @@ else if (payment.status === 'timeout') {
 
   function updateDashboard() {
   const userStatus = "<?= $userStatus ?>";
+  const isInactive = <?= $isInactive ? 'true' : 'false' ?>;
   const suspendedThreshold = 30; // 30 days after expiry = auto-suspend
     const now = new Date();
     const daysDiff = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+
+    // ---------- Inactive ----------
+if (isInactive) {
+
+    statusBadge.innerText = "Status: Inactive";
+
+    statusBadge.className =
+      "block text-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700";
+
+    expiryBtn.classList.add('hidden');
+
+    invoiceBtnWrapper.classList.remove('hidden');
+
+    return;
+}
 
       // 🚫 TERMINATED USERS — NO INVOICE, NO PAYMENT
   if (userStatus === 'terminated') {
