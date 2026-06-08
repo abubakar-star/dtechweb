@@ -18,23 +18,7 @@ createLog(
     header("Location: login.php");
     exit();
 }
-$dashboardOverride = 'off';
 
-$stmt = $conn->prepare("
-    SELECT dashboard_override
-    FROM users
-    WHERE id = ?
-");
-
-$stmt->bind_param("i", $_SESSION['user_id']);
-$stmt->execute();
-
-$result = $stmt->get_result();
-$overrideData = $result->fetch_assoc();
-
-$dashboardOverride = $overrideData['dashboard_override'] ?? 'off';
-
-$stmt->close();
 
 // Check if user has an active subscription
 $stmt = $conn->prepare("
@@ -51,7 +35,7 @@ $stmt->close();
 $hasPaid = $paymentCount > 0;
 
 // Redirect unpaid users
-if (!$hasPaid && $dashboardOverride !== 'on') {
+if (!$hasPaid) {
     header("Location: subscription.php");
     exit();
 }
