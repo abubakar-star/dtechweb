@@ -148,17 +148,19 @@ $stmt->execute();
 $result = $stmt->get_result();
 $paymentData = $result->fetch_assoc();
 
+$displayTotalPaid = $planPriceuser;
+
 if (!$hasPaid && $dashboardOverride === 'on') {
 
-    $totalPaid = 'NIL';
+    $displayTotalPaid = 'NIL';
 
 } elseif ($expiryDate && strtotime($expiryDate) <= time()) {
 
-    $totalPaid = 'KES 0.00';
+    $displayTotalPaid = 'KES 0.00';
 
 } else {
 
-    $totalPaid = 'KES ' . number_format($paymentData['total_paid'], 2);
+   $displayTotalPaid
 
 }
 
@@ -699,7 +701,7 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
       </div>
       <div class="bg-white p-4 rounded-xl shadow">
         <h3 class="text-sm text-gray-500">Total Paid</h3>
-        <p class="text-xl font-bold text-blue-700"><?php echo $totalPaid; ?></p>
+        <p class="text-xl font-bold text-blue-700"><?php echo $displayTotalPaid; ?></p>
       </div>
       <div class="p-4 rounded-xl shadow <?php echo ($paidAmountNumber == 0) ? 'bg-red-600 text-white' : 'bg-white'; ?>">
         <h3 class="text-sm <?php echo ($paidAmountNumber == 0) ? 'text-white' : 'text-gray-500'; ?>">Next Payment Due</h3>
