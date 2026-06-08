@@ -686,17 +686,10 @@ padding-bottom: 30px; /* 👈 THIS lifts it off the bottom */
 </div>
 
 
-   <span id="statusBadge"
-  class="block text-center px-3 py-1 rounded-full text-sm font-medium
-  <?php echo (!$hasPaid && $dashboardOverride === 'on')
-      ? 'bg-red-100 text-red-700'
-      : 'bg-green-100 text-green-700'; ?>">
-
-  Status:
-  <?php echo (!$hasPaid && $dashboardOverride === 'on')
-      ? 'Inactive'
-      : 'Active'; ?>
-</span>
+    <span id="statusBadge"
+      class="block text-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+      Status: Active
+    </span>
   </div>
 </div>
 
