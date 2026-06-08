@@ -20,6 +20,22 @@ createLog(
 }
 $dashboardOverride = 'off';
 
+$stmt = $conn->prepare("
+    SELECT dashboard_override
+    FROM users
+    WHERE id = ?
+");
+
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+
+$result = $stmt->get_result();
+$overrideData = $result->fetch_assoc();
+
+$dashboardOverride = $overrideData['dashboard_override'] ?? 'off';
+
+$stmt->close();
+
 // Check if user has an active subscription
 $stmt = $conn->prepare("
     SELECT COUNT(*) 
@@ -64,8 +80,7 @@ $sql = "SELECT
             p.package_name, 
             p.speed, 
             p.price,
-            u.Expiry,
-            u.dashboard_override
+            u.Expiry
         FROM users u
         LEFT JOIN routers r ON u.router_id = r.id
         LEFT JOIN packages p ON u.package_id = p.id
@@ -77,7 +92,6 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
 // Assign variables
-$dashboardOverride = $user['dashboard_override'] ?? 'off';
 $fullName   = trim($user['first_name'] . ' ' . $user['last_name']);
 $ipAddress  = $user['ip_address'] ?? 'N/A';
 $macAddress = $user['mac_address'] ?? 'N/A';
