@@ -179,9 +179,10 @@ $users = $conn->query("
     <th class="p-2">Username</th>
     <th class="p-2">Password</th>
     <th class="p-2">Phone</th>
+    <th class="p-2">Account Number</th>
     <th class="p-2">Account Created</th>
     <th class="p-2">Package</th>
-    <th class="p-2">Account Number</th>
+    
     <th class="p-2">Router Password</th>
     <th class="p-2">Dashboard Override</th>
     <th class="p-2">Status</th>
@@ -208,6 +209,10 @@ $users = $conn->query("
 </td>
 
 <td class="p-2">
+    <?= htmlspecialchars($u['account_number']) ?>
+</td>
+
+<td class="p-2">
     <?= $u['account_created_at'] ?>
 </td>
 
@@ -215,9 +220,7 @@ $users = $conn->query("
     <?= htmlspecialchars($u['package_name'] ?? '-') ?>
 </td>
 
-<td class="p-2">
-    <?= htmlspecialchars($u['account_number']) ?>
-</td>
+
 
 <td class="p-2 font-mono text-xs">
     <?= htmlspecialchars($u['router_password']) ?>
