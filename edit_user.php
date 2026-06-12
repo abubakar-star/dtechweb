@@ -157,7 +157,7 @@ Edit User — <?= htmlspecialchars($user['username']) ?>
 <?php endif; ?>
 
 
-<form method="POST" class="space-y-4">
+<form method="POST" id="editUserForm" class="space-y-4">
 
 <div class="grid grid-cols-2 gap-4">
 <div>
@@ -297,13 +297,81 @@ class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
 ← Back
 </a>
 
-<button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-Save Changes
+<button
+    id="saveBtn"
+    disabled
+    class="bg-gray-400 text-white px-6 py-2 rounded cursor-not-allowed"
+>
+    Save Changes
 </button>
 </div>
 
 </form>
 </div>
+
+<script>
+
+const form = document.getElementById('editUserForm');
+const saveBtn = document.getElementById('saveBtn');
+
+// Store original values
+const originalValues = {};
+
+Array.from(form.elements).forEach(field => {
+
+    if (field.name) {
+        originalValues[field.name] = field.value;
+    }
+
+});
+
+function checkForChanges() {
+
+    let changed = false;
+
+    Array.from(form.elements).forEach(field => {
+
+        if (!field.name) return;
+
+        if (field.value !== originalValues[field.name]) {
+            changed = true;
+        }
+
+    });
+
+    saveBtn.disabled = !changed;
+
+    if (changed) {
+
+        saveBtn.classList.remove(
+            'bg-gray-400',
+            'cursor-not-allowed'
+        );
+
+        saveBtn.classList.add(
+            'bg-blue-600',
+            'hover:bg-blue-700'
+        );
+
+    } else {
+
+        saveBtn.classList.remove(
+            'bg-blue-600',
+            'hover:bg-blue-700'
+        );
+
+        saveBtn.classList.add(
+            'bg-gray-400',
+            'cursor-not-allowed'
+        );
+
+    }
+}
+
+form.addEventListener('input', checkForChanges);
+form.addEventListener('change', checkForChanges);
+
+</script>
 
 </body>
 </html>
