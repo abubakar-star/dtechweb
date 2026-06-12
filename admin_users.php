@@ -242,8 +242,14 @@ $users = $conn->query("
     class="border p-2 rounded col-span-2"
 >
 
-<select id="packageSelect" name="package_id" class="border p-2 rounded">
-    <option value="">Select Package</option>
+<select id="connectionType" name="connection_type" class="border p-2 rounded" required>
+    <option value="" selected disabled>Select Connection Type</option>
+    <option value="home">Home</option>
+    <option value="business">Business</option>
+</select>
+
+<select id="packageSelect" name="package_id" class="border p-2 rounded" required>
+    <option value="" selected disabled>Select Package</option>
 
     <?php foreach ($packages as $package): ?>
         <option
@@ -257,7 +263,9 @@ $users = $conn->query("
     <?php endforeach; ?>
 </select>
 
-<select name="router_id" class="border p-2 rounded">
+<select name="router_id" class="border p-2 rounded" required>
+    <option value="" selected disabled>Select Router</option>
+
     <?php foreach ($routers as $router): ?>
         <option value="<?= $router['id'] ?>">
             <?= htmlspecialchars($router['router_name']) ?>
@@ -267,20 +275,17 @@ $users = $conn->query("
     <?php endforeach; ?>
 </select>
 
-<select name="dashboard_override" class="border p-2 rounded">
+<select name="dashboard_override" class="border p-2 rounded" required>
+    <option value="" selected disabled>Select Dashboard Override</option>
     <option value="off">Dashboard Override Off</option>
     <option value="on">Dashboard Override On</option>
 </select>
 
-<select id="connectionType" name="connection_type" class="border p-2 rounded">
-    <option value="home">Home</option>
-    <option value="business">Business</option>
-</select>
-
-<select name="status" class="border p-2 rounded">
-<option value="inactive">Inactive</option>
-<option value="active">Active</option>
-<option value="queued">Queued</option>
+<select name="status" class="border p-2 rounded" required>
+    <option value="" selected disabled>Select Status</option>
+    <option value="inactive">Inactive</option>
+    <option value="active">Active</option>
+    <option value="queued">Queued</option>
 </select>
 </div>
 
