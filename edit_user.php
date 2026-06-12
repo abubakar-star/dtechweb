@@ -348,6 +348,14 @@ function checkForChanges() {
         }
 
     });
+    // If connection type changed,
+// package must be selected again
+if (
+    connectionType.value !== originalConnectionType &&
+    packageSelect.value === ''
+) {
+    changed = false;
+}
 
     saveBtn.disabled = !changed;
 
