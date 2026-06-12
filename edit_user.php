@@ -37,10 +37,22 @@ while ($row = $res->fetch_assoc()) {
 
 // ================= FETCH USER =================
 $stmt = $conn->prepare("
-    SELECT id, first_name, last_name, username, email, phone_number,
-           connection_type, status, package_id, router_id, created_at
-    FROM users
-    WHERE id = ?
+   SELECT id,
+       first_name,
+       last_name,
+       username,
+       email,
+       phone_number,
+       account_number,
+       router_password,
+       dashboard_override,
+       connection_type,
+       status,
+       package_id,
+       router_id,
+       created_at
+FROM users
+WHERE id = ?
 ");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -56,18 +68,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $passwordSQL = "";
     $params = [
-        $_POST['first_name'],
-        $_POST['last_name'],
-        $_POST['username'],
-        $_POST['email'],
-        $_POST['phone_number'],
-        $_POST['connection_type'],
-        $_POST['status'],
-        $_POST['package_id'],
-        $_POST['router_id'],
-         $_POST['created_at']  // <-- Add this
-    ];
-  $types = "sssssssiss"; // match the above order
+    $_POST['first_name'],
+    $_POST['last_name'],
+    $_POST['username'],
+    $_POST['email'],
+    $_POST['phone_number'],
+    $_POST['account_number'],
+    $_POST['router_password'],
+    $_POST['dashboard_override'],
+    $_POST['connection_type'],
+    $_POST['status'],
+    $_POST['package_id'],
+    $_POST['router_id'],
+    $_POST['created_at']
+];
+
+$types = "ssssssssssiss"; // match the above order
 
     // Update password ONLY if filled (NO HASHING)
     if (!empty($_POST['password'])) {
@@ -80,19 +96,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $types .= "i";
 
     $stmt = $conn->prepare("
-        UPDATE users SET
-            first_name = ?,
-            last_name = ?,
-            username = ?,
-            email = ?,
-            phone_number = ?,
-            connection_type = ?,
-            status = ?,
-            package_id = ?,
-               router_id = ?,
-        created_at = ?
-        $passwordSQL
-    WHERE id = ?
+       UPDATE users SET
+    first_name = ?,
+    last_name = ?,
+    username = ?,
+    email = ?,
+    phone_number = ?,
+    account_number = ?,
+    router_password = ?,
+    dashboard_override = ?,
+    connection_type = ?,
+    status = ?,
+    package_id = ?,
+    router_id = ?,
+    created_at = ?
+    $passwordSQL
+WHERE id = ?
     ");
 
     $stmt->bind_param($types, ...$params);
@@ -180,6 +199,41 @@ class="border p-2 rounded w-full">
 <input name="phone_number"
 value="<?= htmlspecialchars($user['phone_number']) ?>"
 class="border p-2 rounded w-full">
+</div>
+
+<div class="grid grid-cols-2 gap-4">
+
+    <div>
+        <label class="text-sm">Account Number</label>
+        <input
+            name="account_number"
+            value="<?= htmlspecialchars($user['account_number']) ?>"
+            class="border p-2 rounded w-full">
+    </div>
+
+    <div>
+        <label class="text-sm">Router Password</label>
+        <input
+            name="router_password"
+            value="<?= htmlspecialchars($user['router_password']) ?>"
+            class="border p-2 rounded w-full">
+    </div>
+
+</div>
+
+<div>
+    <label class="text-sm">Dashboard Override</label>
+    <select name="dashboard_override" class="border p-2 rounded w-full">
+        <option value="off"
+            <?= $user['dashboard_override'] == 'off' ? 'selected' : '' ?>>
+            Off
+        </option>
+
+        <option value="on"
+            <?= $user['dashboard_override'] == 'on' ? 'selected' : '' ?>>
+            On
+        </option>
+    </select>
 </div>
 
 <div class="grid grid-cols-2 gap-4">
