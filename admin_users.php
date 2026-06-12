@@ -22,10 +22,13 @@ if ($conn->connect_error) {
 $packages = [];
 
 $result = $conn->query("
-    SELECT id, package_name, speed, price
+    SELECT id,
+           package_name,
+           speed,
+           price,
+           package_type
     FROM packages
-    WHERE status = 'active'
-    ORDER BY package_name
+    WHERE status='active'
 ");
 
 while ($row = $result->fetch_assoc()) {
@@ -226,17 +229,19 @@ $users = $conn->query("
     class="border p-2 rounded col-span-2"
 >
 
-<select name="package_id" class="border p-2 rounded">
+<select id="packageSelect" name="package_id" class="border p-2 rounded">
     <option value="">Select Package</option>
 
     <?php foreach ($packages as $package): ?>
-        <option value="<?= $package['id'] ?>">
+        <option
+            value="<?= $package['id'] ?>"
+            data-type="<?= $package['package_type'] ?>"
+        >
             <?= htmlspecialchars($package['package_name']) ?>
             (<?= htmlspecialchars($package['speed']) ?> -
             KES <?= number_format($package['price']) ?>)
         </option>
     <?php endforeach; ?>
-
 </select>
 
 <input
@@ -251,9 +256,9 @@ $users = $conn->query("
     <option value="on">Dashboard Override On</option>
 </select>
 
-<select name="connection_type" class="border p-2 rounded">
-<option value="home">Home</option>
-<option value="business">Business</option>
+<select id="connectionType" name="connection_type" class="border p-2 rounded">
+    <option value="home">Home</option>
+    <option value="business">Business</option>
 </select>
 
 <select name="status" class="border p-2 rounded">
@@ -270,6 +275,28 @@ $users = $conn->query("
 </form>
 </div>
 </div>
+
+<script>
+function filterPackages() {
+
+    const type = document.getElementById('connectionType').value;
+    const packageSelect = document.getElementById('packageSelect');
+
+    Array.from(packageSelect.options).forEach(option => {
+
+        if (!option.dataset.type) return;
+
+        option.hidden = option.dataset.type !== type;
+    });
+
+    packageSelect.value = '';
+}
+
+document.getElementById('connectionType')
+    .addEventListener('change', filterPackages);
+
+filterPackages();
+</script>
 
 <script>
 function openModal() {
