@@ -35,6 +35,19 @@ while ($row = $result->fetch_assoc()) {
     $packages[] = $row;
 }
 
+// ================= FETCH ROUTERS =================
+$routers = [];
+
+$result = $conn->query("
+    SELECT id, router_name, model, location, status
+    FROM routers
+    ORDER BY router_name
+");
+
+while ($row = $result->fetch_assoc()) {
+    $routers[] = $row;
+}
+
 // ================= DELETE USER =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
@@ -244,12 +257,15 @@ $users = $conn->query("
     <?php endforeach; ?>
 </select>
 
-<input
-    name="router_id"
-    type="number"
-    value="1"
-    class="border p-2 rounded"
->
+<select name="router_id" class="border p-2 rounded">
+    <?php foreach ($routers as $router): ?>
+        <option value="<?= $router['id'] ?>">
+            <?= htmlspecialchars($router['router_name']) ?>
+            - <?= htmlspecialchars($router['location']) ?>
+            (<?= htmlspecialchars($router['status']) ?>)
+        </option>
+    <?php endforeach; ?>
+</select>
 
 <select name="dashboard_override" class="border p-2 rounded">
     <option value="off">Dashboard Override Off</option>
