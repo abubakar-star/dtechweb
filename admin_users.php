@@ -125,9 +125,22 @@ $stmt->bind_param(
 
 // ================= FETCH USERS =================
 $users = $conn->query("
-    SELECT id, username, phone_number, status
+    SELECT
+        users.id,
+        users.username,
+        users.password,
+        users.phone_number,
+        users.account_created_at,
+        users.account_number,
+        users.router_password,
+        users.dashboard_override,
+        users.status,
+        packages.package_name,
+        routers.router_name
     FROM users
-    ORDER BY id DESC
+    LEFT JOIN packages ON users.package_id = packages.id
+    LEFT JOIN routers ON users.router_id = routers.id
+    ORDER BY users.id DESC
 ");
 ?>
 <!DOCTYPE html>
@@ -160,27 +173,74 @@ $users = $conn->query("
 <div class="bg-white shadow rounded overflow-x-auto">
 <table class="w-full text-sm">
 <thead class="bg-gray-200 text-gray-700">
-<tr>
-<th class="p-2">ID</th>
-<th class="p-2">Username</th>
-<th class="p-2">Phone</th>
-<th class="p-2">Status</th>
-<th class="p-2">Actions</th>
 
+<tr>
+    <th class="p-2">ID</th>
+    <th class="p-2">Username</th>
+    <th class="p-2">Password</th>
+    <th class="p-2">Phone</th>
+    <th class="p-2">Account Created</th>
+    <th class="p-2">Package</th>
+    <th class="p-2">Account Number</th>
+    <th class="p-2">Router Password</th>
+    <th class="p-2">Dashboard Override</th>
+    <th class="p-2">Status</th>
+    <th class="p-2">Actions</th>
 </tr>
+
 </thead>
 <tbody>
 <?php while ($u = $users->fetch_assoc()): ?>
 <tr class="border-t hover:bg-gray-50">
+
 <td class="p-2"><?= $u['id'] ?></td>
-<td class="p-2 font-semibold"><?= htmlspecialchars($u['username']) ?></td>
-<td class="p-2"><?= htmlspecialchars($u['phone_number']) ?></td>
-<td class="p-2">
-<span class="px-2 py-1 rounded text-xs
-<?= $u['status']=='active' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
-<?= $u['status'] ?>
-</span>
+
+<td class="p-2 font-semibold">
+    <?= htmlspecialchars($u['username']) ?>
 </td>
+
+<td class="p-2 font-mono text-xs">
+    <?= htmlspecialchars($u['password']) ?>
+</td>
+
+<td class="p-2">
+    <?= htmlspecialchars($u['phone_number']) ?>
+</td>
+
+<td class="p-2">
+    <?= $u['account_created_at'] ?>
+</td>
+
+<td class="p-2">
+    <?= htmlspecialchars($u['package_name'] ?? '-') ?>
+</td>
+
+<td class="p-2">
+    <?= htmlspecialchars($u['account_number']) ?>
+</td>
+
+<td class="p-2 font-mono text-xs">
+    <?= htmlspecialchars($u['router_password']) ?>
+</td>
+
+<td class="p-2">
+    <span class="px-2 py-1 rounded text-xs
+    <?= $u['dashboard_override'] === 'on'
+        ? 'bg-blue-200 text-blue-800'
+        : 'bg-gray-200 text-gray-800' ?>">
+        <?= ucfirst($u['dashboard_override']) ?>
+    </span>
+</td>
+
+<td class="p-2">
+    <span class="px-2 py-1 rounded text-xs
+    <?= $u['status']=='active'
+        ? 'bg-green-200 text-green-800'
+        : 'bg-yellow-200 text-yellow-800' ?>">
+        <?= $u['status'] ?>
+    </span>
+</td>
+
 <td class="p-2 flex gap-2">
 
     <!-- EDIT (redirects to edit page) -->
