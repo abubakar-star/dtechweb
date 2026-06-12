@@ -239,7 +239,7 @@ class="border p-2 rounded w-full">
 <div class="grid grid-cols-2 gap-4">
 <div>
 <label class="text-sm">Connection Type</label>
-<select name="connection_type" class="border p-2 rounded w-full">
+<select id="connectionType" name="connection_type" class="border p-2 rounded w-full">
 <option value="home" <?= $user['connection_type']=='home'?'selected':'' ?>>Home</option>
 <option value="business" <?= $user['connection_type']=='business'?'selected':'' ?>>Business</option>
 </select>
@@ -260,7 +260,10 @@ class="border p-2 rounded w-full">
 <div class="grid grid-cols-2 gap-4">
 <div>
 <label class="text-sm">Package</label>
-<select name="package_id" required class="border p-2 rounded w-full">
+<select id="packageSelect" name="package_id" required class="border p-2 rounded w-full">
+
+    <option value="">Select Package</option>
+
     <?php foreach ($packages as $pkg): ?>
         <option value="<?= $pkg['id'] ?>" <?= $pkg['id'] == $user['package_id'] ? 'selected' : '' ?>>
             <?= htmlspecialchars($pkg['package_name']) ?> — KES <?= number_format($pkg['price'], 2) ?>
@@ -313,6 +316,13 @@ class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
 
 const form = document.getElementById('editUserForm');
 const saveBtn = document.getElementById('saveBtn');
+
+const connectionType = document.getElementById('connectionType');
+const packageSelect = document.getElementById('packageSelect');
+
+const originalConnectionType = connectionType.value;
+
+
 
 // Store original values
 const originalValues = {};
@@ -370,6 +380,18 @@ function checkForChanges() {
 
 form.addEventListener('input', checkForChanges);
 form.addEventListener('change', checkForChanges);
+
+connectionType.addEventListener('change', () => {
+
+    if (connectionType.value !== originalConnectionType) {
+
+        packageSelect.value = '';
+
+    }
+
+    checkForChanges();
+
+});
 
 </script>
 
