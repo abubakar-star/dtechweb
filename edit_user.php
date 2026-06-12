@@ -21,30 +21,14 @@ $success = $error = "";
 
 // ================= FETCH PACKAGES =================
 $packages = [];
-$res = $conn->query("
-    SELECT id,
-           package_name,
-           price,
-           speed,
-           package_type
-    FROM packages
-    WHERE status='active'
-    ORDER BY package_name ASC
-");
+$res = $conn->query("SELECT id, package_name, price FROM packages ORDER BY package_name ASC");
 while ($row = $res->fetch_assoc()) {
     $packages[] = $row;
 }
 
 // ================= FETCH ROUTERS =================
 $routers = [];
-$res = $conn->query("
-    SELECT id,
-           router_name,
-           location,
-           status
-    FROM routers
-    ORDER BY router_name ASC
-");
+$res = $conn->query("SELECT id, router_name FROM routers ORDER BY router_name ASC");
 while ($row = $res->fetch_assoc()) {
     $routers[] = $row;
 }
@@ -106,9 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             status = ?,
             package_id = ?,
                router_id = ?,
-               $passwordSQL,
         created_at = ?
-            WHERE id = ?
+        $passwordSQL
+    WHERE id = ?
     ");
 
     $stmt->bind_param($types, ...$params);
@@ -201,7 +185,7 @@ class="border p-2 rounded w-full">
 <div class="grid grid-cols-2 gap-4">
 <div>
 <label class="text-sm">Connection Type</label>
-<select id="connectionType" name="connection_type" class="border p-2 rounded w-full">
+<select name="connection_type" class="border p-2 rounded w-full">
 <option value="home" <?= $user['connection_type']=='home'?'selected':'' ?>>Home</option>
 <option value="business" <?= $user['connection_type']=='business'?'selected':'' ?>>Business</option>
 </select>
@@ -222,13 +206,11 @@ class="border p-2 rounded w-full">
 <div class="grid grid-cols-2 gap-4">
 <div>
 <label class="text-sm">Package</label>
-<select id="packageSelect" name="package_id" required class="border p-2 rounded w-full">
+<select name="package_id" required class="border p-2 rounded w-full">
     <?php foreach ($packages as $pkg): ?>
-       <option
-    value="<?= $pkg['id'] ?>"
-    data-type="<?= $pkg['package_type'] ?>"
-    <?= $pkg['id'] == $user['package_id'] ? 'selected' : '' ?>
->
+        <option value="<?= $pkg['id'] ?>" <?= $pkg['id'] == $user['package_id'] ? 'selected' : '' ?>>
+            <?= htmlspecialchars($pkg['package_name']) ?> — KES <?= number_format($pkg['price'], 2) ?>
+        </option>
     <?php endforeach; ?>
 </select>
 </div>
@@ -240,8 +222,6 @@ class="border p-2 rounded w-full">
     <?php foreach ($routers as $router): ?>
         <option value="<?= $router['id'] ?>" <?= $router['id'] == $user['router_id'] ? 'selected' : '' ?>>
             <?= htmlspecialchars($router['router_name']) ?>
-- <?= htmlspecialchars($router['location']) ?>
-(<?= htmlspecialchars($router['status']) ?>)
         </option>
     <?php endforeach; ?>
 </select>
@@ -271,24 +251,5 @@ Save Changes
 </form>
 </div>
 
-<script>
-function filterPackages() {
-
-    const type = document.getElementById('connectionType').value;
-    const packageSelect = document.getElementById('packageSelect');
-
-    Array.from(packageSelect.options).forEach(option => {
-
-        if (!option.dataset.type) return;
-
-        option.hidden = option.dataset.type !== type;
-    });
-}
-
-document.getElementById('connectionType')
-    .addEventListener('change', filterPackages);
-
-filterPackages();
-</script>
 </body>
 </html>
