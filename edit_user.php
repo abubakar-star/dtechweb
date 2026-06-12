@@ -21,7 +21,11 @@ $success = $error = "";
 
 // ================= FETCH PACKAGES =================
 $packages = [];
-$res = $conn->query("SELECT id, package_name, price FROM packages ORDER BY package_name ASC");
+$res = $conn->query("
+    SELECT id, package_name, price, package_type
+    FROM packages
+    ORDER BY package_name ASC
+");
 while ($row = $res->fetch_assoc()) {
     $packages[] = $row;
 }
@@ -265,7 +269,11 @@ class="border p-2 rounded w-full">
     <option value="">Select Package</option>
 
     <?php foreach ($packages as $pkg): ?>
-        <option value="<?= $pkg['id'] ?>" <?= $pkg['id'] == $user['package_id'] ? 'selected' : '' ?>>
+        <option
+    value="<?= $pkg['id'] ?>"
+    data-type="<?= $pkg['package_type'] ?>"
+    <?= $pkg['id'] == $user['package_id'] ? 'selected' : '' ?>
+>
             <?= htmlspecialchars($pkg['package_name']) ?> — KES <?= number_format($pkg['price'], 2) ?>
         </option>
     <?php endforeach; ?>
@@ -335,6 +343,21 @@ Array.from(form.elements).forEach(field => {
 
 });
 
+function filterPackages() {
+
+    const selectedType = connectionType.value;
+
+    Array.from(packageSelect.options).forEach(option => {
+
+        // Skip "Select Package"
+        if (!option.dataset.type) return;
+
+        option.hidden = option.dataset.type !== selectedType;
+
+    });
+
+}
+
 function checkForChanges() {
 
     let changed = false;
@@ -389,7 +412,11 @@ if (
 form.addEventListener('input', checkForChanges);
 form.addEventListener('change', checkForChanges);
 
+filterPackages();
+
 connectionType.addEventListener('change', () => {
+
+    filterPackages();
 
     if (connectionType.value !== originalConnectionType) {
 
