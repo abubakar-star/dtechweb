@@ -18,6 +18,20 @@ if ($conn->connect_error) {
     die("DB Connection failed");
 }
 
+// ================= FETCH PACKAGES =================
+$packages = [];
+
+$result = $conn->query("
+    SELECT id, package_name, speed, price
+    FROM packages
+    WHERE status = 'active'
+    ORDER BY package_name
+");
+
+while ($row = $result->fetch_assoc()) {
+    $packages[] = $row;
+}
+
 // ================= DELETE USER =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
@@ -41,25 +55,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     $phone    = trim($_POST['phone']);
     $connType = $_POST['connection_type'];
     $status   = $_POST['status'];
+    $accountNumber    = trim($_POST['account_number']);
+    $packageId        = !empty($_POST['package_id']) ? (int)$_POST['package_id'] : null;
+    $routerId         = !empty($_POST['router_id']) ? (int)$_POST['router_id'] : 1;
+    $dashboardOverride = $_POST['dashboard_override'];
 
     if ($username && $password && $email) {
 
-        $stmt = $conn->prepare("
-            INSERT INTO users 
-            (username, password, first_name, last_name, email, phone_number, connection_type, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->bind_param(
-            "ssssssss",
-            $username,
-            $password,
-            $first,
-            $last,
-            $email,
-            $phone,
-            $connType,
-            $status
-        );
+       $stmt = $conn->prepare("
+    INSERT INTO users (
+        username,
+        password,
+        first_name,
+        last_name,
+        email,
+        phone_number,
+        account_number,
+        connection_type,
+        package_id,
+        router_id,
+        status,
+        dashboard_override
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+");
+
+$stmt->bind_param(
+    "ssssssssiiss",
+    $username,
+    $password,
+    $first,
+    $last,
+    $email,
+    $phone,
+    $accountNumber,
+    $connType,
+    $packageId,
+    $routerId,
+    $status,
+    $dashboardOverride
+);
 
         if ($stmt->execute()) {
             $success = "User created successfully";
@@ -184,6 +219,37 @@ $users = $conn->query("
 
 <input name="email" type="email" placeholder="Email" class="border p-2 rounded col-span-2" required>
 <input name="phone" placeholder="Phone Number" class="border p-2 rounded col-span-2">
+
+<input
+    name="account_number"
+    placeholder="Account Number"
+    class="border p-2 rounded col-span-2"
+>
+
+<select name="package_id" class="border p-2 rounded">
+    <option value="">Select Package</option>
+
+    <?php foreach ($packages as $package): ?>
+        <option value="<?= $package['id'] ?>">
+            <?= htmlspecialchars($package['package_name']) ?>
+            (<?= htmlspecialchars($package['speed']) ?> -
+            KES <?= number_format($package['price']) ?>)
+        </option>
+    <?php endforeach; ?>
+
+</select>
+
+<input
+    name="router_id"
+    type="number"
+    value="1"
+    class="border p-2 rounded"
+>
+
+<select name="dashboard_override" class="border p-2 rounded">
+    <option value="off">Dashboard Override Off</option>
+    <option value="on">Dashboard Override On</option>
+</select>
 
 <select name="connection_type" class="border p-2 rounded">
 <option value="home">Home</option>
