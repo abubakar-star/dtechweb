@@ -125,8 +125,7 @@ $stmt->bind_param(
 
 // ================= FETCH USERS =================
 $users = $conn->query("
-    SELECT id, username, first_name, last_name, email, phone_number,
-           connection_type, status, created_at, Expiry, visit_count
+    SELECT id, username, phone_number, status
     FROM users
     ORDER BY id DESC
 ");
@@ -164,14 +163,8 @@ $users = $conn->query("
 <tr>
 <th class="p-2">ID</th>
 <th class="p-2">Username</th>
-<th class="p-2">Name</th>
-<th class="p-2">Email</th>
 <th class="p-2">Phone</th>
-<th class="p-2">Type</th>
 <th class="p-2">Status</th>
-<th class="p-2">Created</th>
-<th class="p-2">Expiry</th>
-<th class="p-2">Visits</th>
 <th class="p-2">Actions</th>
 
 </tr>
@@ -181,19 +174,13 @@ $users = $conn->query("
 <tr class="border-t hover:bg-gray-50">
 <td class="p-2"><?= $u['id'] ?></td>
 <td class="p-2 font-semibold"><?= htmlspecialchars($u['username']) ?></td>
-<td class="p-2"><?= htmlspecialchars($u['first_name'].' '.$u['last_name']) ?></td>
-<td class="p-2"><?= htmlspecialchars($u['email']) ?></td>
 <td class="p-2"><?= htmlspecialchars($u['phone_number']) ?></td>
-<td class="p-2"><?= $u['connection_type'] ?></td>
 <td class="p-2">
 <span class="px-2 py-1 rounded text-xs
 <?= $u['status']=='active' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
 <?= $u['status'] ?>
 </span>
 </td>
-<td class="p-2"><?= $u['created_at'] ?></td>
-<td class="p-2"><?= $u['Expiry'] ?></td>
-<td class="p-2"><?= $u['visit_count'] ?></td>
 <td class="p-2 flex gap-2">
 
     <!-- EDIT (redirects to edit page) -->
