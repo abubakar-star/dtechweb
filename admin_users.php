@@ -223,23 +223,23 @@ $users = $conn->query("
 <div class="bg-white w-full max-w-lg rounded p-6">
 <h2 class="text-lg font-bold mb-4">Create New User</h2>
 
-<form method="POST">
+<form method="POST" id="createUserForm">
 <input type="hidden" name="create_user">
 
 <div class="grid grid-cols-2 gap-4">
 <input name="username" placeholder="Username" class="border p-2 rounded" required>
 <input name="password" placeholder="Password" class="border p-2 rounded" required>
 
-<input name="first_name" placeholder="First Name" class="border p-2 rounded">
-<input name="last_name" placeholder="Last Name" class="border p-2 rounded">
+<input name="first_name" placeholder="First Name" class="border p-2 rounded" required>
+<input name="last_name" placeholder="Last Name" class="border p-2 rounded" required>
 
 <input name="email" type="email" placeholder="Email" class="border p-2 rounded col-span-2" required>
-<input name="phone" placeholder="Phone Number" class="border p-2 rounded col-span-2">
+<input name="phone" placeholder="Phone Number" class="border p-2 rounded col-span-2" required>
 
 <input
     name="account_number"
     placeholder="Account Number"
-    class="border p-2 rounded col-span-2"
+    class="border p-2 rounded col-span-2" required
 >
 
 <select id="connectionType" name="connection_type" class="border p-2 rounded" required>
@@ -291,7 +291,13 @@ $users = $conn->query("
 
 <div class="flex justify-end gap-3 mt-6">
 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-<button class="px-4 py-2 bg-blue-600 text-white rounded">Create User</button>
+<button
+    id="createUserBtn"
+    disabled
+    class="px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed disabled:opacity-70"
+>
+    Create User
+</button>
 </div>
 </form>
 </div>
@@ -326,6 +332,55 @@ function openModal() {
 function closeModal() {
     document.getElementById('modal').classList.add('hidden');
 }
+</script>
+
+<script>
+const form = document.getElementById('createUserForm');
+const submitBtn = document.getElementById('createUserBtn');
+
+function validateForm() {
+
+    const requiredFields = form.querySelectorAll('[required]');
+
+    let allFilled = true;
+
+    requiredFields.forEach(field => {
+
+        if (!field.value || field.value.trim() === '') {
+            allFilled = false;
+        }
+
+    });
+
+    submitBtn.disabled = !allFilled;
+
+    if (allFilled) {
+        submitBtn.classList.remove(
+            'bg-gray-400',
+            'cursor-not-allowed'
+        );
+
+        submitBtn.classList.add(
+            'bg-blue-600',
+            'hover:bg-blue-700'
+        );
+    } else {
+        submitBtn.classList.remove(
+            'bg-blue-600',
+            'hover:bg-blue-700'
+        );
+
+        submitBtn.classList.add(
+            'bg-gray-400',
+            'cursor-not-allowed'
+        );
+    }
+}
+
+form.addEventListener('input', validateForm);
+form.addEventListener('change', validateForm);
+
+validateForm();
 </script>
 
 </body>
