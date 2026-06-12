@@ -125,24 +125,10 @@ $stmt->bind_param(
 
 // ================= FETCH USERS =================
 $users = $conn->query("
-    SELECT
-        u.id,
-        u.username,
-        u.first_name,
-        u.last_name,
-        u.email,
-        u.phone_number,
-        u.connection_type,
-        u.status,
-        u.created_at,
-        u.Expiry,
-        u.visit_count,
-        p.package_name,
-        r.router_name
-    FROM users u
-    LEFT JOIN packages p ON u.package_id = p.id
-    LEFT JOIN routers r ON u.router_id = r.id
-    ORDER BY u.id DESC
+    SELECT id, username, first_name, last_name, email, phone_number,
+           connection_type, status, created_at, Expiry, visit_count
+    FROM users
+    ORDER BY id DESC
 ");
 ?>
 <!DOCTYPE html>
@@ -182,8 +168,6 @@ $users = $conn->query("
 <th class="p-2">Email</th>
 <th class="p-2">Phone</th>
 <th class="p-2">Type</th>
-<th class="p-2">Package</th>
-<th class="p-2">Router</th>
 <th class="p-2">Status</th>
 <th class="p-2">Created</th>
 <th class="p-2">Expiry</th>
@@ -202,32 +186,10 @@ $users = $conn->query("
 <td class="p-2"><?= htmlspecialchars($u['phone_number']) ?></td>
 <td class="p-2"><?= $u['connection_type'] ?></td>
 <td class="p-2">
-    <?= htmlspecialchars($u['package_name'] ?? '-') ?>
-</td>
-
-<td class="p-2">
-    <?= htmlspecialchars($u['router_name'] ?? '-') ?>
-</td>
-<td class="p-2">
-
-<?php
-$statusClass = 'bg-gray-200 text-gray-800';
-
-if ($u['status'] == 'active') {
-    $statusClass = 'bg-green-200 text-green-800';
-}
-elseif ($u['status'] == 'inactive') {
-    $statusClass = 'bg-red-200 text-red-800';
-}
-elseif ($u['status'] == 'queued') {
-    $statusClass = 'bg-yellow-200 text-yellow-800';
-}
-?>
-
-<span class="px-2 py-1 rounded text-xs <?= $statusClass ?>">
-    <?= $u['status'] ?>
+<span class="px-2 py-1 rounded text-xs
+<?= $u['status']=='active' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
+<?= $u['status'] ?>
 </span>
-
 </td>
 <td class="p-2"><?= $u['created_at'] ?></td>
 <td class="p-2"><?= $u['Expiry'] ?></td>
