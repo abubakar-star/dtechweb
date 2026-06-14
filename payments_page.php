@@ -98,6 +98,7 @@ $totalPages = ceil(
 $payments = $conn->query("
     SELECT
         p.id,
+        p.viewed,
         p.amount,
         p.payment_method,
         p.transaction_id,
@@ -143,6 +144,33 @@ $clients = $conn->query("
 <meta charset="UTF-8">
 <title>Payments</title>
 <script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+@keyframes glowPulse {
+
+    0% {
+        box-shadow: 0 0 5px rgba(34,197,94,.4);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(34,197,94,.9);
+    }
+
+    100% {
+        box-shadow: 0 0 5px rgba(34,197,94,.4);
+    }
+}
+
+.new-payment {
+
+    background: #f0fdf4;
+
+    animation:
+        glowPulse 1.5s infinite;
+}
+
+</style>
 </head>
 
 <body class="bg-slate-100 min-h-screen p-6">
@@ -434,7 +462,13 @@ $clients = $conn->query("
 
             <?php while($payment = $payments->fetch_assoc()): ?>
 
-            <tr class="border-t hover:bg-slate-50">
+            <tr
+    data-payment-id="<?= $payment['id'] ?>"
+    class="border-t hover:bg-slate-50
+    <?= !$payment['viewed']
+        ? 'new-payment'
+        : '' ?>"
+>
 
                 <td class="p-4">
 
@@ -677,5 +711,50 @@ function closeClientModal() {
 }
 
 </script>
+
+<script>
+
+window.addEventListener('load', () => {
+
+    const newRows =
+        document.querySelectorAll(
+            '.new-payment'
+        );
+
+    if(newRows.length === 0) {
+        return;
+    }
+
+    const ids = [];
+
+    newRows.forEach(row => {
+
+        ids.push(
+            row.dataset.paymentId
+        );
+
+        row.classList.remove(
+            'new-payment'
+        );
+    });
+
+    fetch(
+        'mark_payments_viewed.php',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type':
+                'application/json'
+            },
+            body: JSON.stringify({
+                ids: ids
+            })
+        }
+    );
+
+});
+
+</script>
+
 </body>
 </html>
