@@ -23,6 +23,45 @@ $stats = $conn->query("
     WHERE status='completed'
 ")->fetch_assoc();
 
+// ================= FILTERS =================
+
+$search = trim($_GET['search'] ?? '');
+$status = trim($_GET['status'] ?? 'completed');
+$method = trim($_GET['method'] ?? '');
+$from   = trim($_GET['from'] ?? '');
+$to     = trim($_GET['to'] ?? '');
+
+$where = ["p.status = 'completed'"];
+
+if (!empty($search)) {
+
+    $search = $conn->real_escape_string($search);
+
+    $where[] = "(
+        u.username LIKE '%$search%'
+        OR u.account_number LIKE '%$search%'
+        OR u.phone_number LIKE '%$search%'
+        OR p.transaction_id LIKE '%$search%'
+    )";
+}
+
+if (!empty($method)) {
+
+    $method = $conn->real_escape_string($method);
+
+    $where[] = "p.payment_method = '$method'";
+}
+
+if (!empty($from)) {
+    $where[] = "DATE(p.payment_date) >= '$from'";
+}
+
+if (!empty($to)) {
+    $where[] = "DATE(p.payment_date) <= '$to'";
+}
+
+$whereSql = implode(' AND ', $where);
+
 // ================= FETCH COMPLETED PAYMENTS =================
 
 $payments = $conn->query("
@@ -46,7 +85,7 @@ $payments = $conn->query("
     INNER JOIN users u
         ON p.user_id = u.id
 
-    WHERE p.status='completed'
+    WHERE $whereSql
 
     ORDER BY p.payment_date DESC
 ");
@@ -103,6 +142,110 @@ $payments = $conn->query("
         </div>
 
     </div>
+
+</div>
+
+<!-- SEARCH & FILTERS -->
+
+<div class="bg-white rounded-2xl shadow-sm border p-6 mb-6">
+
+<form method="GET">
+
+<div class="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
+
+    <!-- SEARCH -->
+
+    <input
+        type="text"
+        name="search"
+        value="<?= htmlspecialchars($search) ?>"
+        placeholder="Search Client..."
+        class="border rounded-xl px-4 py-2"
+    >
+
+    <!-- STATUS -->
+
+    <select
+        name="status"
+        class="border rounded-xl px-4 py-2"
+    >
+
+        <option value="completed">
+            Completed
+        </option>
+
+    </select>
+
+    <!-- PAYMENT METHOD -->
+
+    <select
+        name="method"
+        class="border rounded-xl px-4 py-2"
+    >
+
+        <option value="">
+            All Methods
+        </option>
+
+        <option
+            value="mpesa"
+            <?= $method == 'mpesa' ? 'selected' : '' ?>
+        >
+            M-Pesa
+        </option>
+
+        <option
+            value="bank"
+            <?= $method == 'bank' ? 'selected' : '' ?>
+        >
+            Bank
+        </option>
+
+        <option
+            value="cash"
+            <?= $method == 'cash' ? 'selected' : '' ?>
+        >
+            Cash
+        </option>
+
+    </select>
+
+    <!-- FROM DATE -->
+
+    <input
+        type="date"
+        name="from"
+        value="<?= htmlspecialchars($from) ?>"
+        class="border rounded-xl px-4 py-2"
+    >
+
+    <!-- TO DATE -->
+
+    <input
+        type="date"
+        name="to"
+        value="<?= htmlspecialchars($to) ?>"
+        class="border rounded-xl px-4 py-2"
+    >
+
+    <!-- FILTER BUTTON -->
+
+    <button
+        type="submit"
+        class="bg-blue-600 text-white rounded-xl px-4 py-2 hover:bg-blue-700"
+    >
+        Apply Filters
+    </button>
+    <a
+    href="payments.php"
+    class="bg-gray-300 rounded-xl px-4 py-2 text-center hover:bg-gray-400"
+>
+    Reset
+</a>
+
+</div>
+
+</form>
 
 </div>
 
