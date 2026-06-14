@@ -737,9 +737,13 @@ const observer = new IntersectionObserver((entries) => {
 
         idsToMark.push(id);
 
-        row.classList.remove('new-payment');
+       setTimeout(() => {
 
-        observer.unobserve(row);
+    row.classList.remove('new-payment');
+
+    observer.unobserve(row);
+
+}, 3000);
 
     });
 
