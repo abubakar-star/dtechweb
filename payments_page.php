@@ -714,11 +714,22 @@ function closeClientModal() {
 
 <script>
 
+let userActive = false;
+
+const activateUser = () => {
+    userActive = true;
+};
+
+['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(event => {
+    window.addEventListener(event, activateUser, {
+        once: true,
+        passive: true
+    });
+});
+
 const seenIds = new Set();
 
 const observer = new IntersectionObserver((entries) => {
-
-    const idsToMark = [];
 
     entries.forEach(entry => {
 
@@ -733,39 +744,42 @@ const observer = new IntersectionObserver((entries) => {
             return;
         }
 
-        seenIds.add(id);
+        if (!userActive) {
+            return;
+        }
 
-        idsToMark.push(id);
+        setTimeout(() => {
 
-       setTimeout(() => {
+            // Prevent duplicate processing
+            if (seenIds.has(id)) {
+                return;
+            }
 
-    row.classList.remove('new-payment');
+            seenIds.add(id);
 
-    observer.unobserve(row);
+            row.classList.remove('new-payment');
 
-}, 3000);
+            observer.unobserve(row);
+
+            fetch('mark_payments_viewed.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ids: [id]
+                })
+            })
+            .catch(error => {
+                console.error(
+                    'Failed to mark payments viewed:',
+                    error
+                );
+            });
+
+        }, 3000);
 
     });
-
-    if (idsToMark.length > 0) {
-
-        fetch('mark_payments_viewed.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                ids: idsToMark
-            })
-        })
-        .catch(error => {
-            console.error(
-                'Failed to mark payments viewed:',
-                error
-            );
-        });
-
-    }
 
 }, {
     threshold: 0.5
