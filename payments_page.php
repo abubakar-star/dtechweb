@@ -62,6 +62,37 @@ if (!empty($to)) {
 
 $whereSql = implode(' AND ', $where);
 
+
+// ================= PAGINATION =================
+
+$recordsPerPage =
+    isset($_GET['per_page'])
+    ? (int)$_GET['per_page']
+    : 25;
+
+$page = isset($_GET['page'])
+    ? max(1, (int)$_GET['page'])
+    : 1;
+
+$offset = ($page - 1) * $recordsPerPage;
+
+$countResult = $conn->query("
+    SELECT COUNT(*) total
+
+    FROM payments p
+
+    INNER JOIN users u
+        ON p.user_id = u.id
+
+    WHERE $whereSql
+");
+
+$totalRecords = $countResult->fetch_assoc()['total'];
+
+$totalPages = ceil(
+    $totalRecords / $recordsPerPage
+);
+
 // ================= FETCH COMPLETED PAYMENTS =================
 
 $payments = $conn->query("
@@ -88,6 +119,8 @@ $payments = $conn->query("
     WHERE $whereSql
 
     ORDER BY p.payment_date DESC
+LIMIT $recordsPerPage
+OFFSET $offset
 ");
 
 $clients = $conn->query("
@@ -282,6 +315,15 @@ $clients = $conn->query("
 
     </select>
 
+    <select
+    name="per_page"
+    class="border rounded-xl px-4 py-2"
+>
+    <option value="25">25 Rows</option>
+    <option value="50">50 Rows</option>
+    <option value="100">100 Rows</option>
+</select>
+
     <!-- FROM DATE -->
 
     <input
@@ -318,6 +360,40 @@ $clients = $conn->query("
 </div>
 
 </form>
+
+</div>
+
+<div class="px-6 py-4 border-b flex justify-between items-center">
+
+    <h2 class="font-semibold text-slate-800">
+        Recent Completed Payments
+    </h2>
+
+    <span class="text-sm text-slate-500">
+
+        Showing
+
+        <?= min(
+            $offset + 1,
+            $totalRecords
+        ) ?>
+
+        -
+
+        <?= min(
+            $offset + $recordsPerPage,
+            $totalRecords
+        ) ?>
+
+        of
+
+        <?= number_format(
+            $totalRecords
+        ) ?>
+
+        payments
+
+    </span>
 
 </div>
 
@@ -426,6 +502,75 @@ $clients = $conn->query("
             </tbody>
 
         </table>
+
+        <?php if($totalPages > 1): ?>
+
+<div class="flex justify-center items-center gap-2 p-6 border-t">
+
+    <!-- PREVIOUS -->
+
+    <?php if($page > 1): ?>
+
+        <a
+            href="?<?= http_build_query(
+                array_merge(
+                    $_GET,
+                    ['page' => $page - 1]
+                )
+            ) ?>"
+            class="px-4 py-2 border rounded-lg hover:bg-slate-100"
+        >
+            Previous
+        </a>
+
+    <?php endif; ?>
+
+    <!-- PAGE NUMBERS -->
+
+    <?php for(
+        $i = 1;
+        $i <= $totalPages;
+        $i++
+    ): ?>
+
+        <a
+            href="?<?= http_build_query(
+                array_merge(
+                    $_GET,
+                    ['page' => $i]
+                )
+            ) ?>"
+            class="px-4 py-2 rounded-lg
+            <?= $page == $i
+                ? 'bg-blue-600 text-white'
+                : 'border hover:bg-slate-100' ?>"
+        >
+            <?= $i ?>
+        </a>
+
+    <?php endfor; ?>
+
+    <!-- NEXT -->
+
+    <?php if($page < $totalPages): ?>
+
+        <a
+            href="?<?= http_build_query(
+                array_merge(
+                    $_GET,
+                    ['page' => $page + 1]
+                )
+            ) ?>"
+            class="px-4 py-2 border rounded-lg hover:bg-slate-100"
+        >
+            Next
+        </a>
+
+    <?php endif; ?>
+
+</div>
+
+<?php endif; ?>
 
     </div>
 
