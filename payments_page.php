@@ -722,14 +722,19 @@ const observer = new IntersectionObserver((entries) => {
 
     entries.forEach(entry => {
 
-        if (!entry.isIntersecting) return;
+        if (!entry.isIntersecting) {
+            return;
+        }
 
         const row = entry.target;
         const id = row.dataset.paymentId;
 
-        if (seenIds.has(id)) return;
+        if (seenIds.has(id)) {
+            return;
+        }
 
         seenIds.add(id);
+
         idsToMark.push(id);
 
         row.classList.remove('new-payment');
@@ -748,6 +753,12 @@ const observer = new IntersectionObserver((entries) => {
             body: JSON.stringify({
                 ids: idsToMark
             })
+        })
+        .catch(error => {
+            console.error(
+                'Failed to mark payments viewed:',
+                error
+            );
         });
 
     }
@@ -756,9 +767,11 @@ const observer = new IntersectionObserver((entries) => {
     threshold: 0.5
 });
 
-document.querySelectorAll('.new-payment').forEach(row => {
-    observer.observe(row);
-});
+document
+    .querySelectorAll('.new-payment')
+    .forEach(row => {
+        observer.observe(row);
+    });
 
 </script>
 
