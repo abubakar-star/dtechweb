@@ -714,44 +714,50 @@ function closeClientModal() {
 
 <script>
 
-window.addEventListener('load', () => {
+const seenIds = new Set();
 
-    const newRows =
-        document.querySelectorAll(
-            '.new-payment'
-        );
+const observer = new IntersectionObserver((entries) => {
 
-    if(newRows.length === 0) {
-        return;
-    }
+    const idsToMark = [];
 
-    const ids = [];
+    entries.forEach(entry => {
 
-    newRows.forEach(row => {
+        if (!entry.isIntersecting) return;
 
-        ids.push(
-            row.dataset.paymentId
-        );
+        const row = entry.target;
+        const id = row.dataset.paymentId;
 
-        row.classList.remove(
-            'new-payment'
-        );
+        if (seenIds.has(id)) return;
+
+        seenIds.add(id);
+        idsToMark.push(id);
+
+        row.classList.remove('new-payment');
+
+        observer.unobserve(row);
+
     });
 
-    fetch(
-        'mark_payments_viewed.php',
-        {
+    if (idsToMark.length > 0) {
+
+        fetch('mark_payments_viewed.php', {
             method: 'POST',
             headers: {
-                'Content-Type':
-                'application/json'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                ids: ids
+                ids: idsToMark
             })
-        }
-    );
+        });
 
+    }
+
+}, {
+    threshold: 0.5
+});
+
+document.querySelectorAll('.new-payment').forEach(row => {
+    observer.observe(row);
 });
 
 </script>
