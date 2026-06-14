@@ -89,6 +89,19 @@ $payments = $conn->query("
 
     ORDER BY p.payment_date DESC
 ");
+
+$clients = $conn->query("
+    SELECT DISTINCT
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.account_number
+    FROM users u
+    INNER JOIN payments p
+        ON p.user_id = u.id
+    WHERE p.status = 'completed'
+    ORDER BY u.first_name, u.last_name
+");
 ?>
 
 <!DOCTYPE html>
@@ -112,6 +125,65 @@ $payments = $conn->query("
         <p class="text-slate-500">
             Successfully completed customer payments
         </p>
+    </div>
+
+    <div class="relative">
+
+        <button
+            onclick="toggleClientDropdown()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
+        >
+            View Client ▼
+        </button>
+
+        <div
+            id="clientDropdown"
+            class="hidden absolute right-0 mt-2 w-80 bg-white border rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto"
+        >
+
+            <div class="p-3 border-b">
+
+                <input
+                    type="text"
+                    id="clientSearch"
+                    placeholder="Search Client..."
+                    class="w-full border rounded-lg px-3 py-2"
+                    onkeyup="filterClients()"
+                >
+
+            </div>
+
+            <?php while($client = $clients->fetch_assoc()): ?>
+
+                <button
+                    onclick="openClientModal(<?= $client['id'] ?>)"
+                    class="client-item block w-full text-left px-4 py-3 hover:bg-slate-50"
+                    data-name="<?= strtolower(
+                        $client['first_name'].' '.
+                        $client['last_name'].' '.
+                        $client['account_number']
+                    ) ?>"
+                >
+
+                    <div class="font-medium">
+                        <?= htmlspecialchars(
+                            $client['first_name'].' '.
+                            $client['last_name']
+                        ) ?>
+                    </div>
+
+                    <div class="text-xs text-slate-500">
+                        <?= htmlspecialchars(
+                            $client['account_number']
+                        ) ?>
+                    </div>
+
+                </button>
+
+            <?php endwhile; ?>
+
+        </div>
+
     </div>
 
 </div>
@@ -359,5 +431,106 @@ $payments = $conn->query("
 
 </div>
 
+<div
+    id="clientModal"
+    class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50"
+>
+
+    <div class="bg-white rounded-2xl w-full max-w-5xl p-6 max-h-[90vh] overflow-y-auto">
+
+        <div class="flex justify-between items-center mb-4">
+
+            <h2 class="text-xl font-bold">
+                Client Payment History
+            </h2>
+
+            <button
+                onclick="closeClientModal()"
+                class="text-gray-500 text-xl"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <div id="clientModalContent">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function toggleClientDropdown() {
+
+    document
+        .getElementById('clientDropdown')
+        .classList
+        .toggle('hidden');
+}
+
+function filterClients() {
+
+    const search =
+        document
+            .getElementById('clientSearch')
+            .value
+            .toLowerCase();
+
+    const clients =
+        document.querySelectorAll('.client-item');
+
+    clients.forEach(client => {
+
+        const name =
+            client.dataset.name;
+
+        client.style.display =
+            name.includes(search)
+            ? 'block'
+            : 'none';
+    });
+}
+
+function openClientModal(userId) {
+
+    document
+        .getElementById('clientDropdown')
+        .classList
+        .add('hidden');
+
+    document
+        .getElementById('clientModal')
+        .classList
+        .remove('hidden');
+
+    fetch(
+        'get_client_payments.php?user_id=' +
+        userId
+    )
+    .then(response => response.text())
+    .then(html => {
+
+        document
+            .getElementById(
+                'clientModalContent'
+            )
+            .innerHTML = html;
+    });
+}
+
+function closeClientModal() {
+
+    document
+        .getElementById('clientModal')
+        .classList
+        .add('hidden');
+}
+
+</script>
 </body>
 </html>
