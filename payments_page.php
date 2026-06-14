@@ -462,12 +462,9 @@ $clients = $conn->query("
 
             <?php while($payment = $payments->fetch_assoc()): ?>
 
-            <tr
+      <tr
     data-payment-id="<?= $payment['id'] ?>"
-    class="border-t hover:bg-slate-50
-    <?= !$payment['viewed']
-        ? 'new-payment'
-        : '' ?>"
+    class="border-t hover:bg-slate-50 new-payment"
 >
 
                 <td class="p-4">
