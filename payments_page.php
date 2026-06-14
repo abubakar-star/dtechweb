@@ -802,7 +802,7 @@ const observer = new IntersectionObserver((entries) => {
                 })
             });
 
-        }, 8000);
+        }, 5000);
 
         pendingTimers.set(id, timer);
 
