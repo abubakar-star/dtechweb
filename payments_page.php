@@ -379,7 +379,7 @@ $clients = $conn->query("
         Apply Filters
     </button>
     <a
-    href="payments.php"
+    href="<?= strtok($_SERVER['REQUEST_URI'], '?') ?>"
     class="bg-gray-300 rounded-xl px-4 py-2 text-center hover:bg-gray-400"
 >
     Reset
