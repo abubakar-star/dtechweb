@@ -75,17 +75,37 @@ Choose an admin module
 
 </a>
 
+<!-- PAYMENTS -->
+<a href="payments_page.php"
+   class="relative block text-center
+          bg-emerald-600 hover:bg-emerald-700
+          transition py-4 rounded-lg font-semibold">
+
+💳 Payments
+
+</a>
+
+<!-- LOGS -->
+<a href="admin_logs.php"
+   class="relative block text-center
+          bg-gray-600 hover:bg-gray-700
+          transition py-4 rounded-lg font-semibold">
+
+📜 Logs
+
+</a>
+
 <!-- DEVICE BINDINGS -->
 <a href="admin_password_requests.php"
    class="relative block text-center
           bg-blue-600 hover:bg-blue-700
           transition py-4 rounded-lg font-semibold">
 
-📱 Password Request
+🔑 Password Requests
 
 <?php if ($pending_bindings > 0): ?>
 <span class="absolute -top-2 -right-2
-             bg-red-600 text-white text-xs font-bold
+             bg-blue-600 text-white text-xs font-bold
              px-2 py-1 rounded-full shadow">
 <?= $pending_bindings ?>
 </span>
@@ -96,10 +116,10 @@ Choose an admin module
 <!-- USERS STATUS -->
 <a href="users_status.php"
    class="relative block text-center
-          bg-yellow-600 hover:bg-yellow-700
+          bg-amber-600 hover:bg-amber-700
           transition py-4 rounded-lg font-semibold">
 
-👥 Users Status
+📊 Users Status
 
 <?php if ($queued_users > 0): ?>
 <span class="absolute -top-2 -right-2
