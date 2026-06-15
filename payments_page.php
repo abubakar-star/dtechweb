@@ -733,9 +733,6 @@ let pageVisible = true;
 const pendingTimers = new Map();
 const seenIds = new Set();
 
-const activateUser = () => {
-    userActive = true;
-};
 
 ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']
 .forEach(event => {
@@ -789,6 +786,8 @@ const observer = new IntersectionObserver((entries) => {
         if (pendingTimers.has(id)) return;
 
         const timer = setTimeout(() => {
+
+        console.log('Marking viewed:', id);
 
             pendingTimers.delete(id);
 
