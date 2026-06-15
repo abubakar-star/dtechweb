@@ -48,6 +48,22 @@ while ($row = $result->fetch_assoc()) {
     $routers[] = $row;
 }
 
+// ================= APPROVE USER =================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_user'])) {
+
+    $stmt = $conn->prepare("
+        UPDATE users
+        SET verification_status = 'approved'
+        WHERE id = ?
+    ");
+
+    $stmt->bind_param("i", $_POST['user_id']);
+    $stmt->execute();
+    $stmt->close();
+
+    $success = "User approved successfully";
+}
+
 // ================= DELETE USER =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
@@ -135,6 +151,7 @@ $users = $conn->query("
         users.router_password,
         users.dashboard_override,
         users.status,
+        users.verification_status,
         packages.package_name,
         routers.router_name
     FROM users
@@ -186,6 +203,7 @@ $users = $conn->query("
     <th class="p-2">Router Password</th>
     <th class="p-2">Dashboard Override</th>
     <th class="p-2">Status</th>
+    <th class="p-2">Verification</th>
     <th class="p-2">Actions</th>
 </tr>
 
@@ -244,7 +262,44 @@ $users = $conn->query("
     </span>
 </td>
 
+<td class="p-2">
+
+<?php if($u['verification_status'] === 'approved'): ?>
+
+    <span class="px-2 py-1 rounded text-xs bg-green-200 text-green-800">
+        Approved
+    </span>
+
+<?php else: ?>
+
+    <span class="px-2 py-1 rounded text-xs bg-yellow-200 text-yellow-800">
+        Pending
+    </span>
+
+<?php endif; ?>
+
+</td>
+
 <td class="p-2 flex gap-2">
+
+<?php if($u['verification_status'] !== 'approved'): ?>
+
+<form method="POST">
+
+    <input type="hidden" name="approve_user">
+    <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+
+    <button
+        onclick="return confirm('Approve this user?')"
+        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
+
+        Approve
+
+    </button>
+
+</form>
+
+<?php endif; ?>
 
     <!-- EDIT (redirects to edit page) -->
     <a href="edit_user.php?id=<?= $u['id'] ?>"
@@ -260,6 +315,7 @@ $users = $conn->query("
             Delete
         </button>
     </form>
+
 
 </td>
 </tr>
