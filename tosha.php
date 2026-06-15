@@ -1,4 +1,14 @@
 <?php
+
+session_start();
+
+if (
+    !isset($_SESSION['user_id']) ||
+    empty($_SESSION['is_admin'])
+) {
+    header("Location: index.php");
+    exit();
+}
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 date_default_timezone_set("Africa/Nairobi");
