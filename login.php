@@ -35,8 +35,23 @@ $password = $_ENV['MYSQLPASSWORD'];
         if ($result->num_rows === 1) {
             $row = $result->fetch_assoc();
             $_SESSION['user_id'] = $row['id'];
-            $_SESSION['username'] = $row['username'];
-            header("Location: index.php");
+$_SESSION['username'] = $row['username'];
+
+/* Check admin */
+$adminStmt = $conn->prepare("
+    SELECT id
+    FROM admins
+    WHERE user_id = ?
+");
+
+$adminStmt->bind_param("i", $row['id']);
+$adminStmt->execute();
+
+$_SESSION['is_admin'] =
+    $adminStmt->get_result()->num_rows > 0;
+
+$adminStmt->close();
+            header("Location: tosha.php");
             exit();
         }
         $stmt->close();
