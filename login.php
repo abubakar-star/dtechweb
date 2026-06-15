@@ -44,6 +44,7 @@ $password = $_ENV['MYSQLPASSWORD'];
     }
 }
 
+$verificationMessage = "";
 $errorMessage = "";
 $attempt = 0;
 
@@ -75,48 +76,95 @@ $password = $_ENV['MYSQLPASSWORD'];
             $row = $result->fetch_assoc();
 
             // ✅ Replace with password_verify if using hashes
-            if ($password === $row['password']) {
-                $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['username'];
+       if ($password === $row['password']) {
 
-                createLog(
-    $conn,
-    'authentication',
-    'User Login',
-    'User logged in successfully',
-    'success',
-    $row['id']
-);
+    // Account awaiting approval
+    if ($row['verification_status'] === 'pending') {
 
-                // ✅ Remember Me feature
-                if ($remember) {
-                    $token = bin2hex(random_bytes(16)); // Secure random token
-                    setcookie("remember_user", $username, time() + (86400 * 30), "/"); // 30 days
-                    setcookie("remember_token", $token, time() + (86400 * 30), "/");
+        $verificationMessage =
+            "Verification process ongoing. Please wait for administrator approval.";
 
-                    // Save token to DB for verification later
-                    $update = $conn->prepare("UPDATE users SET remember_token = ? WHERE id = ?");
-                    $update->bind_param("si", $token, $row['id']);
-                    $update->execute();
-                    if ($update->error) {
-    error_log("Remember token update failed: " . $update->error);
+        createLog(
+            $conn,
+            'authentication',
+            'Pending Verification Login',
+            'User attempted login before approval',
+            'info',
+            $row['id']
+        );
+
+    } else {
+
+        $_SESSION['user_id'] = $row['id'];
+        $_SESSION['username'] = $row['username'];
+
+        createLog(
+            $conn,
+            'authentication',
+            'User Login',
+            'User logged in successfully',
+            'success',
+            $row['id']
+        );
+
+        // Remember Me
+        if ($remember) {
+
+            $token = bin2hex(random_bytes(16));
+
+            setcookie(
+                "remember_user",
+                $username,
+                time() + (86400 * 30),
+                "/"
+            );
+
+            setcookie(
+                "remember_token",
+                $token,
+                time() + (86400 * 30),
+                "/"
+            );
+
+            $update = $conn->prepare(
+                "UPDATE users SET remember_token = ? WHERE id = ?"
+            );
+
+            $update->bind_param(
+                "si",
+                $token,
+                $row['id']
+            );
+
+            $update->execute();
+
+            if ($update->error) {
+                error_log(
+                    "Remember token update failed: " .
+                    $update->error
+                );
+            }
+
+            $update->close();
+        }
+
+        header("Location: index.php");
+        exit();
+    }
+
+} else {
+
+    createLog(
+        $conn,
+        'security',
+        'Failed Login',
+        'Incorrect password entered',
+        'warning'
+    );
+
+    $errorMessage = "Invalid password";
+    $attempt = 1;
 }
-                    $update->close();
-                }
-
-                header("Location: index.php");
-                exit();
-            } else {
-              createLog(
-    $conn,
-    'security',
-    'Failed Login',
-    'Incorrect password entered',
-    'warning'
-);
-
-                $errorMessage = "Invalid password";
-                $attempt = 1;
             }
         } else {
           createLog(
@@ -376,6 +424,20 @@ html.swal2-shown {
                ring-1 ring-white/40 shadow-md flex justify-center items-center transition">
         Sign In
       </button>
+
+      <?php if ($verificationMessage): ?>
+<div class="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4 text-center">
+    <div class="text-2xl mb-2">⏳</div>
+
+    <h3 class="text-blue-200 font-semibold">
+        Verification Process Ongoing
+    </h3>
+
+    <p class="text-blue-100 text-sm mt-1">
+        Your account is awaiting administrator approval.
+    </p>
+</div>
+<?php endif; ?>
 
       <?php if ($errorMessage): ?>
         <p id="loginError" class="error-text text-center"><?php echo $errorMessage; ?></p>
