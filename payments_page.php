@@ -747,7 +747,6 @@ window.addEventListener('blur', () => {
     pendingTimers.clear();
 });
 
-const seenIds = new Set();
 
 const observer = new IntersectionObserver((entries) => {
 
