@@ -715,6 +715,19 @@ function closeClientModal() {
 <script>
 
 let userActive = false;
+let inactivityTimer;
+
+function resetActivity() {
+
+    userActive = true;
+
+    clearTimeout(inactivityTimer);
+
+    inactivityTimer = setTimeout(() => {
+        userActive = false;
+    }, 10000); // 10 seconds idle
+}
+
 let pageVisible = true;
 
 const pendingTimers = new Map();
