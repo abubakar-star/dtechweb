@@ -725,7 +725,7 @@ function resetActivity() {
 
     inactivityTimer = setTimeout(() => {
         userActive = false;
-    }, 10000); // 10 seconds idle
+    }, 15000); // 10 seconds idle
 }
 
 let pageVisible = true;
@@ -737,12 +737,14 @@ const activateUser = () => {
     userActive = true;
 };
 
-['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(event => {
-    window.addEventListener(event, activateUser, {
-        once: true,
+['mousemove', 'keydown', 'scroll', 'click', 'touchstart']
+.forEach(event => {
+    window.addEventListener(event, resetActivity, {
         passive: true
     });
 });
+
+resetActivity();
 
 // Tab visibility
 document.addEventListener('visibilitychange', () => {
@@ -814,7 +816,7 @@ const observer = new IntersectionObserver((entries) => {
                 })
             });
 
-        }, 15000);
+        }, 10000);
 
         pendingTimers.set(id, timer);
 
