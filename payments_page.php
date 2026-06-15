@@ -458,7 +458,7 @@ $clients = $conn->query("
 
             </thead>
 
-            <tbody>
+            <tbody id="paymentsTableBody">
 
             <?php while($payment = $payments->fetch_assoc()): ?>
 
@@ -826,11 +826,72 @@ const observer = new IntersectionObserver((entries) => {
     threshold: 0.5
 });
 
+let latestPaymentId = 0;
+
+document
+.querySelectorAll('[data-payment-id]')
+.forEach(row => {
+
+    const id = parseInt(row.dataset.paymentId);
+
+    if (id > latestPaymentId) {
+        latestPaymentId = id;
+    }
+});
+
+function pollNewPayments() {
+
+    fetch(
+        'poll_new_payments.php?last_id=' +
+        latestPaymentId
+    )
+    .then(response => response.json())
+    .then(rows => {
+
+        if (!rows.length) return;
+
+        const tbody =
+            document.getElementById(
+                'paymentsTableBody'
+            );
+
+        rows.reverse().forEach(item => {
+
+            tbody.insertAdjacentHTML(
+                'afterbegin',
+                item.html
+            );
+
+            const row =
+                tbody.querySelector(
+                    `[data-payment-id="${item.id}"]`
+                );
+
+            if (row.classList.contains('new-payment')) {
+                observer.observe(row);
+            }
+
+            if (item.id > latestPaymentId) {
+                latestPaymentId = item.id;
+            }
+        });
+
+    })
+    .catch(console.error);
+}
+
+setInterval(
+    pollNewPayments,
+    2000
+);
+
 document
     .querySelectorAll('.new-payment')
     .forEach(row => {
         observer.observe(row);
     });
+
+
 
 </script>
 
