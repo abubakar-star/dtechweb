@@ -44,6 +44,8 @@ $password = $_ENV['MYSQLPASSWORD'];
     }
 }
 
+$pendingApproval = false;
+
 $errorMessage = "";
 $attempt = 0;
 
@@ -75,38 +77,55 @@ $password = $_ENV['MYSQLPASSWORD'];
             $row = $result->fetch_assoc();
 
             // ✅ Replace with password_verify if using hashes
-            if ($password === $row['password']) {
-                $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['username'];
+         if ($password === $row['password']) {
 
-                createLog(
-    $conn,
-    'authentication',
-    'User Login',
-    'User logged in successfully',
-    'success',
-    $row['id']
-);
+    if ($row['verification_status'] !== 'approved') {
 
-                // ✅ Remember Me feature
-                if ($remember) {
-                    $token = bin2hex(random_bytes(16)); // Secure random token
-                    setcookie("remember_user", $username, time() + (86400 * 30), "/"); // 30 days
-                    setcookie("remember_token", $token, time() + (86400 * 30), "/");
+        createLog(
+            $conn,
+            'authentication',
+            'Pending Verification Login',
+            'User attempted login before verification approval',
+            'warning',
+            $row['id']
+        );
 
-                    // Save token to DB for verification later
-                    $update = $conn->prepare("UPDATE users SET remember_token = ? WHERE id = ?");
-                    $update->bind_param("si", $token, $row['id']);
-                    $update->execute();
-                    if ($update->error) {
-    error_log("Remember token update failed: " . $update->error);
-}
-                    $update->close();
-                }
+        $pendingApproval = true;
 
-                header("Location: index.php");
-                exit();
-            } else {
+    } else {
+
+        $_SESSION['user_id'] = $row['id'];
+        $_SESSION['username'] = $row['username'];
+
+        createLog(
+            $conn,
+            'authentication',
+            'User Login',
+            'User logged in successfully',
+            'success',
+            $row['id']
+        );
+
+        if ($remember) {
+
+            $token = bin2hex(random_bytes(16));
+
+            setcookie("remember_user", $username, time() + (86400 * 30), "/");
+            setcookie("remember_token", $token, time() + (86400 * 30), "/");
+
+            $update = $conn->prepare(
+                "UPDATE users SET remember_token = ? WHERE id = ?"
+            );
+
+            $update->bind_param("si", $token, $row['id']);
+            $update->execute();
+            $update->close();
+        }
+
+        header("Location: index.php");
+        exit();
+    }
+} else {
               createLog(
     $conn,
     'security',
@@ -1206,5 +1225,19 @@ document
 );
 
 </script>
+
+<?php if ($pendingApproval): ?>
+<script>
+
+Swal.fire({
+    icon: 'info',
+    title: 'Verification Ongoing',
+    text: 'Your account is awaiting administrator approval.',
+    confirmButtonColor: '#2563eb',
+    allowOutsideClick: false
+});
+
+</script>
+<?php endif; ?>
 </body>
 </html>
