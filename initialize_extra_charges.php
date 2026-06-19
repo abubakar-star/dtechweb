@@ -3,7 +3,7 @@ session_start();
 
 header('Content-Type: application/json');
 
-include 'onasis_config.php';
+include 'onasis_config_extra.php';
 include 'includes/logger.php';
 
 /* =========================
