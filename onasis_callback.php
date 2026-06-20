@@ -321,6 +321,12 @@ else {
              WHERE id = $userId"
         );
 
+        file_put_contents(
+    "onasis_log4.txt",
+    "USER UPDATE ROWS: " . $conn->affected_rows . "\n",
+    FILE_APPEND
+);
+
         createLog(
             $conn,
             'subscription',
