@@ -83,6 +83,7 @@ $sql = "SELECT
             u.status,
             u.created_at,
             u.package_updated_popup,
+            u.package_queue_popup,
             r.mac_address, 
             r.ip_address, 
             p.package_name, 
