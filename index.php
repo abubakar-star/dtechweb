@@ -1933,7 +1933,7 @@ document
 <?php
 $showQueuePopup =
     ($userStatus === 'queued')
-    && empty($createdAt)
+  //  && empty($createdAt)
     && isset($user['package_queue_popup'])
     && (int)$user['package_queue_popup'] === 0;
 
