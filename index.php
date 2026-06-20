@@ -1948,14 +1948,14 @@ $showQueuePopup =
 
 if ($showQueuePopup):
 
-   /* $markQueuePopupSeen = $conn->prepare("
+   $markQueuePopupSeen = $conn->prepare("
         UPDATE users
         SET package_queue_popup = 1
         WHERE id = ?
     ");
     $markQueuePopupSeen->bind_param("i", $user_id);
     $markQueuePopupSeen->execute();
-    $markQueuePopupSeen->close(); */
+    $markQueuePopupSeen->close();
 ?>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
