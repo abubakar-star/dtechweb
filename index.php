@@ -1931,9 +1931,15 @@ document
 </script>
 
 <?php
+echo "<pre>";
+var_dump($userStatus);
+var_dump($createdAt);
+var_dump($user['package_queue_popup']);
+echo "</pre>";
+
 $showQueuePopup =
     ($userStatus === 'queued')
-  //  && empty($createdAt)
+   && empty($createdAt)
     && isset($user['package_queue_popup'])
     && (int)$user['package_queue_popup'] === 0;
 
@@ -1944,7 +1950,7 @@ if ($showQueuePopup):
         SET package_queue_popup = 1
         WHERE id = ?
     ");
-    $markQueuePopupSeen->bind_param("i", $userId);
+    $markQueuePopupSeen->bind_param("i", $user_id);
     $markQueuePopupSeen->execute();
     $markQueuePopupSeen->close();
 ?>
