@@ -1,4 +1,5 @@
 <?php
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
@@ -1947,14 +1948,14 @@ $showQueuePopup =
 
 if ($showQueuePopup):
 
-    $markQueuePopupSeen = $conn->prepare("
+   /* $markQueuePopupSeen = $conn->prepare("
         UPDATE users
         SET package_queue_popup = 1
         WHERE id = ?
     ");
     $markQueuePopupSeen->bind_param("i", $user_id);
     $markQueuePopupSeen->execute();
-    $markQueuePopupSeen->close();
+    $markQueuePopupSeen->close(); */
 ?>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
