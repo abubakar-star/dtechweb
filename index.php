@@ -292,7 +292,7 @@ function generateInvoiceNumber($conn, $length = 12) {
 /* GENERATE NEW INVOICE NUMBER HERE */
 $invDteInv = generateInvoiceNumber($conn);
 
-$conn->close();
+
 
 
 
@@ -1998,5 +1998,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 <?php endif; ?>
+
+<?php
+$conn->close();
+?>
+
 </body>
 </html>
