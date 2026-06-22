@@ -3,7 +3,7 @@ session_start();
 
 header('Content-Type: application/json');
 
-include 'onasis_config.php';
+include 'onasis_config_change.php';
 include 'includes/logger.php';
 
 /* =========================
@@ -225,7 +225,7 @@ $data = [
     "amount" => $amount,
     "reference" => $reference,
     "account_ref" => $accountNumber,
-    "callback_url" => "https://dtechweb.onrender.com/onasis_callback.php"
+    "callback_url" => "https://dtechweb.onrender.com/onasis_package_change_callback.php"
 ];
 
 $headers = [
