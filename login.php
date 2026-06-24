@@ -1236,6 +1236,14 @@ if (!isAndroidApp) {
 document.getElementById('biometricBtn')
 .addEventListener('click', function(){
 
+    const signInBtn =
+        document.getElementById('signInBtn');
+
+    signInBtn.disabled = true;
+
+    signInBtn.innerHTML =
+        '<span class="spinner"></span>';
+
     DTECH_APP.startBiometricLogin();
 
 });
@@ -1323,6 +1331,18 @@ document
     }
 );
 
+</script>
+
+<script>
+  function resetLoginButton(){
+
+    const signInBtn =
+        document.getElementById('signInBtn');
+
+    signInBtn.disabled = false;
+
+    signInBtn.innerHTML = 'Sign In';
+}
 </script>
 
 <?php if ($pendingApproval): ?>
