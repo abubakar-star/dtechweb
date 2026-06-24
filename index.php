@@ -2002,6 +2002,8 @@ document.addEventListener("DOMContentLoaded", function () {
 <?php
 $conn->close();
 ?>
-
+<script>
+window.loggedInUserId = "<?php echo $_SESSION['user_id']; ?>";
+</script>
 </body>
 </html>
