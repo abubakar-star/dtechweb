@@ -182,6 +182,8 @@ if (empty($row['biometric_token'])) {
   <title>Login</title>
   <link rel="icon" href="tt.png" type="x-icon" />
    <link rel="manifest" href="/manifest.json">
+   <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <meta name="theme-color" content="#2563eb">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -228,6 +230,60 @@ if (empty($row['biometric_token'])) {
 .otp-error{
   border-color:red !important;
   background:#fee2e2;
+}
+
+.fingerprint-fab{
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+
+    width: 65px;
+    height: 65px;
+
+    border-radius: 50%;
+
+    background: #2563eb;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+    font-size: 30px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 20px rgba(37,99,235,.35);
+
+    z-index: 9999;
+
+    transition: .3s;
+
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse{
+
+    0%{
+        box-shadow:
+        0 0 0 0 rgba(37,99,235,.6);
+    }
+
+    70%{
+        box-shadow:
+        0 0 0 20px rgba(37,99,235,0);
+    }
+
+    100%{
+        box-shadow:
+        0 0 0 0 rgba(37,99,235,0);
+    }
+
+}
+
+.fingerprint-fab:hover{
+    transform: scale(1.08);
 }
 
 .loader {
@@ -417,14 +473,8 @@ html.swal2-shown {
 
        <div class="text-center mt-4">
 
-<button
-    type="button"
-    id="biometricBtn"
-    class="text-white text-3xl"
->
-    🔐
-</button>
-
+<div id="biometricBtn" class="fingerprint-fab">
+    <i class="fas fa-fingerprint"></i>
 </div>
 
       <?php if ($errorMessage): ?>
@@ -1191,9 +1241,8 @@ if (!isAndroidApp) {
 
 <script>
 
-document
-.getElementById("biometricBtn")
-.addEventListener("click", () => {
+document.getElementById('biometricBtn')
+.addEventListener('click', function(){
 
     DTECH_APP.startBiometricLogin();
 
