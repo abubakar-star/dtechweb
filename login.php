@@ -242,7 +242,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
     border-radius: 50%;
 
-    background: #2563eb;
+    background: black;
 
     display: flex;
     align-items: center;
