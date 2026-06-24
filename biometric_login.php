@@ -35,9 +35,10 @@ if ($result->num_rows === 1) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['username'] = $user['username'];
 
-    echo json_encode([
+     echo json_encode([
         'success' => true,
-        'username' => $user['username']
+        'username' => $user['username'],
+        'session_id' => session_id()
     ]);
 
 } else {
