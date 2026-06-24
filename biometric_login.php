@@ -37,8 +37,7 @@ if ($result->num_rows === 1) {
 
      echo json_encode([
         'success' => true,
-        'username' => $user['username'],
-        'session_id' => session_id()
+        'username' => $user['username']
     ]);
 
 } else {
