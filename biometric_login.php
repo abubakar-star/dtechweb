@@ -3,13 +3,17 @@ session_start();
 
 require 'db.php';
 
+header('Content-Type: application/json');
+
 $userId = $_POST['user_id'] ?? '';
 
 if (empty($userId)) {
+
     echo json_encode([
         'success' => false,
         'message' => 'Missing user ID'
     ]);
+
     exit;
 }
 
@@ -32,12 +36,14 @@ if ($result->num_rows === 1) {
     $_SESSION['username'] = $user['username'];
 
     echo json_encode([
-        'success' => true
+        'success' => true,
+        'username' => $user['username']
     ]);
 
 } else {
 
     echo json_encode([
-        'success' => false
+        'success' => false,
+        'message' => 'User not found'
     ]);
 }
