@@ -2005,5 +2005,19 @@ $conn->close();
 <script>
 window.loggedInUserId = "<?php echo $_SESSION['user_id']; ?>";
 </script>
+    <script>
+
+if (
+    window.DTECH_APP &&
+    window.loggedInUserId
+) {
+
+    DTECH_APP.saveBiometricUser(
+        window.loggedInUserId
+    );
+
+}
+
+</script>
 </body>
 </html>
