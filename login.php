@@ -266,27 +266,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
      transition: all .25s ease;
 
-    animation: pulse 2s infinite;
 }
 
-@keyframes pulse{
-
-    0%{
-        box-shadow:
-        0 0 0 0 rgba(37,99,235,.6);
-    }
-
-    70%{
-        box-shadow:
-        0 0 0 20px rgba(37,99,235,0);
-    }
-
-    100%{
-        box-shadow:
-        0 0 0 0 rgba(37,99,235,0);
-    }
-
-}
 
 .fingerprint-fab:hover{
      transform: scale(1.05);
