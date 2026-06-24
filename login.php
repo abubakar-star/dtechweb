@@ -234,31 +234,37 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 .fingerprint-fab{
     position: fixed;
-    bottom: 25px;
-    right: 25px;
+    bottom: 20px;
+    right: 20px;
 
-    width: 65px;
-    height: 65px;
+    width: 52px;
+    height: 52px;
 
     border-radius: 50%;
 
-    background: black;
+     background: linear-gradient(
+    135deg,
+    #111111,
+    #2b2b2b
+);
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    color: white;
-    font-size: 30px;
+     color: #ffffff;
+    font-size: 22px;
+    border: 1px solid rgba(255,255,255,0.15);
 
     cursor: pointer;
 
-    box-shadow:
-        0 8px 20px rgba(37,99,235,.35);
+     box-shadow:
+        0 4px 12px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
 
     z-index: 9999;
 
-    transition: .3s;
+     transition: all .25s ease;
 
     animation: pulse 2s infinite;
 }
@@ -283,7 +289,12 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 }
 
 .fingerprint-fab:hover{
-    transform: scale(1.08);
+     transform: scale(1.05);
+    background: rgba(20,20,20,0.95);
+}
+
+.fingerprint-fab i{
+    line-height: 1;
 }
 
 .loader {
