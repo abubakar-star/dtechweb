@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+include 'includes/logger.php';
+
+// Detect Android devices
+$isAndroid = preg_match('/Android/i', $_SERVER['HTTP_USER_AGENT']);
+
 // ✅ If user is already logged in, redirect
 if (isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -10,21 +15,15 @@ if (isset($_SESSION['user_id'])) {
 // ✅ If cookies exist, auto-login
 if (isset($_COOKIE['remember_user']) && isset($_COOKIE['remember_token'])) {
 // DB connection
-/*
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname     = "dlink_network";
-*/
-// DB connection
-
-$servername = "sql313.infinityfree.com";
-$db_username = "if0_39741603";
-$db_password = "mkala3771";
-$dbname     = "if0_39741603_dlink_network";
 
 
-    $conn = new mysqli($servername, $db_username, $db_password, $dbname);
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
+
+    $conn = new mysqli($host, $username, $password, $dbname, $port);
     if (!$conn->connect_error) {
         $username = $_COOKIE['remember_user'];
         $token = $_COOKIE['remember_token'];
@@ -45,26 +44,21 @@ $dbname     = "if0_39741603_dlink_network";
     }
 }
 
+$pendingApproval = false;
+
 $errorMessage = "";
 $attempt = 0;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // DB connection
-/*
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname     = "dlink_network";
-*/
-// DB connection
 
-$servername = "sql313.infinityfree.com";
-$db_username = "if0_39741603";
-$db_password = "mkala3771";
-$dbname     = "if0_39741603_dlink_network";
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
 
-
-    $conn = new mysqli($servername, $db_username, $db_password, $dbname);
+    $conn = new mysqli($host, $username, $password, $dbname, $port);
     if ($conn->connect_error) {
         $errorMessage = "Database connection failed";
         $attempt = 1;
@@ -83,7 +77,22 @@ $dbname     = "if0_39741603_dlink_network";
             $row = $result->fetch_assoc();
 
             // ✅ Replace with password_verify if using hashes
-            if ($password === $row['password']) {
+         if ($password === $row['password']) {
+
+    if ($row['verification_status'] !== 'approved') {
+
+        createLog(
+            $conn,
+            'authentication',
+            'Pending Verification Login',
+            'User attempted login before verification approval',
+            'warning',
+            $row['id']
+        );
+
+        $pendingApproval = true;
+
+    } else {
 
 if (empty($row['biometric_token'])) {
 
@@ -104,32 +113,58 @@ if (empty($row['biometric_token'])) {
     $updateBio->execute();
 }
 
-                $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['username'];
+        $_SESSION['user_id'] = $row['id'];
+        $_SESSION['username'] = $row['username'];
 
-                // ✅ Remember Me feature
-                if ($remember) {
-                    $token = bin2hex(random_bytes(16)); // Secure random token
-                    setcookie("remember_user", $username, time() + (86400 * 30), "/"); // 30 days
-                    setcookie("remember_token", $token, time() + (86400 * 30), "/");
+        createLog(
+            $conn,
+            'authentication',
+            'User Login',
+            'User logged in successfully',
+            'success',
+            $row['id']
+        );
 
-                    // Save token to DB for verification later
-                    $update = $conn->prepare("UPDATE users SET remember_token = ? WHERE id = ?");
-                    $update->bind_param("si", $token, $row['id']);
-                    $update->execute();
-                    if ($update->error) {
-    error_log("Remember token update failed: " . $update->error);
-}
-                    $update->close();
-                }
+        if ($remember) {
 
-                header("Location: index.php");
-                exit();
-            } else {
+            $token = bin2hex(random_bytes(16));
+
+            setcookie("remember_user", $username, time() + (86400 * 30), "/");
+            setcookie("remember_token", $token, time() + (86400 * 30), "/");
+
+            $update = $conn->prepare(
+                "UPDATE users SET remember_token = ? WHERE id = ?"
+            );
+
+            $update->bind_param("si", $token, $row['id']);
+            $update->execute();
+            $update->close();
+        }
+
+        header("Location: index.php");
+        exit();
+    }
+} else {
+              createLog(
+    $conn,
+    'security',
+    'Failed Login',
+    'Incorrect password entered',
+    'warning'
+);
+
                 $errorMessage = "Invalid password";
                 $attempt = 1;
             }
         } else {
+          createLog(
+    $conn,
+    'security',
+    'Failed Login',
+    'Username does not exist',
+    'warning'
+);
+
             $errorMessage = "Wrong credentials";
             $attempt = 1;
         }
@@ -146,6 +181,8 @@ if (empty($row['biometric_token'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login</title>
   <link rel="icon" href="tt.png" type="x-icon" />
+   <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2563eb">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
       html, body {
@@ -167,6 +204,122 @@ if (empty($row['biometric_token'])) {
     @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
     @keyframes shake { 0% { transform: translateX(0);} 20% { transform: translateX(-5px);} 40% { transform: translateX(5px);} 60% { transform: translateX(-5px);} 80% { transform: translateX(5px);} 100% { transform: translateX(0);} }
     .shake { animation: shake 0.4s ease-in-out; }
+
+    .otp-box{
+  width:45px;
+  height:55px;
+  text-align:center;
+  font-size:24px;
+  border:2px solid #ccc;
+  border-radius:12px;
+  outline:none;
+  transition:0.2s;
+}
+
+.otp-box:focus{
+  border-color:#2563eb;
+}
+
+.otp-success{
+  border-color:green !important;
+  background:#dcfce7;
+}
+
+.otp-error{
+  border-color:red !important;
+  background:#fee2e2;
+}
+
+.loader {
+  width: 45px;
+  height: 45px;
+  border: 4px solid rgba(255,255,255,0.2);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+      #installBanner{
+    position:fixed;
+    top:20px;
+    right:20px;
+
+    width:340px;
+
+    background:#ffffff;
+
+    border-radius:16px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+    padding:16px;
+
+    display:none;
+
+    align-items:center;
+
+    gap:12px;
+
+    z-index:99999;
+
+    animation:slideIn .3s ease;
+}
+
+#installBanner img{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+}
+
+.banner-text{
+    flex:1;
+}
+
+.banner-text h4{
+    margin:0;
+    font-size:15px;
+}
+
+.banner-text p{
+    margin:3px 0 0;
+    color:#64748b;
+    font-size:13px;
+}
+
+#installBtn{
+    border:none;
+    background:#2563eb;
+    color:white;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+@keyframes slideIn{
+    from{
+        opacity:0;
+        transform:translateY(-10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+#loadingOverlay {
+  backdrop-filter: blur(5px);
+}
+
+body.swal2-shown,
+html.swal2-shown {
+  padding-right: 0 !important;
+  overflow: hidden !important;
+}
+
+.swal2-height-auto {
+  height: 100% !important;
+}
   </style>
 </head>
 <body class="bg-cover bg-center bg-no-repeat h-screen flex items-center justify-center font-sans overflow-hidden"
@@ -247,7 +400,11 @@ if (empty($row['biometric_token'])) {
           <label for="remember" class="ml-2 block text-sm text-white/90">Remember me</label>
         </div>
         <div class="text-sm">
-          <a href="#" class="font-medium text-white/90 hover:text-white">Forgot your password?</a>
+          <a href="#"
+   id="forgotPasswordBtn"
+   class="font-medium text-white/90 hover:text-white">
+   Forgot your password?
+</a>
         </div>
       </div>
 
@@ -258,7 +415,7 @@ if (empty($row['biometric_token'])) {
         Sign In
       </button>
 
-      <div class="text-center mt-4">
+       <div class="text-center mt-4">
 
 <button
     type="button"
@@ -278,11 +435,257 @@ if (empty($row['biometric_token'])) {
     </form>
 
     <p class="text-center text-sm text-white/80">
+
+    
       Can't access your account? <br>Contact 
       <a href="#" class="font-medium text-white hover:text-white/90">0758788020</a>
+      <br>
+<?php if ($isAndroid): ?>
+<a href="D-LINK.apk"
+   download
+   class="inline-flex items-center gap-1 mt-2 text-cyan-300 hover:text-cyan-200 text-sm font-medium">
+
+  APK
+
+  <svg xmlns="http://www.w3.org/2000/svg"
+       class="h-4 w-4"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke="currentColor">
+
+    <path stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5m0 0l5-5m-5 5V4"/>
+
+  </svg>
+
+</a>
+<?php endif; ?>
     </p>
   </div>
 
+  <!-- OTP MODAL -->
+<div id="otpModal"
+     class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+  <div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl relative">
+       <!-- CLOSE BUTTON -->
+<button id="closeOtpModal"
+        class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold leading-none">
+  &times;
+</button>
+
+    <h2 class="text-2xl font-bold text-center mb-2">
+      Verify OTP
+    </h2>
+
+<p id="otpPhoneText"
+   class="text-gray-500 text-center mb-5">
+   Enter the 6-digit code sent to your phone
+</p>
+
+    <!-- OTP BOXES -->
+    <div class="flex justify-center gap-2 mb-5">
+      <input id="otp1"
+      maxlength="6"
+       class="otp-box"
+       autocomplete="one-time-code"
+       inputmode="numeric" />
+     
+  <input id="otp2"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp3"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp4"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp5"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+  <input id="otp6"
+         maxlength="1"
+         class="otp-box"
+         inputmode="numeric" />
+
+    </div>
+
+    <p id="otpMessage"
+       class="text-center text-sm mt-3 hidden"></p>
+
+  </div>
+</div>
+
+
+<!-- NEW PASSWORD MODAL -->
+<div id="passwordModal"
+     class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+  <div class="bg-white rounded-2xl p-6 w-[90%] max-w-sm shadow-2xl">
+ 
+
+    <h2 class="text-2xl font-bold text-center mb-5">
+      Create New Password
+    </h2>
+
+   <!-- NEW PASSWORD -->
+<div class="relative mb-4">
+
+  <input type="text"
+         id="newPassword"
+         placeholder="New password"
+         class="w-full border rounded-lg px-4 py-3 pr-12"/>
+
+  <button type="button"
+          id="toggleNewPassword"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+
+    <!-- EYE OPEN -->
+    <svg id="newEyeOpen"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5
+               c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7
+               -4.477 0-8.268-2.943-9.542-7z"/>
+    </svg>
+
+    <!-- EYE CLOSED -->
+    <svg id="newEyeClosed"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5 hidden"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 3l18 18"/>
+    </svg>
+
+  </button>
+
+</div>
+
+
+<!-- CONFIRM PASSWORD -->
+<div class="relative mb-5">
+
+  <input type="text"
+         id="confirmPassword"
+         placeholder="Confirm password"
+         class="w-full border rounded-lg px-4 py-3 pr-12"/>
+
+  <button type="button"
+          id="toggleConfirmPassword"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+
+    <!-- EYE OPEN -->
+    <svg id="confirmEyeOpen"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5
+               c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7
+               -4.477 0-8.268-2.943-9.542-7z"/>
+    </svg>
+
+    <!-- EYE CLOSED -->
+    <svg id="confirmEyeClosed"
+         xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5 hidden"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+      <path stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 3l18 18"/>
+    </svg>
+
+  </button>
+
+</div>
+
+ <button id="changePasswordBtn"
+  class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
+
+  <span id="changePasswordText">
+    Change Password
+  </span>
+
+  <span id="changePasswordLoader"
+        class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin">
+  </span>
+
+</button>
+
+    <p id="passwordMessage"
+       class="text-center text-sm mt-3 hidden"></p>
+
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay"
+     class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[9999]">
+
+  <div class="loader"></div>
+
+</div>
+
+<div id="installBanner">
+
+    <img src="/images/dlink-logo.png" alt="D-LINK">
+
+    <div class="banner-text">
+        <h4>Install D-LINK</h4>
+        <p>Get faster access from your desktop.</p>
+    </div>
+
+    <button id="installBtn">
+        Install
+    </button>
+
+</div>
+    
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
        const togglePassword = document.getElementById('togglePassword');
   const passwordField = document.getElementById('password');
@@ -321,6 +724,455 @@ if (empty($row['biometric_token'])) {
       }
     });
   </script>
+  <script>
+
+    const changePasswordBtn =
+  document.getElementById("changePasswordBtn");
+
+const changePasswordText =
+  document.getElementById("changePasswordText");
+
+const changePasswordLoader =
+  document.getElementById("changePasswordLoader");
+
+const closeOtpModal =
+  document.getElementById("closeOtpModal");
+
+    const loadingOverlay =
+  document.getElementById("loadingOverlay");
+
+let resetUsername = "";
+
+const forgotBtn = document.getElementById("forgotPasswordBtn");
+const otpModal = document.getElementById("otpModal");
+const passwordModal = document.getElementById("passwordModal");
+
+const otpBoxes = document.querySelectorAll(".otp-box");
+// AUTO PASTE OTP FROM PHONE SMS
+otpBoxes[0].addEventListener("input", (e) => {
+
+  const value = e.target.value;
+
+  // Detect full OTP pasted from SMS
+  if(value.length > 1){
+
+    const otpArray =
+      value.replace(/\D/g, '').split('');
+
+    otpBoxes.forEach((box, index) => {
+
+      box.value = otpArray[index] || '';
+
+    });
+
+    // Trigger verification automatically
+    otpBoxes[5].dispatchEvent(
+      new Event("input")
+    );
+
+  }
+
+});
+
+// NEW PASSWORD TOGGLE
+const toggleNewPassword =
+  document.getElementById("toggleNewPassword");
+
+const newPassword =
+  document.getElementById("newPassword");
+
+const newEyeOpen =
+  document.getElementById("newEyeOpen");
+
+const newEyeClosed =
+  document.getElementById("newEyeClosed");
+
+toggleNewPassword.addEventListener("click", () => {
+
+  if(newPassword.type === "text"){
+
+    newPassword.type = "password";
+
+    newEyeOpen.classList.add("hidden");
+    newEyeClosed.classList.remove("hidden");
+
+  }else{
+
+    newPassword.type = "text";
+
+    newEyeOpen.classList.remove("hidden");
+    newEyeClosed.classList.add("hidden");
+
+  }
+
+});
+
+
+// CONFIRM PASSWORD TOGGLE
+const toggleConfirmPassword =
+  document.getElementById("toggleConfirmPassword");
+
+const confirmPassword =
+  document.getElementById("confirmPassword");
+
+const confirmEyeOpen =
+  document.getElementById("confirmEyeOpen");
+
+const confirmEyeClosed =
+  document.getElementById("confirmEyeClosed");
+
+toggleConfirmPassword.addEventListener("click", () => {
+
+  if(confirmPassword.type === "text"){
+
+    confirmPassword.type = "password";
+
+    confirmEyeOpen.classList.add("hidden");
+    confirmEyeClosed.classList.remove("hidden");
+
+  }else{
+
+    confirmPassword.type = "text";
+
+    confirmEyeOpen.classList.remove("hidden");
+    confirmEyeClosed.classList.add("hidden");
+
+  }
+
+});
+
+
+// AUTO MOVE OTP INPUTS
+otpBoxes.forEach((box, index) => {
+
+  box.addEventListener("input", () => {
+
+    if(box.value.length === 1 && index < otpBoxes.length - 1){
+      otpBoxes[index + 1].focus();
+    }
+
+  });
+
+});
+
+
+// OPEN FORGOT PASSWORD
+forgotBtn.addEventListener("click", async (e) => {
+
+  e.preventDefault();
+
+  const username = document.getElementById("username").value.trim();
+
+  if(!username){
+    Swal.fire({
+  icon: "warning",
+  title: "Username Required",
+  text: "Please enter your username first",
+  confirmButtonColor: "#2563eb",
+  background: "#ffffff",
+  color: "#111827"
+});
+    return;
+  }
+
+  resetUsername = username;
+
+  // CLOSE OTP MODAL
+closeOtpModal.addEventListener("click", () => {
+
+  otpModal.classList.remove("flex");
+  otpModal.classList.add("hidden");
+
+  // CLEAR OTP INPUTS
+  otpBoxes.forEach(box => {
+
+    box.value = "";
+
+    box.classList.remove(
+      "otp-success",
+      "otp-error"
+    );
+
+    box.disabled = false;
+
+  });
+
+});
+
+  // SHOW LOADER
+loadingOverlay.classList.remove("hidden");
+loadingOverlay.classList.add("flex");
+
+const startTime = Date.now();
+
+const response = await fetch("send_otp.php", {
+
+  method: "POST",
+
+  headers:{
+    "Content-Type":"application/x-www-form-urlencoded"
+  },
+
+  body: "username=" + encodeURIComponent(username)
+
+});
+
+const result = await response.text();
+
+
+// RELATIVE LOADING TIME
+const elapsed = Date.now() - startTime;
+
+const minimumTime = 1200;
+
+if(elapsed < minimumTime){
+
+  await new Promise(resolve =>
+    setTimeout(resolve, minimumTime - elapsed)
+  );
+
+}
+
+
+// HIDE LOADER
+loadingOverlay.classList.remove("flex");
+loadingOverlay.classList.add("hidden");
+
+if(result.startsWith("success|")){
+
+  const phone = result.split("|")[1];
+
+  document.getElementById("otpPhoneText")
+  .innerHTML =
+    `Enter the 6-digit code sent to <br><strong>${phone}</strong>`;
+
+  otpModal.classList.remove("hidden");
+  otpModal.classList.add("flex");
+
+}else{
+
+    alert(result);
+
+  }
+
+});
+
+
+
+otpBoxes.forEach((box, index) => {
+
+  // INPUT
+  box.addEventListener("input", async () => {
+
+    // NUMBERS ONLY
+    box.value = box.value.replace(/[^0-9]/g, '');
+
+    // AUTO MOVE
+    if(box.value.length === 1 && index < otpBoxes.length - 1){
+      otpBoxes[index + 1].focus();
+    }
+
+    // BUILD OTP
+    let otp = "";
+
+    otpBoxes.forEach(b => {
+      otp += b.value;
+    });
+
+    // AUTO VERIFY
+    if(otp.length === 6){
+
+      const response = await fetch("verify_otp.php", {
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/x-www-form-urlencoded"
+        },
+
+        body:
+          "username=" + encodeURIComponent(resetUsername)
+          + "&otp=" + encodeURIComponent(otp)
+
+      });
+
+      const result = await response.text();
+
+      const otpMessage =
+        document.getElementById("otpMessage");
+
+      if(result.trim() === "success"){
+
+        otpBoxes.forEach(box => {
+
+          box.classList.add("otp-success");
+          box.classList.remove("otp-error");
+
+          box.disabled = true;
+
+        });
+
+        otpMessage.innerHTML = "OTP verified";
+        otpMessage.className =
+          "text-green-600 text-center mt-3";
+
+        setTimeout(() => {
+
+          otpModal.classList.add("hidden");
+
+          passwordModal.classList.remove("hidden");
+          passwordModal.classList.add("flex");
+
+        }, 1000);
+
+      }else{
+
+        otpBoxes.forEach(box => {
+
+          box.classList.add("otp-error");
+          box.classList.remove("otp-success");
+
+        });
+
+        otpMessage.innerHTML = "Invalid OTP";
+        otpMessage.className =
+          "text-red-600 text-center mt-3";
+
+        // CLEAR WRONG OTP
+        setTimeout(() => {
+
+          otpBoxes.forEach(box => {
+
+            box.value = "";
+            box.disabled = false;
+
+            box.classList.remove(
+              "otp-error",
+              "otp-success"
+            );
+
+          });
+
+          otpBoxes[0].focus();
+
+        }, 1200);
+
+      }
+
+    }
+
+  });
+
+  // BACKSPACE
+  box.addEventListener("keydown", (e) => {
+
+    if(
+      e.key === "Backspace"
+      &&
+      box.value === ""
+      &&
+      index > 0
+    ){
+      otpBoxes[index - 1].focus();
+    }
+
+  });
+
+});
+
+
+
+
+// CHANGE PASSWORD
+document.getElementById("changePasswordBtn")
+.addEventListener("click", async () => {
+
+  const newPassword =
+    document.getElementById("newPassword").value;
+
+  const confirmPassword =
+    document.getElementById("confirmPassword").value;
+
+  const msg =
+    document.getElementById("passwordMessage");
+
+  if(newPassword !== confirmPassword){
+
+    msg.innerHTML = "Passwords do not match";
+    msg.className = "text-red-600 text-center mt-3";
+    return;
+
+  }
+
+  // SHOW LOADER
+changePasswordBtn.disabled = true;
+
+changePasswordText.innerHTML =
+  "Updating...";
+
+changePasswordLoader.classList.remove("hidden");
+
+  const response = await fetch("change_password.php", {
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/x-www-form-urlencoded"
+    },
+
+    body:
+      "username=" + encodeURIComponent(resetUsername)
+      + "&password=" + encodeURIComponent(newPassword)
+
+  });
+
+  const result = await response.text();
+
+if(result === "success"){
+
+  changePasswordText.innerHTML =
+    "Success";
+
+  window.location.href = "index.php";
+
+}else{
+
+  // HIDE LOADER
+  changePasswordBtn.disabled = false;
+
+  changePasswordText.innerHTML =
+    "Change Password";
+
+  changePasswordLoader.classList.add("hidden");
+
+    msg.innerHTML = result;
+    msg.className = "text-red-600 text-center mt-3";
+
+  }
+
+});
+
+</script>
+
+    <script>
+if ('serviceWorker' in navigator) {
+
+    window.addEventListener('load', () => {
+
+        navigator.serviceWorker.register('/sw.js')
+
+        .then(() => {
+            console.log('Service Worker Registered');
+        })
+
+        .catch(error => {
+            console.error(error);
+        });
+
+    });
+
+}
+</script>
 
 <script>
 
@@ -349,5 +1201,101 @@ document
 
 </script>
 
+    <script>
+
+let deferredPrompt;
+
+function isDesktop() {
+    return !/Android|iPhone|iPad|iPod/i.test(
+        navigator.userAgent
+    );
+}
+
+window.addEventListener(
+    'beforeinstallprompt',
+    (e) => {
+
+        if (!isDesktop()) {
+            return;
+        }
+
+        e.preventDefault();
+
+        deferredPrompt = e;
+
+        const hiddenTime =
+    localStorage.getItem(
+        'dlink_install_hidden'
+    );
+
+if (hiddenTime) {
+
+    const daysPassed =
+        (Date.now() - hiddenTime) /
+        (1000 * 60 * 60 * 24);
+
+    if (daysPassed < 30) {
+        return;
+    }
+}
+
+        const banner =
+            document.getElementById('installBanner');
+
+        banner.style.display = 'flex';
+
+      setTimeout(() => {
+
+    banner.style.display = 'none';
+
+    localStorage.setItem(
+        'dlink_install_hidden',
+        Date.now()
+    );
+
+}, 10000);
+    }
+);
+
+document
+.getElementById('installBtn')
+.addEventListener(
+    'click',
+    async () => {
+
+        if (!deferredPrompt) return;
+
+        localStorage.setItem(
+            'dlink_install_hidden',
+            Date.now()
+        );
+
+        deferredPrompt.prompt();
+
+        await deferredPrompt.userChoice;
+
+        document
+            .getElementById('installBanner')
+            .style.display = 'none';
+
+        deferredPrompt = null;
+    }
+);
+
+</script>
+
+<?php if ($pendingApproval): ?>
+<script>
+
+Swal.fire({
+    icon: 'info',
+    title: 'Verification Ongoing',
+    text: 'Your account is awaiting administrator approval.',
+    confirmButtonColor: '#2563eb',
+    allowOutsideClick: false
+});
+
+</script>
+<?php endif; ?>
 </body>
 </html>
