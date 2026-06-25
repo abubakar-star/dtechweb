@@ -1932,11 +1932,6 @@ document
 </script>
 
 <?php
-echo "<pre>";
-var_dump($userStatus);
-var_dump($createdAt);
-var_dump($user['package_queue_popup']);
-echo "</pre>";
 
 $showQueuePopup =
     ($userStatus === 'queued')
