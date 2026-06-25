@@ -1233,16 +1233,7 @@ if (!isAndroidApp) {
 
 <script>
 
-document.getElementById('biometricBtn')
-.addEventListener('click', function(){
-
-    const signInBtn =
-        document.getElementById('signInBtn');
-
-    signInBtn.disabled = true;
-
-    signInBtn.innerHTML =
-        '<span class="spinner"></span>';
+document.getElementById('biometricBtn').addEventListener('click', function () {
 
     DTECH_APP.startBiometricLogin();
 
@@ -1336,12 +1327,12 @@ document
 <script>
   function resetLoginButton(){
 
-    const signInBtn =
+    const btn =
         document.getElementById('signInBtn');
 
-    signInBtn.disabled = false;
+    btn.disabled = false;
 
-    signInBtn.innerHTML = 'Sign In';
+    btn.innerHTML = 'Sign In';
 }
 </script>
 
