@@ -1,6 +1,6 @@
 <?php
 
-$ONASIS_SECRET_KEY = "pay_6ceecf07b938d143bc8ff745b3037eaaaafa2064579a4cfc";
+$ONASIS_SECRET_KEY = "pay_b977f384421b9de2b8dfcffcef49183ca2ffe5159facad91";
 
 $ONASIS_BASE_URL = "https://pay.onasis.tech";
 
