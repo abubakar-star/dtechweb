@@ -131,6 +131,16 @@ Choose an admin module
 
 </a>
 
+<!-- SMS MANAGEMENT -->
+<a href="sms.php"
+   class="relative block text-center
+          bg-purple-600 hover:bg-purple-700
+          transition py-4 rounded-lg font-semibold">
+
+📨 SMS Management
+
+</a>
+
 </div>
 
 <hr class="my-6 border-gray-700">
