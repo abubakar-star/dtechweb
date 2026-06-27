@@ -17,6 +17,39 @@ $conn = new mysqli($host, $username, $password, $dbname, $port);
 if ($conn->connect_error) {
     die("Database connection failed");
 }
+
+/* ===============================
+   SMS DASHBOARD STATISTICS
+================================ */
+
+// Total Campaigns
+$total_campaigns = 0;
+$res = $conn->query("SELECT COUNT(*) AS total FROM sms_campaigns");
+if ($res) {
+    $total_campaigns = (int)$res->fetch_assoc()['total'];
+}
+
+// Total SMS Sent
+$total_sms = 0;
+$res = $conn->query("SELECT COUNT(*) AS total FROM sms_history");
+if ($res) {
+    $total_sms = (int)$res->fetch_assoc()['total'];
+}
+
+// Pending Queue
+$pending_sms = 0;
+$res = $conn->query("SELECT COUNT(*) AS total FROM sms_queue WHERE processed = 0");
+if ($res) {
+    $pending_sms = (int)$res->fetch_assoc()['total'];
+}
+
+// Failed SMS
+$failed_sms = 0;
+$res = $conn->query("SELECT COUNT(*) AS total FROM sms_history WHERE status='Failed'");
+if ($res) {
+    $failed_sms = (int)$res->fetch_assoc()['total'];
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,17 +76,93 @@ if ($conn->connect_error) {
 
 </div>
 
-<div class="bg-gray-800 rounded-xl p-10 shadow">
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
-<h2 class="text-xl font-semibold text-white mb-4">
-Welcome
-</h2>
+    <div class="bg-gray-800 rounded-xl p-6 shadow">
+        <p class="text-gray-400 text-sm">Campaigns</p>
+        <h2 class="text-3xl font-bold text-white mt-2">
+            <?= $total_campaigns ?>
+        </h2>
+    </div>
 
-<p class="text-gray-300">
-The SMS Management module is ready.
+    <div class="bg-gray-800 rounded-xl p-6 shadow">
+        <p class="text-gray-400 text-sm">SMS Sent</p>
+        <h2 class="text-3xl font-bold text-green-400 mt-2">
+            <?= $total_sms ?>
+        </h2>
+    </div>
 
-In the next step we'll build the dashboard for sending messages, viewing campaigns, templates, history and settings.
-</p>
+    <div class="bg-gray-800 rounded-xl p-6 shadow">
+        <p class="text-gray-400 text-sm">Pending Queue</p>
+        <h2 class="text-3xl font-bold text-yellow-400 mt-2">
+            <?= $pending_sms ?>
+        </h2>
+    </div>
+
+    <div class="bg-gray-800 rounded-xl p-6 shadow">
+        <p class="text-gray-400 text-sm">Failed SMS</p>
+        <h2 class="text-3xl font-bold text-red-400 mt-2">
+            <?= $failed_sms ?>
+        </h2>
+    </div>
+
+</div>
+
+<!-- Action Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <a href="sms_send.php"
+       class="bg-purple-700 hover:bg-purple-800 transition rounded-xl p-8">
+
+        <h2 class="text-2xl font-bold text-white mb-2">
+            ✉ Send SMS
+        </h2>
+
+        <p class="text-gray-200">
+            Create a new SMS campaign.
+        </p>
+
+    </a>
+
+    <a href="sms_templates.php"
+       class="bg-blue-700 hover:bg-blue-800 transition rounded-xl p-8">
+
+        <h2 class="text-2xl font-bold text-white mb-2">
+            📝 Templates
+        </h2>
+
+        <p class="text-gray-200">
+            Manage reusable SMS templates.
+        </p>
+
+    </a>
+
+    <a href="sms_campaigns.php"
+       class="bg-green-700 hover:bg-green-800 transition rounded-xl p-8">
+
+        <h2 class="text-2xl font-bold text-white mb-2">
+            📊 Campaign History
+        </h2>
+
+        <p class="text-gray-200">
+            View all SMS campaigns.
+        </p>
+
+    </a>
+
+    <a href="sms_settings.php"
+       class="bg-orange-700 hover:bg-orange-800 transition rounded-xl p-8">
+
+        <h2 class="text-2xl font-bold text-white mb-2">
+            ⚙ SMS Settings
+        </h2>
+
+        <p class="text-gray-200">
+            Configure TalkSasa API.
+        </p>
+
+    </a>
 
 </div>
 
