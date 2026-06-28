@@ -112,8 +112,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
         }
 
         /* SAVE TO HISTORY */
-        $campaign_id = 0;
-        $user_id = 0;
+        $campaign_id = null;
+        $user_id = null;
         $recipient_name = 'Manual Test';
         $sms_type = 'Test SMS';
         $cost = 0;
