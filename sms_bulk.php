@@ -243,49 +243,38 @@ while ($row = $result->fetch_assoc()) {
 </div>
 
 <script>
-
-const group=document.getElementById('recipient_group');
-const packageBox=document.getElementById('packageBox');
-const template=document.getElementById('template');
-const message=document.getElementById('message');
-const chars=document.getElementById('chars');
-const pages=document.getElementById('pages');
-const recipients=document.getElementById('recipientCount');
-const button=document.getElementById('continueBtn');
+const packageSelect=document.querySelector('[name="package_id"]');
 
 group.addEventListener('change',()=>{
-
-    packageBox.classList.toggle(
-        'hidden',
-        group.value!=='package'
-    );
-
-    // placeholder until AJAX count
-    recipients.textContent=0;
-    button.disabled=true;
-
+    packageBox.classList.toggle('hidden',group.value!=='package');
+    loadRecipients();
 });
 
-template.addEventListener('change',()=>{
+packageSelect.addEventListener('change',loadRecipients);
 
-    message.value=template.value;
+function loadRecipients(){
 
-    updateCounter();
+    const form=new FormData();
 
-});
+    form.append('group',group.value);
+    form.append('package_id',packageSelect.value);
 
-message.addEventListener('input',updateCounter);
+    fetch('sms_recipient_count.php',{
 
-function updateCounter(){
+        method:'POST',
+        body:form
 
-    const len=message.value.length;
+    })
+    .then(r=>r.json())
+    .then(data=>{
 
-    chars.textContent=len+" Characters";
+        recipients.textContent=data.count;
 
-    pages.textContent=Math.max(1,Math.ceil(len/160))+" SMS";
+        button.disabled=data.count==0;
+
+    });
 
 }
-
 </script>
 
 </body>
