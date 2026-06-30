@@ -260,12 +260,36 @@ $totalSmsUnits = $smsSegments * $totalRecipients;
 
             </a>
 
-            <button
-                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded">
+           <form method="POST" action="sms_bulk_send.php">
 
-                Send SMS
+<input
+type="hidden"
+name="campaign_title"
+value="<?= htmlspecialchars($campaignTitle) ?>">
 
-            </button>
+<input
+type="hidden"
+name="recipient_group"
+value="<?= htmlspecialchars($recipientGroup) ?>">
+
+<input
+type="hidden"
+name="package_id"
+value="<?= htmlspecialchars($packageId) ?>">
+
+<input
+type="hidden"
+name="message"
+value="<?= htmlspecialchars($message) ?>">
+
+<button
+class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded">
+
+Send SMS
+
+</button>
+
+</form>
 
         </div>
 
