@@ -55,40 +55,54 @@ switch ($recipientGroup) {
 
     case 'active':
 
-        $sql = "SELECT COUNT(*) AS total
-                FROM users
-                WHERE status='active'";
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM users
+            WHERE status='active'
+        ";
+
         break;
 
     case 'expired':
 
-        $sql = "SELECT COUNT(*) AS total
-                FROM users
-                WHERE status='expired'";
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM users
+            WHERE status='active'
+            AND Expiry < NOW()
+        ";
+
         break;
 
     case 'expiring3':
 
-        $sql = "SELECT COUNT(*) AS total
-                FROM users
-                WHERE status='active'
-                AND DATE_ADD(created_at, INTERVAL 30 DAY)
-                    BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)";
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM users
+            WHERE status='active'
+            AND Expiry BETWEEN NOW()
+                            AND DATE_ADD(NOW(), INTERVAL 3 DAY)
+        ";
+
         break;
 
     case 'package':
 
         $packageId = (int)$packageId;
 
-        $sql = "SELECT COUNT(*) AS total
-                FROM users
-                WHERE package_id=$packageId
-                AND status='active'";
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM users
+            WHERE status='active'
+            AND package_id=$packageId
+        ";
+
         break;
 
     default:
 
         $sql = "";
+
 }
 
 if ($sql != "") {
