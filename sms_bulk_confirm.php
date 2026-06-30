@@ -28,6 +28,80 @@ $groupNames = [
 ];
 
 $groupDisplay = $groupNames[$recipientGroup] ?? $recipientGroup;
+
+/* ===============================
+   DATABASE CONNECTION
+================================ */
+
+$host = $_ENV['MYSQLHOST'];
+$port = $_ENV['MYSQLPORT'];
+$dbname = $_ENV['MYSQLDATABASE'];
+$username = $_ENV['MYSQLUSER'];
+$password = $_ENV['MYSQLPASSWORD'];
+
+$conn = new mysqli($host, $username, $password, $dbname, $port);
+
+if ($conn->connect_error) {
+    die("Database connection failed");
+}
+
+/* ===============================
+   RECIPIENT COUNT
+================================ */
+
+$totalRecipients = 0;
+
+switch ($recipientGroup) {
+
+    case 'active':
+
+        $sql = "SELECT COUNT(*) AS total
+                FROM users
+                WHERE status='active'";
+        break;
+
+    case 'expired':
+
+        $sql = "SELECT COUNT(*) AS total
+                FROM users
+                WHERE status='expired'";
+        break;
+
+    case 'expiring3':
+
+        $sql = "SELECT COUNT(*) AS total
+                FROM users
+                WHERE status='active'
+                AND DATE_ADD(created_at, INTERVAL 30 DAY)
+                    BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)";
+        break;
+
+    case 'package':
+
+        $packageId = (int)$packageId;
+
+        $sql = "SELECT COUNT(*) AS total
+                FROM users
+                WHERE package_id=$packageId
+                AND status='active'";
+        break;
+
+    default:
+
+        $sql = "";
+}
+
+if ($sql != "") {
+
+    $result = $conn->query($sql);
+
+    if ($row = $result->fetch_assoc()) {
+
+        $totalRecipients = $row['total'];
+
+    }
+
+}
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +138,14 @@ $groupDisplay = $groupNames[$recipientGroup] ?? $recipientGroup;
                 <strong>Recipient Group:</strong>
                <?= htmlspecialchars($groupDisplay) ?>
             </div>
+
+            <div>
+
+    <strong>Recipients:</strong>
+
+    <?= number_format($totalRecipients) ?>
+
+</div>
 
             <div>
                 <strong>Message:</strong>
