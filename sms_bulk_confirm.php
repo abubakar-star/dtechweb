@@ -29,6 +29,8 @@ $groupNames = [
 
 $groupDisplay = $groupNames[$recipientGroup] ?? $recipientGroup;
 
+
+
 /* ===============================
    DATABASE CONNECTION
 ================================ */
@@ -43,6 +45,32 @@ $conn = new mysqli($host, $username, $password, $dbname, $port);
 
 if ($conn->connect_error) {
     die("Database connection failed");
+}
+
+/* ===============================
+   PACKAGE NAME
+================================ */
+
+$packageName = '';
+
+if ($recipientGroup === 'package' && !empty($packageId)) {
+
+    $stmt = $conn->prepare("
+        SELECT package_name
+        FROM packages
+        WHERE id = ?
+    ");
+
+    $stmt->bind_param("i", $packageId);
+
+    $stmt->execute();
+
+    $stmt->bind_result($packageName);
+
+    $stmt->fetch();
+
+    $stmt->close();
+
 }
 
 /* ===============================
@@ -152,6 +180,18 @@ if ($sql != "") {
                 <strong>Recipient Group:</strong>
                <?= htmlspecialchars($groupDisplay) ?>
             </div>
+
+            <?php if ($recipientGroup === 'package'): ?>
+
+<div>
+
+    <strong>Package:</strong>
+
+    <?= htmlspecialchars($packageName) ?>
+
+</div>
+
+<?php endif; ?>
 
             <div>
 
