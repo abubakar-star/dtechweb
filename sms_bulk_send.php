@@ -31,6 +31,41 @@ $recipientGroup = trim($_POST['recipient_group']);
 $packageId = (int)($_POST['package_id'] ?? 0);
 $message = trim($_POST['message']);
 
+/* ===============================
+   CREATE CAMPAIGN
+================================ */
+
+$sentBy = $_SESSION['user_id'] ?? 1;
+
+$stmt = $conn->prepare("
+    INSERT INTO sms_campaigns
+    (
+        title,
+        sms_type,
+        message,
+        sent_by,
+        recipient_group
+    )
+    VALUES
+    (
+        ?, 'custom', ?, ?, ?
+    )
+");
+
+$stmt->bind_param(
+    "ssis",
+    $campaignTitle,
+    $message,
+    $sentBy,
+    $recipientGroup
+);
+
+$stmt->execute();
+
+$campaignId = $conn->insert_id;
+
+$stmt->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -53,6 +88,14 @@ Bulk SMS Send
 </h2>
 
 <p><strong>Campaign:</strong> <?= htmlspecialchars($campaignTitle) ?></p>
+
+<p>
+
+<strong>Campaign ID:</strong>
+
+<?= $campaignId ?>
+
+</p>
 
 <p><strong>Recipient Group:</strong> <?= htmlspecialchars($recipientGroup) ?></p>
 
