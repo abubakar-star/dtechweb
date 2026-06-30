@@ -144,6 +144,16 @@ if ($sql != "") {
     }
 
 }
+
+/* ===============================
+   SMS STATISTICS
+================================ */
+
+$characterCount = strlen($message);
+
+$smsSegments = max(1, ceil($characterCount / 160));
+
+$totalSmsUnits = $smsSegments * $totalRecipients;
 ?>
 
 <!DOCTYPE html>
@@ -198,6 +208,34 @@ if ($sql != "") {
     <strong>Recipients:</strong>
 
     <?= number_format($totalRecipients) ?>
+
+</div>
+
+<div>
+
+    <strong>Characters:</strong>
+
+    <?= number_format($characterCount) ?>
+
+</div>
+
+<div>
+
+    <strong>SMS Segments:</strong>
+
+    <?= number_format($smsSegments) ?>
+
+</div>
+
+<div>
+
+    <strong>Total SMS Units:</strong>
+
+    <span class="font-bold text-yellow-400">
+
+        <?= number_format($totalSmsUnits) ?>
+
+    </span>
 
 </div>
 
