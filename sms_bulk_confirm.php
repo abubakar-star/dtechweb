@@ -15,6 +15,19 @@ if ($campaignTitle === '' || $recipientGroup === '' || $message === '') {
     header("Location: sms_bulk.php");
     exit();
 }
+
+/* ===============================
+   FRIENDLY RECIPIENT GROUP NAME
+================================ */
+
+$groupNames = [
+    'active'    => 'All Active Customers',
+    'expired'   => 'Expired Customers',
+    'expiring3' => 'Expiring Within 3 Days',
+    'package'   => 'Specific Package'
+];
+
+$groupDisplay = $groupNames[$recipientGroup] ?? $recipientGroup;
 ?>
 
 <!DOCTYPE html>
@@ -49,7 +62,7 @@ if ($campaignTitle === '' || $recipientGroup === '' || $message === '') {
 
             <div>
                 <strong>Recipient Group:</strong>
-                <?= htmlspecialchars($recipientGroup) ?>
+               <?= htmlspecialchars($groupDisplay) ?>
             </div>
 
             <div>
