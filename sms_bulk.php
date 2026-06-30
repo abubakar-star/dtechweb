@@ -81,7 +81,10 @@ while ($row = $result->fetch_assoc()) {
 
     <div class="bg-gray-800 rounded-xl p-8 shadow">
 
-        <form id="bulkForm" method="POST">
+        <form
+    id="bulkForm"
+    method="POST"
+    action="sms_bulk_confirm.php">
 
             <div class="space-y-6">
 
@@ -243,38 +246,102 @@ while ($row = $result->fetch_assoc()) {
 </div>
 
 <script>
-const packageSelect=document.querySelector('[name="package_id"]');
+const group = document.getElementById('recipient_group');
+const packageBox = document.getElementById('packageBox');
+const packageSelect = document.querySelector('[name="package_id"]');
 
-group.addEventListener('change',()=>{
-    packageBox.classList.toggle('hidden',group.value!=='package');
+const template = document.getElementById('template');
+const message = document.getElementById('message');
+
+const chars = document.getElementById('chars');
+const pages = document.getElementById('pages');
+
+const recipients = document.getElementById('recipientCount');
+const button = document.getElementById('continueBtn');
+
+/* Show/Hide Package */
+
+group.addEventListener('change', () => {
+
+    packageBox.classList.toggle(
+        'hidden',
+        group.value !== 'package'
+    );
+
     loadRecipients();
+
 });
 
-packageSelect.addEventListener('change',loadRecipients);
+/* Package Changed */
 
-function loadRecipients(){
+packageSelect.addEventListener('change', loadRecipients);
 
-    const form=new FormData();
+/* Template Selected */
 
-    form.append('group',group.value);
-    form.append('package_id',packageSelect.value);
+template.addEventListener('change', () => {
 
-    fetch('sms_recipient_count.php',{
+    message.value = template.value;
 
-        method:'POST',
-        body:form
+    updateCounter();
+
+});
+
+/* Message Changed */
+
+message.addEventListener('input', updateCounter);
+
+/* Character Counter */
+
+function updateCounter() {
+
+    const len = message.value.length;
+
+    chars.textContent = len + " Characters";
+
+    const smsPages = Math.max(1, Math.ceil(len / 160));
+
+    pages.textContent = smsPages + (smsPages === 1 ? " SMS" : " SMS Segments");
+
+}
+
+/* Recipient Counter */
+
+function loadRecipients() {
+
+    const form = new FormData();
+
+    form.append('group', group.value);
+    form.append('package_id', packageSelect.value);
+
+    fetch('sms_recipient_count.php', {
+
+        method: 'POST',
+        body: form
 
     })
-    .then(r=>r.json())
-    .then(data=>{
+    .then(response => response.json())
+    .then(data => {
 
-        recipients.textContent=data.count;
+        recipients.textContent = data.count;
 
-        button.disabled=data.count==0;
+        button.disabled = data.count == 0;
+
+    })
+    .catch(error => {
+
+        console.error(error);
+
+        recipients.textContent = "0";
+
+        button.disabled = true;
 
     });
 
 }
+
+/* Initialize */
+
+updateCounter();
 </script>
 
 </body>
