@@ -1141,7 +1141,7 @@ saveBtn.innerHTML = "Save Payment";
             selectedClient.user_id
         );
 
-    });
+    })
 
     .catch(error => {
 
