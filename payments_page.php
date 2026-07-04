@@ -654,6 +654,165 @@ $clients = $conn->query("
 
 </div>
 
+<!-- ADD PAYMENT MODAL -->
+<div
+    id="addPaymentModal"
+    class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[60]"
+>
+    <div class="bg-white rounded-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+
+        <div class="flex justify-between items-center mb-6">
+
+            <h2 class="text-xl font-bold">
+                Add Manual Payment
+            </h2>
+
+            <button
+                onclick="closeAddPaymentModal()"
+                class="text-gray-500 hover:text-red-600 text-xl"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <form id="addPaymentForm">
+
+            <div class="grid md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Customer Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="customerName"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Account Number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="accountNumber"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Phone Number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="phoneNumber"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        id="amount"
+                        class="w-full border rounded-lg px-3 py-2"
+                        min="1"
+                        step="0.01"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Payment Method
+                    </label>
+
+                    <select
+                        id="paymentMethod"
+                        class="w-full border rounded-lg px-3 py-2"
+                    >
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank</option>
+                        <option value="mpesa">M-Pesa</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Transaction ID
+                    </label>
+
+                    <input
+                        type="text"
+                        value="Will be generated automatically"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Reference
+                    </label>
+
+                    <input
+                        type="text"
+                        value="Will be generated automatically"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Invoice Number
+                    </label>
+
+                    <input
+                        type="text"
+                        value="Will be generated automatically"
+                        class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                        readonly
+                    >
+                </div>
+
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+
+                <button
+                    type="button"
+                    onclick="closeAddPaymentModal()"
+                    class="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                    Save Payment
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
 <script>
 
 function toggleClientDropdown() {
@@ -856,9 +1015,19 @@ document
 
 function openAddPaymentModal() {
 
-    // Baby Step 1
-    // We'll build the modal in the next step.
-    alert('Add Payment modal coming in Baby Step 2.');
+    document
+        .getElementById('addPaymentModal')
+        .classList
+        .remove('hidden');
+
+}
+
+function closeAddPaymentModal() {
+
+    document
+        .getElementById('addPaymentModal')
+        .classList
+        .add('hidden');
 
 }
 </script>
