@@ -146,7 +146,7 @@ $clients = $conn->query("
 <meta charset="UTF-8">
 <title>Payments</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 
 @keyframes glowPulse {
