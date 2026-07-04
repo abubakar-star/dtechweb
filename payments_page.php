@@ -1086,7 +1086,12 @@ const amount = document
 
 if (amount === "") {
 
-    alert("Please enter the payment amount.");
+    Swal.fire({
+    icon: 'warning',
+    title: 'Missing Information',
+    text: 'Please enter the payment amount.',
+    confirmButtonColor: '#f59e0b'
+});
 
     return;
 }
@@ -1126,7 +1131,12 @@ saveBtn.innerHTML = "Saving...";
 
 saveBtn.innerHTML = "Save Payment";
 
-        alert(data.message);
+        Swal.fire({
+    icon: 'success',
+    title: 'Success',
+    text: data.message,
+    confirmButtonColor: '#2563eb'
+});
 
         if (!data.success) return;
 
@@ -1149,7 +1159,12 @@ saveBtn.innerHTML = "Save Payment";
 
     saveBtn.innerHTML = "Save Payment";
 
-    alert("Unable to save payment.");
+   Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: 'Failed to save payment.',
+    confirmButtonColor: '#dc2626'
+});
 
     console.error(error);
 
