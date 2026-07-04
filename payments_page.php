@@ -1078,6 +1078,18 @@ function closeAddPaymentModal() {
 
 function saveManualPayment() {
 
+const amount = document
+    .getElementById("amount")
+    .value
+    .trim();
+
+if (amount === "") {
+
+    alert("Please enter the payment amount.");
+
+    return;
+}
+
     const formData = new FormData();
 
     formData.append(
@@ -1085,10 +1097,10 @@ function saveManualPayment() {
         selectedClient.user_id
     );
 
-    formData.append(
-        "amount",
-        document.getElementById("amount").value
-    );
+  formData.append(
+    "amount",
+    amount
+);
 
     formData.append(
         "payment_method",
