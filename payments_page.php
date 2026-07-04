@@ -619,18 +619,30 @@ $clients = $conn->query("
 
         <div class="flex justify-between items-center mb-4">
 
-            <h2 class="text-xl font-bold">
-                Client Payment History
-            </h2>
+    <h2 class="text-xl font-bold">
+        Client Payment History
+    </h2>
 
-            <button
-                onclick="closeClientModal()"
-                class="text-gray-500 text-xl"
-            >
-                ✕
-            </button>
+    <div class="flex items-center gap-3">
 
-        </div>
+        <button
+            id="addPaymentBtn"
+            onclick="openAddPaymentModal()"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg hidden"
+        >
+            + Add Payment
+        </button>
+
+        <button
+            onclick="closeClientModal()"
+            class="text-gray-500 text-xl hover:text-red-600"
+        >
+            ✕
+        </button>
+
+    </div>
+
+</div>
 
         <div id="clientModalContent">
 
@@ -687,6 +699,11 @@ function openClientModal(userId) {
         .classList
         .remove('hidden');
 
+        document
+    .getElementById('addPaymentBtn')
+    .classList
+    .remove('hidden');
+
     fetch(
         'get_client_payments.php?user_id=' +
         userId
@@ -708,6 +725,11 @@ function closeClientModal() {
         .getElementById('clientModal')
         .classList
         .add('hidden');
+
+        document
+    .getElementById('addPaymentBtn')
+    .classList
+    .add('hidden');
 }
 
 </script>
@@ -832,6 +854,13 @@ document
         observer.observe(row);
     });
 
+function openAddPaymentModal() {
+
+    // Baby Step 1
+    // We'll build the modal in the next step.
+    alert('Add Payment modal coming in Baby Step 2.');
+
+}
 </script>
 
 </body>
