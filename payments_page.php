@@ -820,6 +820,7 @@ $clients = $conn->query("
                 </button>
 
                <button
+               id="savePaymentBtn"
     type="button"
     onclick="saveManualPayment()"
     class="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
@@ -1090,6 +1091,11 @@ if (amount === "") {
     return;
 }
 
+const saveBtn = document.getElementById("savePaymentBtn");
+
+saveBtn.disabled = true;
+
+saveBtn.innerHTML = "Saving...";
     const formData = new FormData();
 
     formData.append(
@@ -1116,6 +1122,10 @@ if (amount === "") {
     .then(response => response.json())
     .then(data => {
 
+    saveBtn.disabled = false;
+
+saveBtn.innerHTML = "Save Payment";
+
         alert(data.message);
 
         if (!data.success) return;
@@ -1132,6 +1142,18 @@ if (amount === "") {
         );
 
     });
+
+    .catch(error => {
+
+    saveBtn.disabled = false;
+
+    saveBtn.innerHTML = "Save Payment";
+
+    alert("Unable to save payment.");
+
+    console.error(error);
+
+});
 
 }
 </script>
