@@ -692,6 +692,11 @@ $clients = $conn->query("
         </div>
 
         <form id="addPaymentForm">
+               <input
+        type="hidden"
+        id="userId"
+        name="user_id"
+    >
 
             <div class="grid md:grid-cols-2 gap-4">
 
@@ -1036,6 +1041,12 @@ document
     });
 
 function openAddPaymentModal() {
+
+    const userId = document.getElementById('userId');
+
+    if (userId) {
+        userId.value = selectedClient.user_id;
+    }
 
     document.getElementById('userId').value =
         selectedClient.user_id;
