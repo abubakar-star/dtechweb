@@ -819,12 +819,13 @@ $clients = $conn->query("
                     Cancel
                 </button>
 
-                <button
-                    type="button"
-                    class="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-                >
-                    Save Payment
-                </button>
+               <button
+    type="button"
+    onclick="saveManualPayment()"
+    class="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+>
+    Save Payment
+</button>
 
             </div>
 
@@ -1072,6 +1073,53 @@ function closeAddPaymentModal() {
         .getElementById('addPaymentModal')
         .classList
         .add('hidden');
+
+}
+
+function saveManualPayment() {
+
+    const formData = new FormData();
+
+    formData.append(
+        "user_id",
+        selectedClient.user_id
+    );
+
+    formData.append(
+        "amount",
+        document.getElementById("amount").value
+    );
+
+    formData.append(
+        "payment_method",
+        document.getElementById("paymentMethod").value
+    );
+
+    fetch("save_manual_payment.php", {
+
+        method: "POST",
+        body: formData
+
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        alert(data.message);
+
+        if (!data.success) return;
+
+        closeAddPaymentModal();
+
+        openClientModal(
+            document.querySelector(
+                '[data-user-id="' +
+                selectedClient.user_id +
+                '"]'
+            ),
+            selectedClient.user_id
+        );
+
+    });
 
 }
 </script>
