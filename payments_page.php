@@ -127,8 +127,10 @@ OFFSET $offset
 $clients = $conn->query("
     SELECT DISTINCT
         u.id,
+        u.username,
         u.first_name,
         u.last_name,
+        u.phone_number,
         u.account_number
     FROM users u
     INNER JOIN payments p
@@ -216,15 +218,28 @@ $clients = $conn->query("
 
             <?php while($client = $clients->fetch_assoc()): ?>
 
-                <button
-                    onclick="openClientModal(<?= $client['id'] ?>)"
-                    class="client-item block w-full text-left px-4 py-3 hover:bg-slate-50"
-                    data-name="<?= strtolower(
-                        $client['first_name'].' '.
-                        $client['last_name'].' '.
-                        $client['account_number']
-                    ) ?>"
-                >
+              <button
+    onclick="openClientModal(this, <?= $client['id'] ?>)"
+    class="client-item block w-full text-left px-4 py-3 hover:bg-slate-50"
+
+    data-search="<?= strtolower(
+        $client['first_name'].' '.
+        $client['last_name'].' '.
+        $client['account_number']
+    ) ?>"
+
+    data-user-id="<?= $client['id'] ?>"
+
+    data-full-name="<?= htmlspecialchars(
+        trim($client['first_name'].' '.$client['last_name'])
+    ) ?>"
+
+    data-account="<?= htmlspecialchars($client['account_number']) ?>"
+
+    data-phone="<?= htmlspecialchars($client['phone_number']) ?>"
+
+    data-username="<?= htmlspecialchars($client['username']) ?>"
+>
 
                     <div class="font-medium">
                         <?= htmlspecialchars(
@@ -836,8 +851,8 @@ function filterClients() {
 
     clients.forEach(client => {
 
-        const name =
-            client.dataset.name;
+       const name =
+    client.dataset.search;
 
         client.style.display =
             name.includes(search)
@@ -846,7 +861,14 @@ function filterClients() {
     });
 }
 
-function openClientModal(userId) {
+function openClientModal(button, userId) {
+
+selectedClient.user_id = userId;
+
+selectedClient.name = button.dataset.fullName;
+selectedClient.account = button.dataset.account;
+selectedClient.phone = button.dataset.phone;
+selectedClient.username = button.dataset.username;
 
     document
         .getElementById('clientDropdown')
@@ -894,7 +916,7 @@ function closeClientModal() {
 </script>
 
 <script>
-
+let selectedClient = {};
 let userActive = false;
 let inactivityTimer;
 
@@ -1015,11 +1037,22 @@ document
 
 function openAddPaymentModal() {
 
+    document.getElementById('userId').value =
+        selectedClient.user_id;
+
+    document.getElementById('customerName').value =
+        selectedClient.name;
+
+    document.getElementById('accountNumber').value =
+        selectedClient.account;
+
+    document.getElementById('phoneNumber').value =
+        selectedClient.phone;
+
     document
         .getElementById('addPaymentModal')
         .classList
         .remove('hidden');
-
 }
 
 function closeAddPaymentModal() {
