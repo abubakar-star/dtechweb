@@ -80,16 +80,43 @@ $installationFee = 0.00;
 
 
 
-// Fetch all available packages from the database
+// Fetch only packages matching the logged-in user's connection type
 $packages = [];
 
 $pkg_sql = "
-    SELECT id, package_name, speed, price 
-    FROM packages 
-    WHERE status = 'active'
+    SELECT p.id, p.package_name, p.speed, p.price
+    FROM packages p
+    INNER JOIN users u ON u.connection_type = p.package_type
+    WHERE p.status = 'active'
+      AND u.id = ?
+    ORDER BY p.price ASC
 ";
 
-$pkg_result = $conn->query($pkg_sql);
+$stmt = $conn->prepare($pkg_sql);
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+
+$pkg_result = $stmt->get_result();
+
+if (!$pkg_result) {
+
+    createLog(
+        $conn,
+        'database',
+        'package_query_failed',
+        "Failed to fetch packages for user's connection type",
+        'error',
+        $_SESSION['user_id']
+    );
+
+} else {
+
+    while ($row = $pkg_result->fetch_assoc()) {
+        $packages[] = $row;
+    }
+}
+
+$stmt->close();
 
 if (!$pkg_result) {
 
