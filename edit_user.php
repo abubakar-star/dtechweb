@@ -246,6 +246,7 @@ class="border p-2 rounded w-full">
 <select id="connectionType" name="connection_type" class="border p-2 rounded w-full">
 <option value="home" <?= $user['connection_type']=='home'?'selected':'' ?>>Home</option>
 <option value="business" <?= $user['connection_type']=='business'?'selected':'' ?>>Business</option>
+<option value="business plus" <?= $user['connection_type']=='business plus'?'selected':'' ?>>Business Plus</option>
 </select>
 </div>
 
