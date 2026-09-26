@@ -422,6 +422,7 @@ $users = $conn->query("
     <option value="" selected disabled>Select Connection Type</option>
     <option value="home">Home</option>
     <option value="business">Business</option>
+    <option value="business plus">Business Plus</option>
 </select>
 
 <select id="packageSelect" name="package_id" class="border p-2 rounded" required>
