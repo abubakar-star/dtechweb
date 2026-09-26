@@ -51,17 +51,192 @@ while ($row = $result->fetch_assoc()) {
 // ================= APPROVE USER =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_user'])) {
 
+    $userId = (int) $_POST['user_id'];
+
+    // ================= GET USER DETAILS =================
     $stmt = $conn->prepare("
-        UPDATE users
-        SET verification_status = 'approved'
+        SELECT username, phone_number
+        FROM users
         WHERE id = ?
+        LIMIT 1
     ");
 
-    $stmt->bind_param("i", $_POST['user_id']);
+    $stmt->bind_param("i", $userId);
     $stmt->execute();
+
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+
     $stmt->close();
 
-    $success = "User approved successfully";
+    if (!$user) {
+
+        $error = "User not found.";
+
+    } else {
+
+        // ================= APPROVE USER =================
+        $stmt = $conn->prepare("
+            UPDATE users
+            SET verification_status = 'approved'
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $stmt->close();
+
+
+        // ================= FORMAT USER PHONE =================
+        $userPhone = trim($user['phone_number']);
+
+        if (substr($userPhone, 0, 1) === "0") {
+            $userPhone = "254" . substr($userPhone, 1);
+        }
+
+
+        // ================= GET ADMIN PHONE =================
+        $adminPhone = null;
+
+        $adminQuery = $conn->query("
+            SELECT phone_number
+            FROM admin_contacts
+            LIMIT 1
+        ");
+
+        if ($adminQuery && $adminQuery->num_rows > 0) {
+
+            $adminRow = $adminQuery->fetch_assoc();
+
+            $adminPhone = trim($adminRow['phone_number']);
+
+            if (substr($adminPhone, 0, 1) === "0") {
+                $adminPhone = "254" . substr($adminPhone, 1);
+            }
+        }
+
+
+        // ================= TALKSASA SMS FUNCTION =================
+        function sendVerificationSMS($recipient, $message) {
+
+            $apiToken = "3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b";
+
+            $payload = json_encode([
+                "recipient" => $recipient,
+                "sender_id" => "TALKSASA",
+                "type" => "plain",
+                "message" => $message
+            ]);
+
+            $ch = curl_init(
+                "https://bulksms.talksasa.com/api/v3/sms/send"
+            );
+
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: Bearer " . $apiToken,
+                "Content-Type: application/json",
+                "Accept: application/json"
+            ]);
+
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+            $response = curl_exec($ch);
+            $error = curl_error($ch);
+
+            curl_close($ch);
+
+            return [
+                "response" => $response,
+                "error" => $error
+            ];
+        }
+
+
+        // ================= USER SMS =================
+        $userMessage =
+            "Hello " . $user['username'] . ",\n"
+            . "Your D-LINK NETWORK account has been verified and approved.\n"
+            . "You can now log in to your account.";
+
+        $userSMS = sendVerificationSMS(
+            $userPhone,
+            $userMessage
+        );
+
+
+        // ================= ADMIN SMS =================
+        if ($adminPhone) {
+
+            $adminMessage =
+                "D-LINK NETWORK Verification Alert\n"
+                . "User: " . $user['username'] . "\n"
+                . "Phone: " . $userPhone . "\n"
+                . "Status: VERIFIED";
+
+            $adminSMS = sendVerificationSMS(
+                $adminPhone,
+                $adminMessage
+            );
+        }
+
+
+        // ================= LOG SMS RESULTS =================
+        if ($userSMS['error']) {
+
+            createLog(
+                $conn,
+                'sms',
+                'verification_sms_failed',
+                "Verification SMS failed for user ID {$userId}: {$userSMS['error']}",
+                'error',
+                $userId
+            );
+
+        } else {
+
+            createLog(
+                $conn,
+                'sms',
+                'verification_sms_sent',
+                "Verification SMS sent to user ID {$userId}",
+                'info',
+                $userId
+            );
+        }
+
+
+        if ($adminPhone) {
+
+            if ($adminSMS['error']) {
+
+                createLog(
+                    $conn,
+                    'sms',
+                    'admin_verification_sms_failed',
+                    "Admin verification SMS failed: {$adminSMS['error']}",
+                    'error',
+                    $userId
+                );
+
+            } else {
+
+                createLog(
+                    $conn,
+                    'sms',
+                    'admin_verification_sms_sent',
+                    "Admin notified that user ID {$userId} was verified",
+                    'info',
+                    $userId
+                );
+            }
+        }
+
+
+        $success = "User approved successfully. Verification SMS sent.";
+    }
 }
 
 // ================= ACTIVATE UPDATED PACKAGE =================
