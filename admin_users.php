@@ -160,7 +160,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_user'])) {
         $userMessage =
             "Hello " . $user['username'] . ",\n"
             . "Your D-LINK NETWORK account has been verified and approved.\n"
-            . "You can now log in to your account.";
+            . "You can now log in to your account and pay for your Wi-Fi \n"
+            . "using the D-LINK APP or via the website at dtechweb.onrender.com \n"
+            . "Username: " . $user['username'] . "";
 
         $userSMS = sendVerificationSMS(
             $userPhone,
@@ -175,6 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_user'])) {
                 "D-LINK NETWORK Verification Alert\n"
                 . "User: " . $user['username'] . "\n"
                 . "Phone: " . $userPhone . "\n"
+                 . "Username: " . $user['username'] . "\n"
                 . "Status: VERIFIED";
 
             $adminSMS = sendVerificationSMS(
