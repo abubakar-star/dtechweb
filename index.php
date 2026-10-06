@@ -1569,8 +1569,7 @@ const days = Math.floor(totalSeconds / 86400);
 const hours = Math.floor((totalSeconds % 86400) / 3600);
 const minutes = Math.floor((totalSeconds % 3600) / 60);
 const seconds = totalSeconds % 60;
-
-expiryText.innerText = `Expiry: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+expiryText.innerText = `Expiry: ${days} Day${days !== 1 ? 's' : ''} ${hours}h ${minutes}m ${seconds}s remaining`;
         invoiceBtnWrapper.classList.remove('hidden');
       } else {
         expiryBtn.classList.remove("bg-red-500", "text-white", "animate-pulse");
