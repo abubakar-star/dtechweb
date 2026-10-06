@@ -1577,13 +1577,20 @@ if (days > 0) {
         `${minutes > 0 ? ` ${minutes}m` : ''}` +
         `${seconds > 0 ? ` ${seconds}s` : ''}` +
         ` remaining`;
-} else {
+} else if (hours > 0) {
     expiryText.innerText =
-        `Expiry:` +
-        `${hours > 0 ? ` ${hours}h` : ''}` +
+        `Expiry: ${hours} Hour${hours !== 1 ? 's' : ''}` +
         `${minutes > 0 ? ` ${minutes}m` : ''}` +
         `${seconds > 0 ? ` ${seconds}s` : ''}` +
         ` remaining`;
+} else if (minutes > 0) {
+    expiryText.innerText =
+        `Expiry: ${minutes} Minute${minutes !== 1 ? 's' : ''}` +
+        `${seconds > 0 ? ` ${seconds}s` : ''}` +
+        ` remaining`;
+} else {
+    expiryText.innerText =
+        `Expiry: ${seconds} Second${seconds !== 1 ? 's' : ''} remaining`;
 }
         invoiceBtnWrapper.classList.remove('hidden');
       } else {
