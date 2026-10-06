@@ -1570,11 +1570,21 @@ const hours = Math.floor((totalSeconds % 86400) / 3600);
 const minutes = Math.floor((totalSeconds % 3600) / 60);
 const seconds = totalSeconds % 60;
 
-if (days > 0) { 
-expiryText.innerText = `Expiry: ${days} Day${days !== 1 ? 's' : ''} ${hours}h ${minutes}m ${seconds}s remaining`;
- }else{
-expiryText.innerText = `Expiry: ${hours}hour${hours !== 1 ? 's' : ''} ${minutes}m ${seconds}s remaining`;
- }
+if (days > 0) {
+    expiryText.innerText =
+        `Expiry: ${days} Day${days !== 1 ? 's' : ''}` +
+        `${hours > 0 ? ` ${hours}h` : ''}` +
+        `${minutes > 0 ? ` ${minutes}m` : ''}` +
+        `${seconds > 0 ? ` ${seconds}s` : ''}` +
+        ` remaining`;
+} else {
+    expiryText.innerText =
+        `Expiry:` +
+        `${hours > 0 ? ` ${hours}h` : ''}` +
+        `${minutes > 0 ? ` ${minutes}m` : ''}` +
+        `${seconds > 0 ? ` ${seconds}s` : ''}` +
+        ` remaining`;
+}
         invoiceBtnWrapper.classList.remove('hidden');
       } else {
         expiryBtn.classList.remove("bg-red-500", "text-white", "animate-pulse");
