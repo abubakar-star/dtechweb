@@ -1572,25 +1572,25 @@ const seconds = totalSeconds % 60;
 
 if (days > 0) {
     expiryText.innerText =
-        `Expiry: ${days} Day${days !== 1 ? 's' : ''}` +
+        `Expiry: ${days}day${days !== 1 ? 's' : ''}` +
         `${hours > 0 ? ` ${hours}h` : ''}` +
         `${minutes > 0 ? ` ${minutes}m` : ''}` +
         `${seconds > 0 ? ` ${seconds}s` : ''}` +
         ` remaining`;
 } else if (hours > 0) {
     expiryText.innerText =
-        `Expiry: ${hours} Hour${hours !== 1 ? 's' : ''}` +
+        `Expiry: ${hours}hour${hours !== 1 ? 's' : ''}` +
         `${minutes > 0 ? ` ${minutes}m` : ''}` +
         `${seconds > 0 ? ` ${seconds}s` : ''}` +
         ` remaining`;
 } else if (minutes > 0) {
     expiryText.innerText =
-        `Expiry: ${minutes} Minute${minutes !== 1 ? 's' : ''}` +
+        `Expiry: ${minutes}minute${minutes !== 1 ? 's' : ''}` +
         `${seconds > 0 ? ` ${seconds}s` : ''}` +
         ` remaining`;
 } else {
     expiryText.innerText =
-        `Expiry: ${seconds} Second${seconds !== 1 ? 's' : ''} remaining`;
+        `Expiry: ${seconds}second${seconds !== 1 ? 's' : ''} remaining`;
 }
         invoiceBtnWrapper.classList.remove('hidden');
       } else {
