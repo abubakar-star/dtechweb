@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 date_default_timezone_set("Africa/Nairobi");
 
+
 /* ===============================
    DATABASE CONNECTION
 ================================ */
@@ -37,39 +38,93 @@ $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if (isset($_POST['automation_id'], $_POST['is_active'])) {
+    $automation_id = isset($_POST['automation_id'])
+        ? (int) $_POST['automation_id']
+        : 0;
 
-        $automation_id = (int) $_POST['automation_id'];
-        $is_active = (int) $_POST['is_active'];
+    $is_active = isset($_POST['is_active'])
+        ? (int) $_POST['is_active']
+        : 0;
 
-        if ($is_active !== 0 && $is_active !== 1) {
-            $is_active = 0;
-        }
+    $template_id = isset($_POST['template_id'])
+        ? (int) $_POST['template_id']
+        : 0;
 
-        $stmt = $conn->prepare("
-            UPDATE sms_automations
-            SET is_active = ?
-            WHERE id = ?
-        ");
 
-        $stmt->bind_param(
-            "ii",
-            $is_active,
-            $automation_id
-        );
+    /* ---------------------------
+       Validate active value
+    ---------------------------- */
 
-        if ($stmt->execute()) {
+    if ($is_active !== 0 && $is_active !== 1) {
+        $is_active = 0;
+    }
 
-            $message = "Automation setting updated successfully.";
-            $message_type = "success";
 
-        } else {
+    /* ---------------------------
+       Convert empty template
+       to NULL
+    ---------------------------- */
 
-            $message = "Failed to update automation setting.";
-            $message_type = "error";
-        }
+    if ($template_id <= 0) {
+        $template_id = null;
+    }
 
-        $stmt->close();
+
+    /* ---------------------------
+       Update
+    ---------------------------- */
+
+    $stmt = $conn->prepare("
+        UPDATE sms_automations
+        SET
+            is_active = ?,
+            template_id = ?
+        WHERE id = ?
+    ");
+
+    $stmt->bind_param(
+        "iii",
+        $is_active,
+        $template_id,
+        $automation_id
+    );
+
+
+    if ($stmt->execute()) {
+
+        $message = "Automation settings saved successfully.";
+        $message_type = "success";
+
+    } else {
+
+        $message = "Failed to save automation settings.";
+        $message_type = "error";
+    }
+
+    $stmt->close();
+}
+
+
+/* ===============================
+   LOAD SMS TEMPLATES
+================================ */
+
+$templates = [];
+
+$result = $conn->query("
+    SELECT
+        id,
+        template_name,
+        message
+    FROM sms_templates
+    ORDER BY template_name ASC
+");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        $templates[] = $row;
     }
 }
 
@@ -85,8 +140,7 @@ $result = $conn->query("
     FROM sms_automations
     ORDER BY
         CASE
-            WHEN hours_before IS NOT NULL
-            THEN 1
+            WHEN hours_before IS NOT NULL THEN 1
             ELSE 2
         END,
         hours_before DESC,
@@ -103,6 +157,7 @@ if ($result) {
 
 ?>
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -125,7 +180,9 @@ if ($result) {
 <div class="max-w-6xl mx-auto p-8">
 
 
-    <!-- HEADER -->
+    <!-- =========================
+         HEADER
+    ========================== -->
 
     <div class="flex items-center justify-between mb-8">
 
@@ -159,7 +216,9 @@ if ($result) {
 
 
 
-    <!-- SUCCESS / ERROR MESSAGE -->
+    <!-- =========================
+         MESSAGE
+    ========================== -->
 
     <?php if (!empty($message)): ?>
 
@@ -181,16 +240,16 @@ if ($result) {
 
 
 
-    <!-- GLOBAL INFORMATION -->
+    <!-- =========================
+         INFORMATION
+    ========================== -->
 
     <div class="bg-gray-800 rounded-xl p-6 shadow mb-6">
 
         <div class="flex items-center gap-3">
 
             <div class="text-2xl">
-
                 🤖
-
             </div>
 
             <div>
@@ -203,8 +262,8 @@ if ($result) {
 
                 <p class="text-gray-400 text-sm mt-1">
 
-                    These settings control which automatic
-                    reminders will be enabled.
+                    Choose which reminders are active and
+                    which SMS template should be used.
 
                 </p>
 
@@ -216,7 +275,9 @@ if ($result) {
 
 
 
-    <!-- EXPIRY REMINDERS -->
+    <!-- =========================
+         EXPIRY REMINDERS
+    ========================== -->
 
     <div class="bg-gray-800 rounded-xl shadow mb-6">
 
@@ -239,73 +300,202 @@ if ($result) {
 
         <div class="divide-y divide-gray-700">
 
+
         <?php foreach ($automations as $automation): ?>
+
 
             <?php if ($automation['hours_before'] !== null): ?>
 
-                <div class="p-6 flex items-center
-                            justify-between">
 
-                    <div>
-
-                        <h3 class="text-white font-semibold">
-
-                            <?= htmlspecialchars(
-                                $automation['automation_name']
-                            ) ?>
-
-                        </h3>
-
-                        <p class="text-gray-400 text-sm mt-1">
-
-                            <?= htmlspecialchars(
-                                $automation['description']
-                            ) ?>
-
-                        </p>
-
-                    </div>
-
+                <div class="p-6">
 
                     <form method="POST">
 
-                        <input type="hidden"
-                               name="automation_id"
-                               value="<?= (int)$automation['id'] ?>">
+
+                        <!-- Automation ID -->
+
+                        <input
+                            type="hidden"
+                            name="automation_id"
+                            value="<?= (int)$automation['id'] ?>"
+                        >
 
 
-                        <input type="hidden"
-                               name="is_active"
-                               value="<?= $automation['is_active'] ? 0 : 1 ?>">
+                        <div class="flex items-start
+                                    justify-between
+                                    gap-6">
 
 
-                        <button type="submit"
-                                class="
-                                px-5
-                                py-2
-                                rounded-full
-                                font-semibold
-                                transition
-                                <?= $automation['is_active']
-                                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                                    : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
-                                ?>
-                                ">
+                            <!-- LEFT SIDE -->
 
-                            <?= $automation['is_active']
-                                ? 'ON'
-                                : 'OFF'
-                            ?>
+                            <div class="flex-1">
 
-                        </button>
+                                <h3 class="text-white
+                                           font-semibold
+                                           text-lg">
+
+                                    <?= htmlspecialchars(
+                                        $automation['automation_name']
+                                    ) ?>
+
+                                </h3>
+
+
+                                <p class="text-gray-400
+                                          text-sm
+                                          mt-1">
+
+                                    <?= htmlspecialchars(
+                                        $automation['description']
+                                    ) ?>
+
+                                </p>
+
+
+                                <!-- TEMPLATE -->
+
+                                <div class="mt-5">
+
+                                    <label
+                                        class="block
+                                               text-gray-300
+                                               text-sm
+                                               mb-2">
+
+                                        SMS Template
+
+                                    </label>
+
+
+                                    <select
+                                        name="template_id"
+                                        class="w-full
+                                               max-w-xl
+                                               bg-gray-700
+                                               text-white
+                                               rounded-lg
+                                               p-3
+                                               border
+                                               border-gray-600
+                                               focus:outline-none
+                                               focus:ring-2
+                                               focus:ring-purple-500"
+                                    >
+
+                                        <option value="0">
+
+                                            -- Select SMS Template --
+
+                                        </option>
+
+
+                                        <?php foreach ($templates as $template): ?>
+
+                                            <option
+                                                value="<?= (int)$template['id'] ?>"
+                                                <?= (
+                                                    (int)$automation['template_id']
+                                                    ===
+                                                    (int)$template['id']
+                                                )
+                                                    ? 'selected'
+                                                    : ''
+                                                ?>
+                                            >
+
+                                                <?= htmlspecialchars(
+                                                    $template['template_name']
+                                                ) ?>
+
+                                            </option>
+
+                                        <?php endforeach; ?>
+
+                                    </select>
+
+                                </div>
+
+
+                            </div>
+
+
+                            <!-- RIGHT SIDE -->
+
+                            <div class="flex flex-col
+                                        items-end
+                                        gap-4">
+
+
+                                <!-- STATUS -->
+
+                                <button
+                                    type="button"
+                                    onclick="toggleStatus(
+                                        <?= (int)$automation['id'] ?>
+                                    )"
+                                    class="
+                                    px-5
+                                    py-2
+                                    rounded-full
+                                    font-semibold
+                                    <?= $automation['is_active']
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-gray-600 text-gray-200'
+                                    ?>
+                                    "
+                                    id="statusButton<?= (int)$automation['id'] ?>"
+                                >
+
+                                    <?= $automation['is_active']
+                                        ? 'ON'
+                                        : 'OFF'
+                                    ?>
+
+                                </button>
+
+
+                                <input
+                                    type="hidden"
+                                    name="is_active"
+                                    id="statusInput<?= (int)$automation['id'] ?>"
+                                    value="<?= (int)$automation['is_active'] ?>"
+                                >
+
+
+                                <!-- SAVE -->
+
+                                <button
+                                    type="submit"
+                                    class="
+                                    bg-purple-700
+                                    hover:bg-purple-800
+                                    text-white
+                                    px-5
+                                    py-2
+                                    rounded-lg
+                                    font-semibold
+                                    "
+                                >
+
+                                    Save
+
+                                </button>
+
+
+                            </div>
+
+                        </div>
 
                     </form>
 
                 </div>
 
+
             <?php endif; ?>
 
+
         <?php endforeach; ?>
+
 
         </div>
 
@@ -313,7 +503,9 @@ if ($result) {
 
 
 
-    <!-- OTHER REMINDERS -->
+    <!-- =========================
+         OTHER REMINDERS
+    ========================== -->
 
     <div class="bg-gray-800 rounded-xl shadow mb-6">
 
@@ -336,73 +528,197 @@ if ($result) {
 
         <div class="divide-y divide-gray-700">
 
+
         <?php foreach ($automations as $automation): ?>
+
 
             <?php if ($automation['hours_before'] === null): ?>
 
-                <div class="p-6 flex items-center
-                            justify-between">
 
-                    <div>
-
-                        <h3 class="text-white font-semibold">
-
-                            <?= htmlspecialchars(
-                                $automation['automation_name']
-                            ) ?>
-
-                        </h3>
-
-                        <p class="text-gray-400 text-sm mt-1">
-
-                            <?= htmlspecialchars(
-                                $automation['description']
-                            ) ?>
-
-                        </p>
-
-                    </div>
-
+                <div class="p-6">
 
                     <form method="POST">
 
-                        <input type="hidden"
-                               name="automation_id"
-                               value="<?= (int)$automation['id'] ?>">
+
+                        <input
+                            type="hidden"
+                            name="automation_id"
+                            value="<?= (int)$automation['id'] ?>"
+                        >
 
 
-                        <input type="hidden"
-                               name="is_active"
-                               value="<?= $automation['is_active'] ? 0 : 1 ?>">
+                        <div class="flex items-start
+                                    justify-between
+                                    gap-6">
 
 
-                        <button type="submit"
-                                class="
-                                px-5
-                                py-2
-                                rounded-full
-                                font-semibold
-                                transition
-                                <?= $automation['is_active']
-                                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                                    : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
-                                ?>
-                                ">
+                            <!-- LEFT -->
 
-                            <?= $automation['is_active']
-                                ? 'ON'
-                                : 'OFF'
-                            ?>
+                            <div class="flex-1">
 
-                        </button>
+                                <h3 class="text-white
+                                           font-semibold
+                                           text-lg">
+
+                                    <?= htmlspecialchars(
+                                        $automation['automation_name']
+                                    ) ?>
+
+                                </h3>
+
+
+                                <p class="text-gray-400
+                                          text-sm
+                                          mt-1">
+
+                                    <?= htmlspecialchars(
+                                        $automation['description']
+                                    ) ?>
+
+                                </p>
+
+
+                                <!-- TEMPLATE -->
+
+                                <div class="mt-5">
+
+                                    <label
+                                        class="block
+                                               text-gray-300
+                                               text-sm
+                                               mb-2">
+
+                                        SMS Template
+
+                                    </label>
+
+
+                                    <select
+                                        name="template_id"
+                                        class="w-full
+                                               max-w-xl
+                                               bg-gray-700
+                                               text-white
+                                               rounded-lg
+                                               p-3
+                                               border
+                                               border-gray-600
+                                               focus:outline-none
+                                               focus:ring-2
+                                               focus:ring-purple-500"
+                                    >
+
+                                        <option value="0">
+
+                                            -- Select SMS Template --
+
+                                        </option>
+
+
+                                        <?php foreach ($templates as $template): ?>
+
+                                            <option
+                                                value="<?= (int)$template['id'] ?>"
+                                                <?= (
+                                                    (int)$automation['template_id']
+                                                    ===
+                                                    (int)$template['id']
+                                                )
+                                                    ? 'selected'
+                                                    : ''
+                                                ?>
+                                            >
+
+                                                <?= htmlspecialchars(
+                                                    $template['template_name']
+                                                ) ?>
+
+                                            </option>
+
+                                        <?php endforeach; ?>
+
+                                    </select>
+
+                                </div>
+
+
+                            </div>
+
+
+                            <!-- RIGHT -->
+
+                            <div class="flex flex-col
+                                        items-end
+                                        gap-4">
+
+
+                                <button
+                                    type="button"
+                                    onclick="toggleStatus(
+                                        <?= (int)$automation['id'] ?>
+                                    )"
+                                    class="
+                                    px-5
+                                    py-2
+                                    rounded-full
+                                    font-semibold
+                                    <?= $automation['is_active']
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-gray-600 text-gray-200'
+                                    ?>
+                                    "
+                                    id="statusButton<?= (int)$automation['id'] ?>"
+                                >
+
+                                    <?= $automation['is_active']
+                                        ? 'ON'
+                                        : 'OFF'
+                                    ?>
+
+                                </button>
+
+
+                                <input
+                                    type="hidden"
+                                    name="is_active"
+                                    id="statusInput<?= (int)$automation['id'] ?>"
+                                    value="<?= (int)$automation['is_active'] ?>"
+                                >
+
+
+                                <button
+                                    type="submit"
+                                    class="
+                                    bg-purple-700
+                                    hover:bg-purple-800
+                                    text-white
+                                    px-5
+                                    py-2
+                                    rounded-lg
+                                    font-semibold
+                                    "
+                                >
+
+                                    Save
+
+                                </button>
+
+
+                            </div>
+
+
+                        </div>
 
                     </form>
 
                 </div>
 
+
             <?php endif; ?>
 
+
         <?php endforeach; ?>
+
 
         </div>
 
@@ -410,31 +726,103 @@ if ($result) {
 
 
 
-    <!-- IMPORTANT NOTICE -->
+    <!-- =========================
+         IMPORTANT NOTICE
+    ========================== -->
 
-    <div class="bg-gray-800 border border-yellow-700
-                rounded-xl p-6">
+    <div class="bg-gray-800
+                border
+                border-yellow-700
+                rounded-xl
+                p-6">
 
-        <h3 class="text-yellow-400 font-bold mb-2">
+
+        <h3 class="text-yellow-400
+                   font-bold
+                   mb-2">
 
             ⚠ Automatic SMS Processing
 
         </h3>
 
+
         <p class="text-gray-400 text-sm">
 
-            These switches currently only control the
-            automation settings. They do not send SMS yet.
+            The settings above only determine which
+            automation rules are enabled and which
+            templates they will use.
 
-            The SMS processor will be added in a later
-            baby step.
+            SMS sending will be connected in a later step.
 
         </p>
+
 
     </div>
 
 
 </div>
 
+
+
+<script>
+
+/* ===============================
+   TOGGLE ON / OFF
+================================ */
+
+function toggleStatus(id)
+{
+
+    const input =
+        document.getElementById(
+            'statusInput' + id
+        );
+
+    const button =
+        document.getElementById(
+            'statusButton' + id
+        );
+
+
+    if (input.value === '1') {
+
+        input.value = '0';
+
+        button.textContent = 'OFF';
+
+        button.classList.remove(
+            'bg-green-600',
+            'text-white'
+        );
+
+        button.classList.add(
+            'bg-gray-600',
+            'text-gray-200'
+        );
+
+    } else {
+
+        input.value = '1';
+
+        button.textContent = 'ON';
+
+        button.classList.remove(
+            'bg-gray-600',
+            'text-gray-200'
+        );
+
+        button.classList.add(
+            'bg-green-600',
+            'text-white'
+        );
+
+    }
+
+}
+
+</script>
+
+
 </body>
+
 </html>
