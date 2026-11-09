@@ -1,14 +1,15 @@
 <?php
 
-http_response_code(200);
-
+include 'onasis_config.php';
 include 'includes/logger.php';
 
 /*
 =========================================
-SEND SMS USING TALKSASA API
+TALKSASA SMS
+UNCHANGED
 =========================================
 */
+
 function sendSMS($phone, $message)
 {
     $token = "3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b";
@@ -37,32 +38,105 @@ function sendSMS($phone, $message)
 
     $response = curl_exec($ch);
 
-$error = curl_error($ch);
+    $error = curl_error($ch);
 
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-file_put_contents(
-    "onasis_log.txt",
-    "SMS CODE: $httpCode\nERROR: $error\nRESPONSE: $response\n\n",
-    FILE_APPEND
-);
-
-    if (curl_errno($ch)) {
-        file_put_contents(
-            "onasis_log.txt",
-            "SMS ERROR: " . curl_error($ch) . "\n\n",
-            FILE_APPEND
-        );
-    } else {
-        file_put_contents(
-            "onasis_log.txt",
-            "SMS RESPONSE: " . $response . "\n\n",
-            FILE_APPEND
-        );
-    }
+    file_put_contents(
+        "onasis_log.txt",
+        "SMS CODE: $httpCode\nERROR: $error\nRESPONSE: $response\n\n",
+        FILE_APPEND
+    );
 
     curl_close($ch);
 }
+
+/*
+=========================================
+READ RAW ZETUPAY WEBHOOK
+=========================================
+*/
+
+$raw = file_get_contents("php://input");
+
+$signatureHeader = $_SERVER['HTTP_X_ZETUPAY_SIGNATURE'] ?? '';
+
+/*
+=========================================
+VERIFY ZETUPAY SIGNATURE
+=========================================
+*/
+
+if (empty($ZETUPAY_SECRET_KEY)) {
+    http_response_code(500);
+    exit("Gateway configuration missing");
+}
+
+$parts = [];
+
+foreach (explode(',', $signatureHeader) as $part) {
+
+    $pair = explode('=', trim($part), 2);
+
+    if (count($pair) === 2) {
+        $parts[$pair[0]] = $pair[1];
+    }
+}
+
+$timestamp = $parts['t'] ?? '';
+$signature = $parts['v1'] ?? '';
+
+if (
+    empty($timestamp) ||
+    empty($signature) ||
+    !ctype_digit((string)$timestamp) ||
+    !preg_match('/^[a-f0-9]{64}$/i', $signature)
+) {
+    http_response_code(401);
+    exit("Invalid webhook signature");
+}
+
+/* CHECK TIMESTAMP */
+
+if (abs(time() - (int)$timestamp) > 300) {
+    http_response_code(401);
+    exit("Expired webhook");
+}
+
+/* CALCULATE EXPECTED SIGNATURE */
+
+$expectedSignature = hash_hmac(
+    'sha256',
+    $timestamp . "." . $raw,
+    $ZETUPAY_SECRET_KEY
+);
+
+if (!hash_equals(
+    strtolower($expectedSignature),
+    strtolower($signature)
+)) {
+    http_response_code(401);
+    exit("Signature verification failed");
+}
+
+/*
+=========================================
+DECODE VERIFIED WEBHOOK
+=========================================
+*/
+
+$data = json_decode($raw, true);
+
+if (!is_array($data)) {
+    http_response_code(400);
+    exit("Invalid JSON");
+}
+
+/*
+=========================================
+DATABASE CONNECTION
+=========================================
+*/
 
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
@@ -70,396 +144,389 @@ $dbname = $_ENV['MYSQLDATABASE'];
 $username = $_ENV['MYSQLUSER'];
 $password = $_ENV['MYSQLPASSWORD'];
 
-$conn = new mysqli($host, $username, $password, $dbname, $port);
-
-$raw = file_get_contents("php://input");
-
-file_put_contents(
-    "onasis_log.txt",
-    date('Y-m-d H:i:s') . "\n" . $raw . "\n\n",
-    FILE_APPEND
+$conn = new mysqli(
+    $host,
+    $username,
+    $password,
+    $dbname,
+    $port
 );
 
-$data = json_decode($raw, true);
+if ($conn->connect_error) {
+    http_response_code(500);
+    exit("Database connection failed");
+}
 
-file_put_contents(
-    "onasis_secondlog.txt",
-    "PARSED STATUS: " . ($data['status'] ?? 'NO STATUS') . "\n\n",
-    FILE_APPEND
-);
+$conn->set_charset("utf8mb4");
+
+/*
+=========================================
+LOG VERIFIED CALLBACK
+=========================================
+*/
 
 createLog(
     $conn,
     'payment',
-    'Onasis callback received',
-    'Incoming callback received from payment gateway',
+    'ZetuPay callback received',
+    'Verified payment callback received',
     'info'
 );
 
-/* SUCCESS PAYMENT */
-if (
-    isset($data['status']) &&
-    $data['status'] === 'success' &&
-    isset($data['reference'])
-) {
+/*
+=========================================
+HANDLE SUBSCRIPTION EVENTS SEPARATELY
+=========================================
+*/
 
-    $reference = $data['reference'];
+if (isset($data['event'])) {
 
     createLog(
-    $conn,
-    'payment',
-    'Payment success callback',
-    'Reference: ' . $reference,
-    'success'
-);
+        $conn,
+        'payment',
+        'ZetuPay subscription event',
+        'Event: ' . $data['event'],
+        'info'
+    );
 
-    $mpesa_receipt = isset($data['mpesa_receipt'])
-        ? $data['mpesa_receipt']
-        : '';
+    http_response_code(200);
+    exit("OK");
+}
 
-    $payment_method = "M-PESA";
+/*
+=========================================
+ONLY PROCESS SUCCESSFUL PAYMENTS
+=========================================
+*/
 
-    /* UPDATE PAYMENT TABLE */
-    $stmt = $conn->prepare(
-        "UPDATE payments
-         SET
+if (
+    ($data['status'] ?? '') !== 'success' ||
+    empty($data['reference']) ||
+    empty($data['waveTransactionId']) ||
+    empty($data['receiptNumber'])
+) {
+    http_response_code(200);
+    exit("Payment not confirmed");
+}
+
+$reference = $data['reference'];
+$receipt = $data['receiptNumber'];
+$waveTransactionId = $data['waveTransactionId'];
+$paymentAmount = (float)($data['amount'] ?? 0);
+
+/*
+=========================================
+BEGIN DATABASE TRANSACTION
+=========================================
+*/
+
+$conn->begin_transaction();
+
+try {
+
+    /*
+    FETCH PAYMENT AND LOCK RECORD
+    */
+
+    $stmt = $conn->prepare("
+        SELECT user_id, invoice_number, amount, status
+        FROM payments
+        WHERE reference = ?
+        FOR UPDATE
+    ");
+
+    $stmt->bind_param("s", $reference);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        throw new Exception("Payment reference not found");
+    }
+
+    $payment = $result->fetch_assoc();
+
+    $userId = (int)$payment['user_id'];
+    $amount = (float)$payment['amount'];
+    $invoiceNumber = $payment['invoice_number'];
+
+    /*
+    DUPLICATE PAYMENT PROTECTION
+    */
+
+    if ($payment['status'] === 'completed') {
+
+        $conn->commit();
+
+        createLog(
+            $conn,
+            'payment',
+            'Duplicate callback ignored',
+            'Reference: ' . $reference .
+            ' | ZetuPay ID: ' . $waveTransactionId,
+            'info',
+            $userId
+        );
+
+        http_response_code(200);
+        exit("Already processed");
+    }
+
+    /*
+    VERIFY PAYMENT AMOUNT
+    */
+
+    if (abs($amount - $paymentAmount) > 0.001) {
+        throw new Exception("Payment amount mismatch");
+    }
+
+    /*
+    FETCH AND LOCK USER
+    */
+
+    $userStmt = $conn->prepare("
+        SELECT phone_number, username, created_at
+        FROM users
+        WHERE id = ?
+        FOR UPDATE
+    ");
+
+    $userStmt->bind_param("i", $userId);
+    $userStmt->execute();
+
+    $userResult = $userStmt->get_result();
+
+    if ($userResult->num_rows === 0) {
+        throw new Exception("Customer not found");
+    }
+
+    $userData = $userResult->fetch_assoc();
+
+    $userPhone = trim($userData['phone_number']);
+    $userName = $userData['username'] ?: 'Customer';
+
+    /*
+    FORMAT CUSTOMER PHONE
+    */
+
+    if (substr($userPhone, 0, 1) === "0") {
+        $userPhone = "254" . substr($userPhone, 1);
+    }
+
+    /*
+    UPDATE PAYMENT RECORD
+    */
+
+    $paymentMethod = "M-PESA";
+
+    $updatePayment = $conn->prepare("
+        UPDATE payments
+        SET
             status = 'completed',
             transaction_id = ?,
             payment_method = ?,
             payment_date = NOW()
-         WHERE reference = ?"
-    );
+        WHERE reference = ?
+    ");
 
-    $stmt->bind_param(
+    $updatePayment->bind_param(
         "sss",
-        $mpesa_receipt,
-        $payment_method,
+        $receipt,
+        $paymentMethod,
         $reference
     );
 
-    $stmt->execute();
-
-    if ($stmt->affected_rows > 0) {
-
-    createLog(
-        $conn,
-        'payment',
-        'Payment updated',
-        'Payment marked completed: ' . $reference,
-        'success'
-    );
-
-} else {
-
-    createLog(
-        $conn,
-        'payment',
-        'Payment update failed',
-        'No payment record updated for: ' . $reference,
-        'warning'
-    );
-
-}
+    if (!$updatePayment->execute()) {
+        throw new Exception("Payment update failed");
+    }
 
     /*
-    =========================================
-    FETCH USER ID FROM PAYMENTS TABLE
-    =========================================
+    CALCULATE SUBSCRIPTION EXPIRY
     */
 
-    $payStmt = $conn->prepare(
-        "SELECT user_id, invoice_number, amount
-         FROM payments
-         WHERE reference = ?"
-    );
+    $createdAt = new DateTime($userData['created_at']);
 
-    $payStmt->bind_param("s", $reference);
+    $today = new DateTime();
 
-    $payStmt->execute();
+    $expiry = clone $createdAt;
 
-    $payRes = $payStmt->get_result();
-
-    if ($payRes->num_rows > 0) {
-
-        $payment = $payRes->fetch_assoc();
-
-        $userId = $payment['user_id'];
-
-        createLog(
-    $conn,
-    'payment',
-    'Payment linked to user',
-    'Reference: ' . $reference,
-    'info',
-    $userId
-);
-
-        $invoiceNumber = $payment['invoice_number'];
-
-        $amount = $payment['amount'];
-
-/*
-=========================================
-FETCH USER PHONE
-=========================================
-*/
-
-$userPhone = '';
-$userName = 'Customer';
-
-$userPhoneStmt = $conn->prepare(
-    "SELECT phone_number, username
-     FROM users
-     WHERE id = ?"
-);
-
-$userPhoneStmt->bind_param("i", $userId);
-
-$userPhoneStmt->execute();
-
-$userPhoneRes = $userPhoneStmt->get_result();
-
-if ($userPhoneRes->num_rows > 0) {
-
-    $userData = $userPhoneRes->fetch_assoc();
-
-    $userPhone = trim($userData['phone_number']);
-
-if (substr($userPhone, 0, 1) === "0") {
-    $userPhone = "254" . substr($userPhone, 1);
-}
-
-    if (!empty($userData['username'])) {
-        $userName = $userData['username'];
-    }
-}
-
-
-        /*
-        =========================================
-        FETCH CURRENT USER STATUS
-        =========================================
-        */
-
-        $userRes = $conn->query(
-            "SELECT status, created_at
-             FROM users
-             WHERE id = $userId"
-        );
-
-        if ($userRes && $userRes->num_rows > 0) {
-
-            $user = $userRes->fetch_assoc();
-
-            $createdAt = new DateTime($user['created_at']);
-
-            $today = new DateTime();
-
-            /*
-            =========================================
-            CALCULATE CURRENT EXPIRY
-            =========================================
-            */
-
-            $expiry = clone $createdAt;
-
-            $expiry->modify('+30 days');
-
-            /*
-            =========================================
-            IF USER PAYS BEFORE EXPIRY
-            =========================================
-            */
-
-            if ($expiry >= $today) {
-
-                $newCreatedAt =
-                    $expiry->format('Y-m-d H:i:s');
-
-                $conn->query(
-                    "UPDATE users
-                     SET
-                        status = 'active',
-                        created_at = '$newCreatedAt'
-                     WHERE id = $userId"
-                );
-
-                createLog(
-    $conn,
-    'subscription',
-    'Subscription renewed',
-    'Existing subscription extended by 30 days',
-    'success',
-    $userId
-);
-
-            }
-
-            /*
-            =========================================
-            IF USER PAYS AFTER EXPIRY
-            =========================================
-            */
-
-            else {
-
-                $conn->query(
-                    "UPDATE users
-                     SET
-                        status = 'active',
-                        created_at = NOW()
-                     WHERE id = $userId"
-                );
-
-                createLog(
-    $conn,
-    'subscription',
-    'Subscription activated',
-    'Expired subscription reactivated',
-    'success',
-    $userId
-);
-
-            }
-
-            file_put_contents(
-                "onasis_log.txt",
-                "UPDATED USER SUBSCRIPTION: USER ID $userId | REF $reference\n\n",
-                FILE_APPEND
-            );
-        }
-    }
-/*
-=========================================
-SEND PAYMENT SUCCESS SMS
-=========================================
-*/
-
-if (!empty($userPhone)) {
-
-$smsMessage =
-         "PAYMENT RECEIVED\n" .
-        "User: $userName\n" .
-        "Amount: KES $amount\n" .
-        "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt\n".
-        "\n" .
-        "From D-LINK NETWORK INC.";
-
-    sendSMS($userPhone, $smsMessage);
-
-    createLog(
-    $conn,
-    'notification',
-    'Customer SMS sent',
-    'Payment confirmation SMS sent',
-    'info',
-    $userId
-);
+    $expiry->modify('+30 days');
 
     /*
-=========================================
-SEND ADMIN PAYMENT ALERT SMS
-=========================================
-*/
+    RENEW ACTIVE SUBSCRIPTION
+    */
 
-$adminPhone = null;
+    if ($expiry >= $today) {
 
-$adminQuery = $conn->query(
-    "SELECT phone_number
-     FROM admin_contacts
-     LIMIT 1"
-);
+        $newCreatedAt = $expiry->format('Y-m-d H:i:s');
 
-if ($adminQuery && $adminQuery->num_rows > 0) {
+        $subscriptionStmt = $conn->prepare("
+            UPDATE users
+            SET status = 'active', created_at = ?
+            WHERE id = ?
+        ");
 
-    $admin = $adminQuery->fetch_assoc();
+        $subscriptionStmt->bind_param(
+            "si",
+            $newCreatedAt,
+            $userId
+        );
 
-    $adminPhone = trim($admin['phone_number']);
+        $subscriptionStmt->execute();
 
-    // Format admin number
-    if (substr($adminPhone, 0, 1) === "0") {
-        $adminPhone =
-            "254" . substr($adminPhone, 1);
+        $subscriptionMessage = "Existing subscription extended by 30 days";
+
     }
-}
 
-if (!empty($adminPhone)) {
+    /*
+    REACTIVATE EXPIRED SUBSCRIPTION
+    */
 
-    $adminMessage =
-        "PAYMENT RECEIVED\n" .
-        "User: $userName\n" .
-        "Amount: KES $amount\n" .
-        "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt";
+    else {
 
-    sendSMS($adminPhone, $adminMessage);
+        $subscriptionStmt = $conn->prepare("
+            UPDATE users
+            SET status = 'active', created_at = NOW()
+            WHERE id = ?
+        ");
+
+        $subscriptionStmt->bind_param("i", $userId);
+
+        $subscriptionStmt->execute();
+
+        $subscriptionMessage = "Expired subscription reactivated";
+    }
+
+    /*
+    COMMIT DATABASE CHANGES
+    */
+
+    $conn->commit();
+
+    /*
+    LOG PAYMENT SUCCESS
+    */
 
     createLog(
-    $conn,
-    'notification',
-    'Admin SMS sent',
-    'Admin payment alert sent',
-    'info',
-    $userId
-);
-}
-
-}
-    file_put_contents(
-        "onasis_log.txt",
-        "UPDATED SUCCESS PAYMENT: $reference\n\n",
-        FILE_APPEND
+        $conn,
+        'payment',
+        'ZetuPay payment completed',
+        'Reference: ' . $reference .
+        ' | Receipt: ' . $receipt,
+        'success',
+        $userId
     );
-}
 
-/* FAILED PAYMENT */
-if (
-    isset($data['status']) &&
-    $data['status'] === 'failed' &&
-    isset($data['reference'])
-) {
-
-    $reference = $data['reference'];
-
-     $failure_reason = isset($data['result_desc'])
-        ? $data['result_desc']
-        : 'Unknown error';
-    
     createLog(
-    $conn,
-    'payment',
-    'Payment failed',
-    'Reference: ' .
-    $reference .
-    ' | Reason: ' .
-    $failure_reason,
-    'error'
-);
-
-   
-
-    $stmt = $conn->prepare(
-        "UPDATE payments
-         SET
-            status = 'failed',
-            failure_reason = ?
-         WHERE reference = ?"
+        $conn,
+        'subscription',
+        'Subscription updated',
+        $subscriptionMessage,
+        'success',
+        $userId
     );
 
-    $stmt->bind_param(
-        "ss",
-        $failure_reason,
-        $reference
-    );
+    /*
+    CUSTOMER PAYMENT SMS
+    */
 
-    $stmt->execute();
+    if (!empty($userPhone)) {
+
+        $smsMessage =
+            "PAYMENT RECEIVED\n" .
+            "User: $userName\n" .
+            "Amount: KES $amount\n" .
+            "Invoice: $invoiceNumber\n" .
+            "M-PESA Ref: $receipt\n\n" .
+            "From D-LINK NETWORK INC.";
+
+        sendSMS($userPhone, $smsMessage);
+
+        createLog(
+            $conn,
+            'notification',
+            'Customer SMS sent',
+            'Payment confirmation SMS sent',
+            'info',
+            $userId
+        );
+
+        /*
+        ADMIN PAYMENT ALERT
+        */
+
+        $adminQuery = $conn->query("
+            SELECT phone_number
+            FROM admin_contacts
+            LIMIT 1
+        ");
+
+        if ($adminQuery && $adminQuery->num_rows > 0) {
+
+            $admin = $adminQuery->fetch_assoc();
+
+            $adminPhone = trim($admin['phone_number']);
+
+            if (substr($adminPhone, 0, 1) === "0") {
+                $adminPhone = "254" . substr($adminPhone, 1);
+            }
+
+            if (!empty($adminPhone)) {
+
+                $adminMessage =
+                    "PAYMENT RECEIVED\n" .
+                    "User: $userName\n" .
+                    "Amount: KES $amount\n" .
+                    "Invoice: $invoiceNumber\n" .
+                    "M-PESA Ref: $receipt";
+
+                sendSMS($adminPhone, $adminMessage);
+
+                createLog(
+                    $conn,
+                    'notification',
+                    'Admin SMS sent',
+                    'Admin payment alert sent',
+                    'info',
+                    $userId
+                );
+            }
+        }
+    }
 
     file_put_contents(
-        "onasis_log.txt",
-        "FAILED PAYMENT: $reference | $failure_reason\n\n",
+        "zetupay_callback_log.txt",
+        date('c') .
+        " SUCCESS: $reference | $waveTransactionId\n",
         FILE_APPEND
     );
+
+    http_response_code(200);
+    echo "OK";
+
+} catch (Throwable $e) {
+
+    $conn->rollback();
+
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay callback processing failed',
+        $e->getMessage(),
+        'error'
+    );
+
+    file_put_contents(
+        "zetupay_callback_log.txt",
+        date('c') .
+        " ERROR: " . $e->getMessage() . "\n",
+        FILE_APPEND
+    );
+
+    http_response_code(500);
+    echo "Processing failed";
 }
 
-echo "OK";
+$conn->close();
+
+?>
