@@ -17,8 +17,8 @@ $password = $_ENV['MYSQLPASSWORD'];
 $conn = new mysqli(
     $host,
     $username,
-    $dbname,
     $password,
+    $dbname,
     $port
 );
 
