@@ -3,12 +3,10 @@ session_start();
 
 header('Content-Type: application/json');
 
-require_once 'onasis_config.php';
+require_once 'onasis_config_change.php';
 require_once 'includes/logger.php';
 
-/* =========================
-   DATABASE CONNECTION
-========================= */
+/* DATABASE CONNECTION */
 
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
@@ -34,9 +32,7 @@ if ($conn->connect_error) {
 
 $conn->set_charset("utf8mb4");
 
-/* =========================
-   SESSION CHECK
-========================= */
+/* SESSION CHECK */
 
 if (!isset($_SESSION['user_id'])) {
 
@@ -50,27 +46,25 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = (int) $_SESSION['user_id'];
 
+/* GET PACKAGE ID */
+
 $package_id = filter_input(
     INPUT_POST,
     'package_id',
     FILTER_VALIDATE_INT
 );
 
-$invoiceNumber = trim($_POST['invoice_number'] ?? '');
-
 if (!$package_id || $package_id < 1) {
 
     echo json_encode([
         "success" => false,
-        "message" => "Invalid package selected"
+        "message" => "Package not selected"
     ]);
 
     exit;
 }
 
-/* =========================
-   FETCH USER DETAILS
-========================= */
+/* GET USER DETAILS */
 
 $stmt = $conn->prepare("
     SELECT
@@ -90,6 +84,15 @@ $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
 
+    createLog(
+        $conn,
+        'payment',
+        'User lookup failed',
+        'No user found during ZetuPay package initialization',
+        'error',
+        $user_id
+    );
+
     echo json_encode([
         "success" => false,
         "message" => "User not found"
@@ -100,32 +103,19 @@ if ($result->num_rows === 0) {
 
 $user = $result->fetch_assoc();
 
-$phone = trim($user['phone_number']);
-
-/* =========================
-   FETCH SELECTED PACKAGE
-========================= */
+/* GET SELECTED PACKAGE */
 
 $pkg = $conn->prepare("
     SELECT
-        p.id,
-        p.package_name,
-        p.price
-    FROM packages p
-    INNER JOIN users u
-        ON u.connection_type = p.package_type
-    WHERE p.id = ?
-      AND u.id = ?
-      AND p.status = 'active'
+        id,
+        package_name,
+        price
+    FROM packages
+    WHERE id = ?
     LIMIT 1
 ");
 
-$pkg->bind_param(
-    "ii",
-    $package_id,
-    $user_id
-);
-
+$pkg->bind_param("i", $package_id);
 $pkg->execute();
 
 $pkgResult = $pkg->get_result();
@@ -134,7 +124,7 @@ if ($pkgResult->num_rows === 0) {
 
     echo json_encode([
         "success" => false,
-        "message" => "Selected package is unavailable"
+        "message" => "Selected package not found"
     ]);
 
     exit;
@@ -142,11 +132,17 @@ if ($pkgResult->num_rows === 0) {
 
 $package = $pkgResult->fetch_assoc();
 
-$amount = (float) $package['price'];
+/* ASSIGN VARIABLES */
 
-/* =========================
-   VALIDATE PAYMENT
-========================= */
+$phone = trim($user['phone_number']);
+
+$amount = (int) $package['price'];
+
+$invoiceNumber = trim(
+    $_POST['invoice_number'] ?? ''
+);
+
+/* VALIDATE PAYMENT */
 
 if ($amount < 1 || $amount > 250000) {
 
@@ -168,15 +164,14 @@ if (empty($phone)) {
     exit;
 }
 
-/* =========================
-   CREATE UNIQUE REFERENCE
-========================= */
+/* CREATE UNIQUE REFERENCE */
 
-$reference = "DLINK-" . $user_id . "-" . time();
+$reference = "DLINK-" .
+    $user_id . "-" .
+    time() . "-" .
+    bin2hex(random_bytes(3));
 
-/* =========================
-   SAVE PENDING PAYMENT
-========================= */
+/* SAVE PENDING PAYMENT */
 
 $insert = $conn->prepare("
     INSERT INTO payments
@@ -209,7 +204,7 @@ if (!$insert->execute()) {
     createLog(
         $conn,
         'payment',
-        'Payment record creation failed',
+        'Pending payment creation failed',
         $insert->error,
         'error',
         $user_id
@@ -223,9 +218,20 @@ if (!$insert->execute()) {
     exit;
 }
 
-/* =========================
-   ZETUPAY REQUEST
-========================= */
+/* LOG PAYMENT CREATION */
+
+createLog(
+    $conn,
+    'payment',
+    'Pending package payment created',
+    'Reference: ' . $reference .
+    ' | Package: ' . $package['package_name'] .
+    ' | Amount: ' . $amount,
+    'info',
+    $user_id
+);
+
+/* PREPARE ZETUPAY REQUEST */
 
 $data = [
     "phoneNumber" => $phone,
@@ -241,9 +247,7 @@ $headers = [
     "Idempotency-Key: " . $reference
 ];
 
-/* =========================
-   SEND STK PUSH
-========================= */
+/* SEND STK PUSH */
 
 $ch = curl_init();
 
@@ -267,67 +271,44 @@ $httpCode = curl_getinfo(
 
 curl_close($ch);
 
-/* =========================
-   CONNECTION ERROR
-========================= */
+/* HANDLE CONNECTION ERROR */
 
 if ($response === false) {
-
-    $update = $conn->prepare("
-        UPDATE payments
-        SET status = 'failed',
-            failure_reason = ?
-        WHERE reference = ?
-    ");
-
-    $reason = "ZetuPay connection error: " . $curlError;
-
-    $update->bind_param(
-        "ss",
-        $reason,
-        $reference
-    );
-
-    $update->execute();
 
     createLog(
         $conn,
         'payment',
-        'ZetuPay connection failed',
-        $curlError,
+        'ZetuPay connection error',
+        $curlError . ' | Reference: ' . $reference,
         'error',
         $user_id
     );
 
     echo json_encode([
         "success" => false,
-        "message" => "Payment gateway connection failed"
+        "reference" => $reference,
+        "message" => "Could not confirm gateway response. Check payment status before retrying."
     ]);
 
     exit;
 }
 
-/* =========================
-   DECODE RESPONSE
-========================= */
+/* DECODE RESPONSE */
 
 $result = json_decode($response, true);
 
-/* =========================
-   SAVE RESPONSE LOG
-========================= */
+/* SAVE API RESPONSE LOG */
 
 file_put_contents(
     "zetupay_package_log.txt",
     date('c') .
     " HTTP: " . $httpCode .
-    " RESPONSE: " . $response . PHP_EOL,
+    " RESPONSE: " . $response .
+    PHP_EOL,
     FILE_APPEND
 );
 
-/* =========================
-   SUCCESSFUL STK REQUEST
-========================= */
+/* SUCCESSFUL STK REQUEST */
 
 if (
     $httpCode == 202 &&
@@ -373,8 +354,7 @@ if (
         "success" => true,
         "http_code" => $httpCode,
         "transaction_id" => $transactionId,
-        "payment_key" =>
-            $paymentData['paymentKey'] ?? null,
+        "payment_key" => $paymentData['paymentKey'] ?? null,
         "reference" => $reference,
         "message" => "STK push sent. Check your phone."
     ]);
@@ -404,8 +384,9 @@ if (
     createLog(
         $conn,
         'payment',
-        'ZetuPay initialization failed',
-        json_encode($result),
+        'ZetuPay package initialization failed',
+        $failureMessage .
+        ' | Reference: ' . $reference,
         'error',
         $user_id
     );
