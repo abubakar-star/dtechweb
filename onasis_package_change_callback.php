@@ -1,14 +1,16 @@
+```php
 <?php
 
-http_response_code(200);
-
+include 'onasis_config.php';
 include 'includes/logger.php';
 
 /*
 =========================================
 SEND SMS USING TALKSASA API
+UNCHANGED
 =========================================
 */
+
 function sendSMS($phone, $message)
 {
     $token = "3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b";
@@ -37,15 +39,15 @@ function sendSMS($phone, $message)
 
     $response = curl_exec($ch);
 
-$error = curl_error($ch);
+    $error = curl_error($ch);
 
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-file_put_contents(
-    "onasis_log.txt",
-    "SMS CODE: $httpCode\nERROR: $error\nRESPONSE: $response\n\n",
-    FILE_APPEND
-);
+    file_put_contents(
+        "onasis_log.txt",
+        "SMS CODE: $httpCode\nERROR: $error\nRESPONSE: $response\n\n",
+        FILE_APPEND
+    );
 
     if (curl_errno($ch)) {
         file_put_contents(
@@ -64,367 +66,571 @@ file_put_contents(
     curl_close($ch);
 }
 
+/*
+=========================================
+READ ZETUPAY WEBHOOK
+=========================================
+*/
+
+$raw = file_get_contents("php://input");
+
+file_put_contents(
+    "onasis_log.txt",
+    date('Y-m-d H:i:s') .
+    "\nZETUPAY PACKAGE CALLBACK:\n" .
+    $raw . "\n\n",
+    FILE_APPEND
+);
+
+/*
+=========================================
+VERIFY ZETUPAY SIGNATURE
+=========================================
+*/
+
+if (empty($ZETUPAY_SECRET_KEY)) {
+
+    http_response_code(500);
+    exit("Gateway configuration missing");
+}
+
+$signatureHeader = $_SERVER['HTTP_X_ZETUPAY_SIGNATURE'] ?? '';
+
+$parts = [];
+
+foreach (explode(',', $signatureHeader) as $part) {
+
+    $pair = explode('=', trim($part), 2);
+
+    if (count($pair) === 2) {
+        $parts[$pair[0]] = $pair[1];
+    }
+}
+
+$timestamp = $parts['t'] ?? '';
+$signature = $parts['v1'] ?? '';
+
+if (
+    empty($timestamp) ||
+    empty($signature) ||
+    !ctype_digit((string)$timestamp) ||
+    !preg_match('/^[a-f0-9]{64}$/i', $signature)
+) {
+
+    http_response_code(401);
+    exit("Invalid webhook signature");
+}
+
+/* CHECK TIMESTAMP */
+
+if (abs(time() - (int)$timestamp) > 300) {
+
+    http_response_code(401);
+    exit("Expired webhook");
+}
+
+/* CALCULATE SIGNATURE */
+
+$expectedSignature = hash_hmac(
+    'sha256',
+    $timestamp . "." . $raw,
+    $ZETUPAY_SECRET_KEY
+);
+
+if (!hash_equals(
+    strtolower($expectedSignature),
+    strtolower($signature)
+)) {
+
+    http_response_code(401);
+    exit("Signature verification failed");
+}
+
+/*
+=========================================
+DECODE VERIFIED WEBHOOK
+=========================================
+*/
+
+$data = json_decode($raw, true);
+
+if (!is_array($data)) {
+
+    http_response_code(400);
+    exit("Invalid JSON");
+}
+
+/*
+=========================================
+DATABASE CONNECTION
+=========================================
+*/
+
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
 $username = $_ENV['MYSQLUSER'];
 $password = $_ENV['MYSQLPASSWORD'];
 
-$conn = new mysqli($host, $username, $password, $dbname, $port);
-
-$raw = file_get_contents("php://input");
-
-file_put_contents(
-    "onasis_log.txt",
-    date('Y-m-d H:i:s') . "\n" . $raw . "\n\n",
-    FILE_APPEND
+$conn = new mysqli(
+    $host,
+    $username,
+    $password,
+    $dbname,
+    $port
 );
 
-$data = json_decode($raw, true);
+if ($conn->connect_error) {
 
-file_put_contents(
-    "onasis_secondlog.txt",
-    "PARSED STATUS: " . ($data['status'] ?? 'NO STATUS') . "\n\n",
-    FILE_APPEND
-);
+    http_response_code(500);
+    exit("Database connection failed");
+}
+
+$conn->set_charset("utf8mb4");
+
+/*
+=========================================
+LOG CALLBACK
+=========================================
+*/
 
 createLog(
     $conn,
     'payment',
-    'Onasis callback received',
-    'Incoming callback received from payment gateway',
+    'ZetuPay package callback received',
+    'Verified callback received',
     'info'
 );
 
-/* SUCCESS PAYMENT */
-if (
-    isset($data['status']) &&
-    $data['status'] === 'success' &&
-    isset($data['reference'])
-) {
+/*
+=========================================
+CHECK PAYMENT RESPONSE
+=========================================
+*/
 
-    $reference = $data['reference'];
+$status = $data['status'] ?? '';
+
+$reference = $data['reference'] ?? '';
+
+if (empty($reference)) {
+
+    http_response_code(400);
+    exit("Missing payment reference");
+}
+
+/*
+=========================================
+HANDLE FAILED PAYMENT
+=========================================
+*/
+
+if ($status === 'failed') {
+
+    $failureReason = $data['result_desc']
+        ?? $data['message']
+        ?? 'Payment failed';
+
+    $stmt = $conn->prepare("
+        UPDATE payments
+        SET
+            status = 'failed',
+            failure_reason = ?
+        WHERE reference = ?
+        AND status = 'pending'
+    ");
+
+    $stmt->bind_param(
+        "ss",
+        $failureReason,
+        $reference
+    );
+
+    $stmt->execute();
 
     createLog(
-    $conn,
-    'payment',
-    'Payment success callback',
-    'Reference: ' . $reference,
-    'success'
-);
+        $conn,
+        'payment',
+        'ZetuPay package payment failed',
+        'Reference: ' . $reference .
+        ' | Reason: ' . $failureReason,
+        'error'
+    );
 
-    $mpesa_receipt = isset($data['mpesa_receipt'])
-        ? $data['mpesa_receipt']
-        : '';
+    file_put_contents(
+        "onasis_log.txt",
+        "FAILED PAYMENT: $reference\n\n",
+        FILE_APPEND
+    );
 
-    $payment_method = "M-PESA";
+    http_response_code(200);
+    exit("OK");
+}
 
-    /* UPDATE PAYMENT TABLE */
-    $stmt = $conn->prepare(
-        "UPDATE payments
-         SET
+/*
+=========================================
+ONLY PROCESS SUCCESSFUL PAYMENTS
+=========================================
+*/
+
+if (
+    $status !== 'success' ||
+    empty($data['waveTransactionId']) ||
+    empty($data['receiptNumber']) ||
+    !isset($data['amount'])
+) {
+
+    http_response_code(200);
+    exit("Payment not confirmed");
+}
+
+$receipt = $data['receiptNumber'];
+
+$waveTransactionId = $data['waveTransactionId'];
+
+$paymentAmount = (float)$data['amount'];
+
+/*
+=========================================
+BEGIN DATABASE TRANSACTION
+=========================================
+*/
+
+$conn->begin_transaction();
+
+try {
+
+    /*
+    FETCH PAYMENT RECORD
+    */
+
+    $stmt = $conn->prepare("
+        SELECT
+            user_id,
+            package_id,
+            invoice_number,
+            amount,
+            status
+        FROM payments
+        WHERE reference = ?
+        FOR UPDATE
+    ");
+
+    $stmt->bind_param("s", $reference);
+
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+
+        throw new Exception("Payment reference not found");
+    }
+
+    $payment = $result->fetch_assoc();
+
+    $userId = (int)$payment['user_id'];
+
+    $packageId = (int)$payment['package_id'];
+
+    $invoiceNumber = $payment['invoice_number'];
+
+    $amount = (float)$payment['amount'];
+
+    /*
+    DUPLICATE CALLBACK PROTECTION
+    */
+
+    if ($payment['status'] === 'completed') {
+
+        $conn->commit();
+
+        http_response_code(200);
+        exit("Already processed");
+    }
+
+    /*
+    VERIFY PAYMENT AMOUNT
+    */
+
+    if (abs($amount - $paymentAmount) > 0.001) {
+
+        throw new Exception("Payment amount mismatch");
+    }
+
+    /*
+    FETCH CUSTOMER DETAILS
+    */
+
+    $userStmt = $conn->prepare("
+        SELECT
+            phone_number,
+            username,
+            package_id
+        FROM users
+        WHERE id = ?
+        FOR UPDATE
+    ");
+
+    $userStmt->bind_param("i", $userId);
+
+    $userStmt->execute();
+
+    $userResult = $userStmt->get_result();
+
+    if ($userResult->num_rows === 0) {
+
+        throw new Exception("Customer not found");
+    }
+
+    $userData = $userResult->fetch_assoc();
+
+    $userPhone = trim($userData['phone_number']);
+
+    $userName = $userData['username'] ?: 'Customer';
+
+    $currentPackageId = (int)$userData['package_id'];
+
+    /*
+    VERIFY PACKAGE CHANGE
+    */
+
+    if ($packageId < 1) {
+
+        throw new Exception("Invalid package ID");
+    }
+
+    if ($currentPackageId === $packageId) {
+
+        throw new Exception("Selected package is already assigned to customer");
+    }
+
+    /*
+    FORMAT CUSTOMER PHONE
+    */
+
+    if (substr($userPhone, 0, 1) === "0") {
+
+        $userPhone = "254" . substr($userPhone, 1);
+    }
+
+    /*
+    UPDATE PAYMENT RECORD
+    */
+
+    $paymentMethod = "M-PESA";
+
+    $updatePayment = $conn->prepare("
+        UPDATE payments
+        SET
             status = 'completed',
             transaction_id = ?,
             payment_method = ?,
             payment_date = NOW()
-         WHERE reference = ?"
-    );
+        WHERE reference = ?
+    ");
 
-    $stmt->bind_param(
+    $updatePayment->bind_param(
         "sss",
-        $mpesa_receipt,
-        $payment_method,
+        $receipt,
+        $paymentMethod,
         $reference
     );
 
-    $stmt->execute();
+    if (!$updatePayment->execute()) {
 
-    if ($stmt->affected_rows > 0) {
-
-    createLog(
-        $conn,
-        'payment',
-        'Payment updated',
-        'Payment marked completed: ' . $reference,
-        'success'
-    );
-
-} else {
-
-    createLog(
-        $conn,
-        'payment',
-        'Payment update failed',
-        'No payment record updated for: ' . $reference,
-        'warning'
-    );
-
-}
+        throw new Exception("Payment update failed");
+    }
 
     /*
     =========================================
-    FETCH USER ID FROM PAYMENTS TABLE
+    PACKAGE CHANGE
+    WAITING FOR ADMIN VERIFICATION
     =========================================
     */
 
-  $payStmt = $conn->prepare(
-    "SELECT
-        user_id,
-        package_id,
-        invoice_number,
-        amount
-     FROM payments
-     WHERE reference = ?"
-);
+    $packageUpdate = $conn->prepare("
+        UPDATE users
+        SET
+            status = 'queued',
+            updating = 'yes',
+            package_id = ?,
+            package_queue_popup = 0,
+            created_at = NULL
+        WHERE id = ?
+    ");
 
-    $payStmt->bind_param("s", $reference);
+    $packageUpdate->bind_param(
+        "ii",
+        $packageId,
+        $userId
+    );
 
-    $payStmt->execute();
+    if (!$packageUpdate->execute()) {
 
-    $payRes = $payStmt->get_result();
+        throw new Exception("Package update failed");
+    }
 
-    if ($payRes->num_rows > 0) {
+    /*
+    LOG PACKAGE CHANGE
+    */
 
-        $payment = $payRes->fetch_assoc();
+    createLog(
+        $conn,
+        'subscription',
+        'Package change awaiting verification',
+        'Payment received. Package ID: ' .
+        $packageId .
+        '. Waiting for administrator verification.',
+        'info',
+        $userId
+    );
 
-        $userId = $payment['user_id'];
-        
-        $packageId = $payment['package_id'];
+    /*
+    COMMIT DATABASE CHANGES
+    */
+
+    $conn->commit();
+
+    /*
+    LOG PAYMENT SUCCESS
+    */
+
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay package payment completed',
+        'Reference: ' . $reference .
+        ' | Receipt: ' . $receipt .
+        ' | Transaction: ' . $waveTransactionId,
+        'success',
+        $userId
+    );
+
+    /*
+    =========================================
+    SEND CUSTOMER PAYMENT SUCCESS SMS
+    =========================================
+    */
+
+    if (!empty($userPhone)) {
+
+        $smsMessage =
+            "PAYMENT RECEIVED\n" .
+            "User: $userName\n" .
+            "Amount: KES $amount\n" .
+            "Invoice: $invoiceNumber\n" .
+            "M-PESA Ref: $receipt\n\n" .
+            "From D-LINK NETWORK INC.";
+
+        sendSMS($userPhone, $smsMessage);
 
         createLog(
-    $conn,
-    'payment',
-    'Payment linked to user',
-    'Reference: ' . $reference,
-    'info',
-    $userId
-);
-
-        $invoiceNumber = $payment['invoice_number'];
-
-        $amount = $payment['amount'];
-
-/*
-=========================================
-FETCH USER PHONE
-=========================================
-*/
-
-$userPhone = '';
-$userName = 'Customer';
-
-$userPhoneStmt = $conn->prepare(
-    "SELECT phone_number, username
-     FROM users
-     WHERE id = ?"
-);
-
-$userPhoneStmt->bind_param("i", $userId);
-
-$userPhoneStmt->execute();
-
-$userPhoneRes = $userPhoneStmt->get_result();
-
-if ($userPhoneRes->num_rows > 0) {
-
-    $userData = $userPhoneRes->fetch_assoc();
-
-    $userPhone = trim($userData['phone_number']);
-
-if (substr($userPhone, 0, 1) === "0") {
-    $userPhone = "254" . substr($userPhone, 1);
-}
-
-    if (!empty($userData['username'])) {
-        $userName = $userData['username'];
-    }
-}
-
+            $conn,
+            'notification',
+            'Customer SMS sent',
+            'Payment confirmation SMS sent',
+            'info',
+            $userId
+        );
 
         /*
         =========================================
-        FETCH CURRENT USER STATUS
+        SEND ADMIN PAYMENT ALERT SMS
         =========================================
         */
 
-   $userRes = $conn->query(
-    "SELECT status, created_at, package_id
-     FROM users
-     WHERE id = $userId"
-);
+        $adminPhone = null;
 
-        if ($userRes && $userRes->num_rows > 0) {
+        $adminQuery = $conn->query("
+            SELECT phone_number
+            FROM admin_contacts
+            LIMIT 1
+        ");
 
-            $user = $userRes->fetch_assoc();
+        if (
+            $adminQuery &&
+            $adminQuery->num_rows > 0
+        ) {
 
-            $currentPackageId = $user['package_id'];
+            $admin = $adminQuery->fetch_assoc();
 
-/*
-=========================================
-PACKAGE CHANGE
-=========================================
-*/
-if ($currentPackageId != $packageId) {
+            $adminPhone = trim($admin['phone_number']);
 
-    $conn->query(
-        "UPDATE users
-         SET
-            status = 'queued',
-            updating='yes',
-            package_id = $packageId,
-            package_queue_popup = 0,
-            created_at = NULL
-         WHERE id = $userId"
-    );
+            if (substr($adminPhone, 0, 1) === "0") {
 
-   createLog(
-    $conn,
-    'subscription',
-    'Package change awaiting verification',
-    'Package payment received. Waiting for administrator verification before activating the new package.',
-    'info',
-    $userId
-);
-}
+                $adminPhone =
+                    "254" . substr($adminPhone, 1);
+            }
+        }
 
-            file_put_contents(
-                "onasis_log.txt",
-                "UPDATED USER SUBSCRIPTION: USER ID $userId | REF $reference\n\n",
-                FILE_APPEND
+        if (!empty($adminPhone)) {
+
+            $adminMessage =
+                "PAYMENT RECEIVED\n" .
+                "User: $userName\n" .
+                "Amount: KES $amount\n" .
+                "Invoice: $invoiceNumber\n" .
+                "M-PESA Ref: $receipt";
+
+            sendSMS($adminPhone, $adminMessage);
+
+            createLog(
+                $conn,
+                'notification',
+                'Admin SMS sent',
+                'Admin payment alert sent',
+                'info',
+                $userId
             );
         }
     }
-/*
-=========================================
-SEND PAYMENT SUCCESS SMS
-=========================================
-*/
-
-if (!empty($userPhone)) {
-
-$smsMessage =
-         "PAYMENT RECEIVED\n" .
-        "User: $userName\n" .
-        "Amount: KES $amount\n" .
-        "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt\n".
-        "\n" .
-        "From D-LINK NETWORK INC.";
-
-    sendSMS($userPhone, $smsMessage);
-
-    createLog(
-    $conn,
-    'notification',
-    'Customer SMS sent',
-    'Payment confirmation SMS sent',
-    'info',
-    $userId
-);
 
     /*
-=========================================
-SEND ADMIN PAYMENT ALERT SMS
-=========================================
-*/
-
-$adminPhone = null;
-
-$adminQuery = $conn->query(
-    "SELECT phone_number
-     FROM admin_contacts
-     LIMIT 1"
-);
-
-if ($adminQuery && $adminQuery->num_rows > 0) {
-
-    $admin = $adminQuery->fetch_assoc();
-
-    $adminPhone = trim($admin['phone_number']);
-
-    // Format admin number
-    if (substr($adminPhone, 0, 1) === "0") {
-        $adminPhone =
-            "254" . substr($adminPhone, 1);
-    }
-}
-
-if (!empty($adminPhone)) {
-
-    $adminMessage =
-        "PAYMENT RECEIVED\n" .
-        "User: $userName\n" .
-        "Amount: KES $amount\n" .
-        "Invoice: $invoiceNumber\n" .
-        "M-PESA Ref: $mpesa_receipt";
-
-    sendSMS($adminPhone, $adminMessage);
-
-    createLog(
-    $conn,
-    'notification',
-    'Admin SMS sent',
-    'Admin payment alert sent',
-    'info',
-    $userId
-);
-}
-
-}
-    file_put_contents(
-        "onasis_log.txt",
-        "UPDATED SUCCESS PAYMENT: $reference\n\n",
-        FILE_APPEND
-    );
-}
-
-/* FAILED PAYMENT */
-if (
-    isset($data['status']) &&
-    $data['status'] === 'failed' &&
-    isset($data['reference'])
-) {
-
-    $reference = $data['reference'];
-
-     $failure_reason = isset($data['result_desc'])
-        ? $data['result_desc']
-        : 'Unknown error';
-    
-    createLog(
-    $conn,
-    'payment',
-    'Payment failed',
-    'Reference: ' .
-    $reference .
-    ' | Reason: ' .
-    $failure_reason,
-    'error'
-);
-
-   
-
-    $stmt = $conn->prepare(
-        "UPDATE payments
-         SET
-            status = 'failed',
-            failure_reason = ?
-         WHERE reference = ?"
-    );
-
-    $stmt->bind_param(
-        "ss",
-        $failure_reason,
-        $reference
-    );
-
-    $stmt->execute();
+    LOG SUCCESS
+    */
 
     file_put_contents(
         "onasis_log.txt",
-        "FAILED PAYMENT: $reference | $failure_reason\n\n",
+        "PACKAGE CHANGE PAYMENT SUCCESS: " .
+        $reference .
+        " | USER: " . $userId .
+        " | PACKAGE: " . $packageId .
+        "\n\n",
         FILE_APPEND
     );
+
+    http_response_code(200);
+
+    echo "OK";
+
+} catch (Throwable $e) {
+
+    $conn->rollback();
+
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay package callback processing failed',
+        $e->getMessage(),
+        'error'
+    );
+
+    file_put_contents(
+        "onasis_log.txt",
+        "CALLBACK ERROR: " .
+        $e->getMessage() .
+        "\nREFERENCE: " .
+        $reference .
+        "\n\n",
+        FILE_APPEND
+    );
+
+    http_response_code(500);
+
+    echo "Processing failed";
 }
 
-echo "OK";
+$conn->close();
+
+?>
+```
