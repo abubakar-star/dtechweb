@@ -218,115 +218,148 @@ createLog(
 );
 
 /* =========================
-   PREPARE STK REQUEST
+   PREPARE ZETUPAY REQUEST
 ========================= */
+
 $data = [
-    "phone" => $phone,
-    "amount" => $amount,
+    "phoneNumber" => $phone,
+    "amount" => (int)$amount,
     "reference" => $reference,
-    "account_ref" => $accountNumber,
-    "callback_url" => "https://dtechweb.onrender.com/onasis_package_change_callback.php"
+    "identifier" => (string)$user_id
 ];
 
 $headers = [
-    "x-api-key: " . $ONASIS_SECRET_KEY,
+    "Authorization: Bearer " . $ZETUPAY_SECRET_KEY,
     "Content-Type: application/json",
-    "Accept: application/json"
+    "Accept: application/json",
+    "Idempotency-Key: " . $reference
 ];
 
 /* =========================
-   CURL REQUEST
+   SEND STK PUSH
 ========================= */
+
 $ch = curl_init();
 
-curl_setopt($ch, CURLOPT_URL, $ONASIS_BASE_URL . "/api/stk");
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+curl_setopt_array($ch, [
+    CURLOPT_URL => $ZETUPAY_BASE_URL . "/payment/stk-push",
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($data),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => $headers,
+    CURLOPT_TIMEOUT => 30
+]);
 
 $response = curl_exec($ch);
+
+$curlError = curl_error($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+curl_close($ch);
 
 /* =========================
    CURL ERROR CHECK
 ========================= */
+
 if ($response === false) {
 
-createLog(
-    $conn,
-    'payment',
-    'STK API connection failed',
-    curl_error($ch),
-    'error',
-    $user_id
-);
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay connection failed',
+        $curlError,
+        'error',
+        $user_id
+    );
 
     echo json_encode([
         "success" => false,
-        "curl_error" => curl_error($ch),
-        "curl_errno" => curl_errno($ch)
+        "message" => "Payment gateway connection failed"
     ]);
-    curl_close($ch);
+
     exit;
 }
 
 /* =========================
-   RESPONSE HANDLING
+   DECODE RESPONSE
 ========================= */
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
 
 $result = json_decode($response, true);
 
 /* =========================
-   LOGGING (VERY IMPORTANT)
+   LOG RESPONSE
 ========================= */
+
 file_put_contents(
-    "stk_log.txt",
-    date('c') . " " . $response . PHP_EOL,
+    "zetupay_sub_log.txt",
+    date('c') . " HTTP: " . $httpCode .
+    " RESPONSE: " . $response . PHP_EOL,
     FILE_APPEND
 );
 
 /* =========================
-   FINAL RESPONSE
+   SUCCESSFUL STK REQUEST
 ========================= */
-if ($httpCode == 200 && isset($result['status'])) {
 
-createLog(
-    $conn,
-    'payment',
-    'STK push sent',
-    'Reference: ' . $reference,
-    'success',
-    $user_id
-);
+if (
+    $httpCode == 202 &&
+    isset($result['success']) &&
+    $result['success'] === true &&
+    isset($result['data'])
+) {
+
+    $paymentData = $result['data'];
+
+    $transactionId = $paymentData['waveTransactionId'] ?? '';
+
+    if (!empty($transactionId)) {
+
+        $update = $conn->prepare("
+            UPDATE payments
+            SET transaction_id = ?
+            WHERE reference = ?
+        ");
+
+        $update->bind_param(
+            "ss",
+            $transactionId,
+            $reference
+        );
+
+        $update->execute();
+    }
+
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay subscription STK push sent',
+        'Reference: ' . $reference,
+        'success',
+        $user_id
+    );
 
     echo json_encode([
         "success" => true,
         "http_code" => $httpCode,
-        "transaction_id" => $result['transaction_id'] ?? null,
+        "transaction_id" => $transactionId,
         "reference" => $reference,
-        "message" => "STK push sent — waiting for payment"
+        "message" => "STK push sent. Check your phone."
     ]);
 
 } else {
 
-createLog(
-    $conn,
-    'payment',
-    'Payment Server Unreachable',
-    json_encode($result),
-    'error',
-    $user_id
-);
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay subscription initialization failed',
+        json_encode($result),
+        'error',
+        $user_id
+    );
 
     echo json_encode([
         "success" => false,
         "http_code" => $httpCode,
-        "message" => "Payment Server Unreachable",
-        "response" => $result
+        "message" => $result['message'] ?? "Payment initialization failed"
     ]);
 }
-
-exit;
-?>
