@@ -6,16 +6,21 @@ header('Content-Type: application/json');
 include 'onasis_config_change.php';
 include 'includes/logger.php';
 
-/* =========================
-   DB CONNECTION
-========================= */
+/* DATABASE CONNECTION */
+
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
 $username = $_ENV['MYSQLUSER'];
 $password = $_ENV['MYSQLPASSWORD'];
 
-$conn = new mysqli($host, $username, $password, $dbname, $port);
+$conn = new mysqli(
+    $host,
+    $username,
+    $dbname,
+    $password,
+    $port
+);
 
 if ($conn->connect_error) {
     echo json_encode([
@@ -25,69 +30,52 @@ if ($conn->connect_error) {
     exit;
 }
 
-/* =========================
-   SESSION CHECK
-========================= */
-if (!isset($_SESSION['user_id'])) {
+/* SESSION CHECK */
 
-createLog(
-    $conn,
-    'security',
-    'Unauthorized payment initialization',
-    'Attempt to initialize STK without login session',
-    'warning'
-);
+if (!isset($_SESSION['user_id'])) {
 
     echo json_encode([
         "success" => false,
         "message" => "User not logged in"
     ]);
+
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$user_id = (int)$_SESSION['user_id'];
 
-$package_id = $_POST['package_id'] ?? '';
+$package_id = (int)($_POST['package_id'] ?? 0);
 
-if (empty($package_id)) {
+$invoiceNumber = $_POST['invoice_number'] ?? '';
+
+if ($package_id < 1) {
 
     echo json_encode([
         "success" => false,
         "message" => "Package not selected"
     ]);
+
     exit;
 }
 
-/* =========================
-   GET USER DETAILS
-========================= */
+/* GET USER DETAILS */
 
-$sql = "
-SELECT 
-    id,
-    phone_number,
-    username,
-    account_number
-FROM users
-WHERE id = ?
-";
+$stmt = $conn->prepare("
+    SELECT
+        id,
+        phone_number,
+        username,
+        account_number
+    FROM users
+    WHERE id = ?
+");
 
-$stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 
 $result = $stmt->get_result();
 
 if ($result->num_rows == 0) {
-
-    createLog(
-        $conn,
-        'payment',
-        'User lookup failed',
-        'No user found during STK initialization',
-        'error',
-        $user_id
-    );
 
     echo json_encode([
         "success" => false,
@@ -99,18 +87,24 @@ if ($result->num_rows == 0) {
 
 $user = $result->fetch_assoc();
 
-/* =========================
-   GET SELECTED PACKAGE
-========================= */
+$phone = trim($user['phone_number']);
+
+$accountNumber = $user['account_number'];
+
+/* GET SELECTED PACKAGE */
 
 $pkg = $conn->prepare("
-SELECT id, package_name, price
-FROM packages
-WHERE id = ?
-LIMIT 1
+    SELECT
+        id,
+        package_name,
+        price
+    FROM packages
+    WHERE id = ?
+    LIMIT 1
 ");
 
 $pkg->bind_param("i", $package_id);
+
 $pkg->execute();
 
 $pkgResult = $pkg->get_result();
@@ -127,73 +121,49 @@ if ($pkgResult->num_rows == 0) {
 
 $package = $pkgResult->fetch_assoc();
 
-/* =========================
-   ASSIGN VARIABLES
-========================= */
+/* ASSIGN PACKAGE PRICE */
 
-$phone = $user['phone_number'];
-$amount = $package['price'];
-$accountNumber = $user['account_number'];
+$amount = (float)$package['price'];
 
-$invDteInv = $_POST['invoice_number'] ?? '';
-
-/* =========================
-   GET USER DETAILS
-========================= */
-
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-
-$result = $stmt->get_result();
-
-if ($result->num_rows == 0) {
-
-createLog(
-    $conn,
-    'payment',
-    'User lookup failed',
-    'No user found during STK initialization',
-    'error',
-    $user_id
-);
+if ($amount < 1 || $amount > 250000) {
 
     echo json_encode([
         "success" => false,
-        "message" => "User not found"
+        "message" => "Invalid payment amount"
     ]);
+
     exit;
 }
 
-$user = $result->fetch_assoc();
+if (empty($phone)) {
 
-$phone = $user['phone_number'];
-$accountNumber = $user['account_number'];
+    echo json_encode([
+        "success" => false,
+        "message" => "Customer phone number missing"
+    ]);
 
-/* =========================
-   CREATE REFERENCE
-========================= */
-$reference = "DLINK-" . $user['id'] . "-" . time();
+    exit;
+}
 
-/* =========================
-   SAVE PAYMENT (PENDING)
-========================= */
+/* CREATE UNIQUE REFERENCE */
+
+$reference = "DLINK-" . $user_id . "-" . time();
+
+/* SAVE PENDING PAYMENT */
+
 $insert = $conn->prepare("
-INSERT INTO payments
-(
-    user_id,
-    package_id,
-    reference,
-    amount,
-    payment_type,
-    invoice_number,
-    status
-)
-VALUES
-(
-    ?, ?, ?, ?, 'subscription', ?, 'pending'
-)
+    INSERT INTO payments
+    (
+        user_id,
+        package_id,
+        reference,
+        amount,
+        payment_type,
+        invoice_number,
+        status
+    )
+    VALUES
+    (?, ?, ?, ?, 'subscription', ?, 'pending')
 ");
 
 $insert->bind_param(
@@ -202,24 +172,39 @@ $insert->bind_param(
     $package_id,
     $reference,
     $amount,
-    $invDteInv
+    $invoiceNumber
 );
 
-$insert->execute();
+if (!$insert->execute()) {
+
+    createLog(
+        $conn,
+        'payment',
+        'Pending payment creation failed',
+        $insert->error,
+        'error',
+        $user_id
+    );
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Could not create payment record"
+    ]);
+
+    exit;
+}
 
 createLog(
     $conn,
     'payment',
-    'Pending payment created',
+    'Pending subscription payment created',
     'Reference: ' . $reference .
     ' | Amount: ' . $amount,
     'info',
     $user_id
 );
 
-/* =========================
-   PREPARE ZETUPAY REQUEST
-========================= */
+/* ZETUPAY REQUEST */
 
 $data = [
     "phoneNumber" => $phone,
@@ -235,9 +220,7 @@ $headers = [
     "Idempotency-Key: " . $reference
 ];
 
-/* =========================
-   SEND STK PUSH
-========================= */
+/* SEND STK PUSH */
 
 $ch = curl_init();
 
@@ -253,13 +236,15 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 
 $curlError = curl_error($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+$httpCode = curl_getinfo(
+    $ch,
+    CURLINFO_HTTP_CODE
+);
 
 curl_close($ch);
 
-/* =========================
-   CURL ERROR CHECK
-========================= */
+/* CURL ERROR */
 
 if ($response === false) {
 
@@ -280,26 +265,21 @@ if ($response === false) {
     exit;
 }
 
-/* =========================
-   DECODE RESPONSE
-========================= */
+/* DECODE RESPONSE */
 
 $result = json_decode($response, true);
 
-/* =========================
-   LOG RESPONSE
-========================= */
+/* LOG RESPONSE */
 
 file_put_contents(
     "zetupay_sub_log.txt",
-    date('c') . " HTTP: " . $httpCode .
+    date('c') .
+    " HTTP: " . $httpCode .
     " RESPONSE: " . $response . PHP_EOL,
     FILE_APPEND
 );
 
-/* =========================
-   SUCCESSFUL STK REQUEST
-========================= */
+/* SUCCESSFUL STK REQUEST */
 
 if (
     $httpCode == 202 &&
@@ -332,7 +312,7 @@ if (
     createLog(
         $conn,
         'payment',
-        'ZetuPay subscription STK push sent',
+        'ZetuPay subscription STK sent',
         'Reference: ' . $reference,
         'success',
         $user_id
@@ -363,3 +343,7 @@ if (
         "message" => $result['message'] ?? "Payment initialization failed"
     ]);
 }
+
+exit;
+
+?>v
