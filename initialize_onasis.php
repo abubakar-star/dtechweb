@@ -6,9 +6,7 @@ header('Content-Type: application/json');
 include 'onasis_config.php';
 include 'includes/logger.php';
 
-/* =========================
-   DB CONNECTION
-========================= */
+/* DATABASE CONNECTION */
 $host = $_ENV['MYSQLHOST'];
 $port = $_ENV['MYSQLPORT'];
 $dbname = $_ENV['MYSQLDATABASE'];
@@ -25,19 +23,8 @@ if ($conn->connect_error) {
     exit;
 }
 
-/* =========================
-   SESSION CHECK
-========================= */
+/* SESSION CHECK */
 if (!isset($_SESSION['user_id'])) {
-
-createLog(
-    $conn,
-    'security',
-    'Unauthorized payment initialization',
-    'Attempt to initialize STK without login session',
-    'warning'
-);
-
     echo json_encode([
         "success" => false,
         "message" => "User not logged in"
@@ -46,19 +33,17 @@ createLog(
 }
 
 $user_id = $_SESSION['user_id'];
-$invDteInv = $_POST['invoice_number'] ?? '';
+$invoiceNumber = $_POST['invoice_number'] ?? '';
 
-/* =========================
-   GET USER DETAILS
-========================= */
-$sql = "SELECT 
+/* GET USER DETAILS */
+$sql = "SELECT
             users.id,
             users.phone_number,
             users.username,
             users.account_number,
             packages.price
         FROM users
-        LEFT JOIN packages 
+        LEFT JOIN packages
         ON users.package_id = packages.id
         WHERE users.id = ?";
 
@@ -69,16 +54,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows == 0) {
-
-createLog(
-    $conn,
-    'payment',
-    'User lookup failed',
-    'No user found during STK initialization',
-    'error',
-    $user_id
-);
-
     echo json_encode([
         "success" => false,
         "message" => "User not found"
@@ -88,20 +63,32 @@ createLog(
 
 $user = $result->fetch_assoc();
 
-$phone = $user['phone_number'];
-$amount = $user['price'];
+$phone = trim($user['phone_number']);
+$amount = (int)$user['price'];
 $accountNumber = $user['account_number'];
 
-/* =========================
-   CREATE REFERENCE
-========================= */
+if ($amount < 1 || $amount > 250000) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid payment amount"
+    ]);
+    exit;
+}
+
+if (empty($phone)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Customer phone number missing"
+    ]);
+    exit;
+}
+
+/* CREATE UNIQUE REFERENCE */
 $reference = "DLINK-" . $user['id'] . "-" . time();
 
-/* =========================
-   SAVE PAYMENT (PENDING)
-========================= */
+/* SAVE PENDING PAYMENT */
 $insert = $conn->prepare("
-    INSERT INTO payments 
+    INSERT INTO payments
     (user_id, reference, amount, invoice_number, status)
     VALUES (?, ?, ?, ?, 'pending')
 ");
@@ -111,129 +98,144 @@ $insert->bind_param(
     $user_id,
     $reference,
     $amount,
-    $invDteInv
+    $invoiceNumber
 );
 
-$insert->execute();
-
-createLog(
-    $conn,
-    'payment',
-    'Pending payment created',
-    'Reference: ' . $reference .
-    ' | Amount: ' . $amount,
-    'info',
-    $user_id
-);
-
-/* =========================
-   PREPARE STK REQUEST
-========================= */
-$data = [
-    "phone" => $phone,
-    "amount" => $amount,
-    "reference" => $reference,
-    "account_ref" => $accountNumber,
-    "callback_url" => "https://dtechweb.onrender.com/onasis_callback.php"
-];
-
-$headers = [
-    "x-api-key: " . $ONASIS_SECRET_KEY,
-    "Content-Type: application/json",
-    "Accept: application/json"
-];
-
-/* =========================
-   CURL REQUEST
-========================= */
-$ch = curl_init();
-
-curl_setopt($ch, CURLOPT_URL, $ONASIS_BASE_URL . "/api/stk");
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-$response = curl_exec($ch);
-
-/* =========================
-   CURL ERROR CHECK
-========================= */
-if ($response === false) {
-
-createLog(
-    $conn,
-    'payment',
-    'STK API connection failed',
-    curl_error($ch),
-    'error',
-    $user_id
-);
-
+if (!$insert->execute()) {
     echo json_encode([
         "success" => false,
-        "curl_error" => curl_error($ch),
-        "curl_errno" => curl_errno($ch)
+        "message" => "Could not create payment record"
     ]);
-    curl_close($ch);
     exit;
 }
 
-/* =========================
-   RESPONSE HANDLING
-========================= */
+/* ZETUPAY REQUEST */
+$data = [
+    "phoneNumber" => $phone,
+    "amount" => $amount,
+    "reference" => $reference,
+    "identifier" => (string)$user_id
+];
+
+$headers = [
+    "Authorization: Bearer " . $ZETUPAY_SECRET_KEY,
+    "Content-Type: application/json",
+    "Accept: application/json",
+    "Idempotency-Key: " . $reference
+];
+
+/* SEND STK PUSH */
+$ch = curl_init();
+
+curl_setopt_array($ch, [
+    CURLOPT_URL => $ZETUPAY_BASE_URL . "/payment/stk-push",
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($data),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => $headers,
+    CURLOPT_TIMEOUT => 30
+]);
+
+$response = curl_exec($ch);
+
+$curlError = curl_error($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
 curl_close($ch);
 
+/* CURL ERROR */
+if ($response === false) {
+
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay connection failed',
+        $curlError,
+        'error',
+        $user_id
+    );
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Payment gateway connection failed"
+    ]);
+
+    exit;
+}
+
+/* DECODE RESPONSE */
 $result = json_decode($response, true);
 
-/* =========================
-   LOGGING (VERY IMPORTANT)
-========================= */
+/* SAVE API RESPONSE LOG */
 file_put_contents(
-    "stk_log.txt",
-    date('c') . " " . $response . PHP_EOL,
+    "zetupay_log.txt",
+    date('c') . " HTTP: " . $httpCode .
+    " RESPONSE: " . $response . PHP_EOL,
     FILE_APPEND
 );
 
-/* =========================
-   FINAL RESPONSE
-========================= */
-if ($httpCode == 200 && isset($result['status'])) {
+/* SUCCESSFUL STK REQUEST */
+if (
+    $httpCode == 202 &&
+    isset($result['success']) &&
+    $result['success'] === true &&
+    isset($result['data'])
+) {
 
-createLog(
-    $conn,
-    'payment',
-    'STK push sent',
-    'Reference: ' . $reference,
-    'success',
-    $user_id
-);
+    $paymentData = $result['data'];
+
+    $transactionId = $paymentData['waveTransactionId'] ?? '';
+
+    if (!empty($transactionId)) {
+
+        $update = $conn->prepare("
+            UPDATE payments
+            SET transaction_id = ?
+            WHERE reference = ?
+        ");
+
+        $update->bind_param(
+            "ss",
+            $transactionId,
+            $reference
+        );
+
+        $update->execute();
+    }
+
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay STK push sent',
+        'Reference: ' . $reference,
+        'success',
+        $user_id
+    );
 
     echo json_encode([
         "success" => true,
         "http_code" => $httpCode,
-        "transaction_id" => $result['transaction_id'] ?? null,
+        "transaction_id" => $transactionId,
+        "payment_key" => $paymentData['paymentKey'] ?? null,
         "reference" => $reference,
-        "message" => "STK push sent — waiting for payment"
+        "message" => "STK push sent. Check your phone."
     ]);
 
 } else {
 
-createLog(
-    $conn,
-    'payment',
-    'Payment Server Unreachable',
-    json_encode($result),
-    'error',
-    $user_id
-);
+    createLog(
+        $conn,
+        'payment',
+        'ZetuPay payment initialization failed',
+        json_encode($result),
+        'error',
+        $user_id
+    );
 
     echo json_encode([
         "success" => false,
         "http_code" => $httpCode,
-        "message" => "Payment Server Unreachable",
-        "response" => $result
+        "message" => $result['message'] ?? "Payment initialization failed"
     ]);
 }
 
