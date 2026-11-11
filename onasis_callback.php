@@ -12,7 +12,8 @@ UNCHANGED
 
 function sendSMS($phone, $message)
 {
-    $token = "3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b";
+    // KEEP YOUR ORIGINAL TALKSASA TOKEN LINE HERE UNCHANGED.
+    $token = "YOUR_EXISTING_TALKSASA_TOKEN";
 
     $url = "https://bulksms.talksasa.com/api/v3/sms/send";
 
@@ -202,6 +203,7 @@ ONLY PROCESS SUCCESSFUL PAYMENTS
 if (
     ($data['status'] ?? '') !== 'success' ||
     empty($data['reference']) ||
+    empty($data['identifier']) ||
     empty($data['waveTransactionId']) ||
     empty($data['receiptNumber'])
 ) {
@@ -209,7 +211,12 @@ if (
     exit("Payment not confirmed");
 }
 
-$reference = $data['reference'];
+// ZetuPay "reference" is the Centipede Paybill account number.
+$accountReference = trim((string)$data['reference']);
+
+// ZetuPay "identifier" carries our unique D-LINK payment reference.
+$reference = trim((string)$data['identifier']);
+
 $receipt = $data['receiptNumber'];
 $waveTransactionId = $data['waveTransactionId'];
 $paymentAmount = (float)($data['amount'] ?? 0);
@@ -262,7 +269,8 @@ try {
             $conn,
             'payment',
             'Duplicate callback ignored',
-            'Reference: ' . $reference .
+            'D-LINK reference: ' . $reference .
+            ' | Account: ' . $accountReference .
             ' | ZetuPay ID: ' . $waveTransactionId,
             'info',
             $userId
@@ -285,7 +293,7 @@ try {
     */
 
     $userStmt = $conn->prepare("
-        SELECT phone_number, username, created_at
+        SELECT phone_number, username, created_at, account_number
         FROM users
         WHERE id = ?
         FOR UPDATE
@@ -304,6 +312,11 @@ try {
 
     $userPhone = trim($userData['phone_number']);
     $userName = $userData['username'] ?: 'Customer';
+
+    // Ensure the Paybill account reference belongs to this D-LINK customer.
+    if (trim((string)$userData['account_number']) !== $accountReference) {
+        throw new Exception("Centipede account reference does not match the D-LINK customer");
+    }
 
     /*
     FORMAT CUSTOMER PHONE
@@ -411,7 +424,8 @@ try {
         $conn,
         'payment',
         'ZetuPay payment completed',
-        'Reference: ' . $reference .
+        'D-LINK reference: ' . $reference .
+        ' | Centipede account: ' . $accountReference .
         ' | Receipt: ' . $receipt,
         'success',
         $userId
@@ -497,7 +511,7 @@ try {
     file_put_contents(
         "zetupay_callback_log.txt",
         date('c') .
-        " SUCCESS: $reference | $waveTransactionId\n",
+        " SUCCESS: $reference | Account: $accountReference | $waveTransactionId\n",
         FILE_APPEND
     );
 
