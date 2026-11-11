@@ -89,7 +89,7 @@ $user = $result->fetch_assoc();
 
 $phone = trim($user['phone_number']);
 
-$accountNumber = $user['account_number'];
+$accountNumber = trim((string)($user['account_number'] ?? ''));
 
 /* GET SELECTED PACKAGE */
 
@@ -132,6 +132,18 @@ if ($amount < 1 || $amount > 250000) {
         "message" => "Invalid payment amount"
     ]);
 
+    exit;
+}
+
+if (
+    $accountNumber === '' ||
+    strlen($accountNumber) > 100 ||
+    !ctype_alnum($accountNumber)
+) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid Centipede account number. Check your account number."
+    ]);
     exit;
 }
 
@@ -209,8 +221,10 @@ createLog(
 $data = [
     "phoneNumber" => $phone,
     "amount" => (int)$amount,
-    "reference" => $reference,
-    "identifier" => (string)$user_id
+    // ZetuPay uses reference as the actual Centipede Paybill account number.
+    "reference" => $accountNumber,
+    // D-LINK's unique payment reference is returned in identifier.
+    "identifier" => $reference
 ];
 
 $headers = [
