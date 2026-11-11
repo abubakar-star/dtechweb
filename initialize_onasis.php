@@ -65,12 +65,20 @@ $user = $result->fetch_assoc();
 
 $phone = trim($user['phone_number']);
 $amount = (int)$user['price'];
-$accountNumber = $user['account_number'];
+$accountNumber = trim((string)($user['account_number'] ?? ''));
 
 if ($amount < 1 || $amount > 250000) {
     echo json_encode([
         "success" => false,
         "message" => "Invalid payment amount"
+    ]);
+    exit;
+}
+
+if ($accountNumber === '' || strlen($accountNumber) > 100 || !ctype_alnum($accountNumber)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid Centipede account number. Use the exact account number with letters and numbers only."
     ]);
     exit;
 }
@@ -113,8 +121,10 @@ if (!$insert->execute()) {
 $data = [
     "phoneNumber" => $phone,
     "amount" => $amount,
-    "reference" => $reference,
-    "identifier" => (string)$user_id
+    // ZetuPay forwards "reference" as the dynamic Paybill account reference.
+    "reference" => $accountNumber,
+    // Keep the unique D-LINK payment reference for webhook matching.
+    "identifier" => $reference
 ];
 
 $headers = [
