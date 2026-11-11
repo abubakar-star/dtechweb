@@ -1,7 +1,7 @@
 ```php
 <?php
 
-include 'onasis_config.php';
+include 'onasis_config_change.php';
 include 'includes/logger.php';
 
 /*
@@ -210,9 +210,12 @@ CHECK PAYMENT RESPONSE
 
 $status = $data['status'] ?? '';
 
-$reference = $data['reference'] ?? '';
+// ZetuPay sends the Centipede account number in reference,
+// and the unique D-LINK payment reference in identifier.
+$accountReference = trim((string)($data['reference'] ?? ''));
+$reference = trim((string)($data['identifier'] ?? ''));
 
-if (empty($reference)) {
+if ($accountReference === '' || $reference === '') {
 
     http_response_code(400);
     exit("Missing payment reference");
@@ -274,6 +277,7 @@ ONLY PROCESS SUCCESSFUL PAYMENTS
 
 if (
     $status !== 'success' ||
+    empty($accountReference) ||
     empty($data['waveTransactionId']) ||
     empty($data['receiptNumber']) ||
     !isset($data['amount'])
@@ -365,7 +369,8 @@ try {
         SELECT
             phone_number,
             username,
-            package_id
+            package_id,
+            account_number
         FROM users
         WHERE id = ?
         FOR UPDATE
@@ -389,6 +394,10 @@ try {
     $userName = $userData['username'] ?: 'Customer';
 
     $currentPackageId = (int)$userData['package_id'];
+
+    if (trim((string)$userData['account_number']) !== $accountReference) {
+        throw new Exception("Centipede account reference does not match the D-LINK customer");
+    }
 
     /*
     VERIFY PACKAGE CHANGE
@@ -499,7 +508,8 @@ try {
         $conn,
         'payment',
         'ZetuPay package payment completed',
-        'Reference: ' . $reference .
+        'D-LINK reference: ' . $reference .
+        ' | Centipede account: ' . $accountReference .
         ' | Receipt: ' . $receipt .
         ' | Transaction: ' . $waveTransactionId,
         'success',
@@ -633,4 +643,4 @@ try {
 $conn->close();
 
 ?>
-```
+
