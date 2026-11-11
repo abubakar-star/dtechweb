@@ -13,7 +13,7 @@ UNCHANGED
 function sendSMS($phone, $message)
 {
     // KEEP YOUR ORIGINAL TALKSASA TOKEN LINE HERE UNCHANGED.
-    $token = "YOUR_EXISTING_TALKSASA_TOKEN";
+    $token = "3126|cEo2LuIPqQCnEdZ9bma2IFDUBUt8YPqu6X8Gm2god1dcfd0b";
 
     $url = "https://bulksms.talksasa.com/api/v3/sms/send";
 
