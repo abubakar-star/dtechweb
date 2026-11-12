@@ -4,6 +4,9 @@ session_start();
 
 include 'includes/logger.php';
 
+// D-LINK WEBSITE MAINTENANCE PROTECTION
+require_once __DIR__ . '/includes/maintenance_gate.php';
+
 if(
 !isset($_SESSION['otp_verified'])
 ||
