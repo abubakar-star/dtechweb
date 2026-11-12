@@ -6,6 +6,9 @@ require 'db.php';
 
 include 'includes/logger.php';
 
+// D-LINK WEBSITE MAINTENANCE PROTECTION
+require_once __DIR__ . '/includes/maintenance_gate.php';
+
 if (!isset($_SESSION['user_id'])) {
 
 createLog(
