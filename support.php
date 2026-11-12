@@ -4,6 +4,9 @@ session_start();
 require_once 'db.php';
 require_once 'includes/logger.php';
 
+// D-LINK WEBSITE MAINTENANCE PROTECTION
+require_once __DIR__ . '/includes/maintenance_gate.php';
+
 // Redirect if user not logged in
 if (!isset($_SESSION['user_id'])) {
 
