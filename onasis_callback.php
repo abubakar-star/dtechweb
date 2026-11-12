@@ -161,6 +161,111 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8mb4");
 
 /*
+=================================================
+ZETUPAY WEBHOOK RAW RESPONSE LOGGER
+SAVE EVERY VERIFIED WEBHOOK TO MYSQL
+=================================================
+*/
+
+// Extract available information without assuming
+// that every webhook contains the same fields.
+
+$logIdentifier = (
+    isset($data['identifier']) &&
+    is_scalar($data['identifier'])
+) ? substr((string)$data['identifier'], 0, 191) : null;
+
+
+$logGatewayReference = null;
+
+if (
+    isset($data['waveTransactionId']) &&
+    is_scalar($data['waveTransactionId'])
+) {
+    $logGatewayReference = (string)$data['waveTransactionId'];
+
+} elseif (
+    isset($data['transaction_id']) &&
+    is_scalar($data['transaction_id'])
+) {
+    $logGatewayReference = (string)$data['transaction_id'];
+
+} elseif (
+    isset($data['reference']) &&
+    is_scalar($data['reference'])
+) {
+    $logGatewayReference = (string)$data['reference'];
+}
+
+
+$logEvent = (
+    isset($data['event']) &&
+    is_scalar($data['event'])
+) ? substr((string)$data['event'], 0, 100) : null;
+
+
+$logStatus = (
+    isset($data['status']) &&
+    is_scalar($data['status'])
+) ? substr((string)$data['status'], 0, 50) : null;
+
+
+// Save the COMPLETE original ZetuPay response.
+
+$logStmt = $conn->prepare("
+    INSERT INTO zetupay_webhook_logs
+    (
+        identifier,
+        gateway_reference,
+        event_name,
+        payment_status,
+        raw_payload
+    )
+    VALUES (?, ?, ?, ?, ?)
+");
+
+if (!$logStmt) {
+
+    http_response_code(500);
+    exit("Webhook logging preparation failed");
+}
+
+
+$logStmt->bind_param(
+    "sssss",
+    $logIdentifier,
+    $logGatewayReference,
+    $logEvent,
+    $logStatus,
+    $raw
+);
+
+
+if (!$logStmt->execute()) {
+
+    $logStmt->close();
+
+    http_response_code(500);
+    exit("Webhook logging failed");
+}
+
+
+$logStmt->close();
+
+
+// Confirm that the webhook was captured.
+
+createLog(
+    $conn,
+    'payment',
+    'ZetuPay webhook captured',
+    'Status: ' . ($logStatus ?? 'Unknown') .
+    ' | Identifier: ' . ($logIdentifier ?? 'Unknown'),
+    'info'
+);
+
+
+/*
 =========================================
 LOG VERIFIED CALLBACK
 =========================================
