@@ -1,4 +1,3 @@
-```php
 <?php
 
 /**
@@ -123,4 +122,3 @@ if ($maintenanceEnabled) {
 }
 
 ?>
-```
