@@ -1,4 +1,7 @@
 <?php
+// D-LINK ADMINISTRATOR SECURITY
+require_once __DIR__ . '/includes/admin_auth.php';
+
 require_once __DIR__ . '/includes/logger.php';
 // ================= DB CONNECTION =================
 
