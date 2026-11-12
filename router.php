@@ -1,5 +1,8 @@
 <?php
 session_start();
+
+require_once __DIR__ . '/includes/maintenance_gate.php';
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
