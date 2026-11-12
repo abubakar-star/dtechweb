@@ -3,6 +3,9 @@ session_start();
 
 include 'includes/logger.php';
 
+// D-LINK WEBSITE MAINTENANCE PROTECTION
+require_once __DIR__ . '/includes/maintenance_gate.php';
+
 // Detect Android devices
 $isAndroid = preg_match('/Android/i', $_SERVER['HTTP_USER_AGENT']);
 
