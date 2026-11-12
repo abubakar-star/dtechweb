@@ -1,57 +1,55 @@
+```php
 <?php
 
 /**
  * D-LINK WEBSITE MAINTENANCE GATE
- *
- * Checks whether website maintenance is enabled.
- * Blocks ordinary visitors while allowing:
- * - The maintenance page
- * - Payment callbacks
- * - Payment status checks
- * - Authenticated administrators
+ * --------------------------------
+ * Blocks normal website visitors during maintenance.
+ * Allows authenticated administrators.
+ * Allows essential payment callbacks.
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/**
- * Files that must remain accessible during maintenance.
- */
-$maintenanceAllowedFiles = [
+/*
+|--------------------------------------------------------------------------
+| 1. Allow the maintenance page
+|--------------------------------------------------------------------------
+*/
 
-    'maintenance_page.php',
-
-    // Payment callbacks
-    'onasis_callback.php',
-    'onasis_package_change_callback.php',
-    'onasis_sub_callback.php',
-    'centipid_webhook.php',
-
-    // Payment status checks
-    'check_payment_status.php',
-    'check_payment_sub_status.php',
-
-];
-
-/**
- * Identify the currently requested PHP file.
- */
 $currentFile = basename(
     parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH)
 );
 
-/**
- * Allow essential payment operations.
- */
-if (in_array($currentFile, $maintenanceAllowedFiles, true)) {
+if ($currentFile === 'maintenance_page.php') {
     return;
 }
 
-/**
- * Allow administrators authenticated by the
- * maintenance administration system.
- */
+/*
+|--------------------------------------------------------------------------
+| 2. Allow essential payment callbacks
+|--------------------------------------------------------------------------
+*/
+
+$allowedDuringMaintenance = [
+    'onasis_callback.php',
+    'onasis_package_change_callback.php',
+    'onasis_sub_callback.php',
+    'check_payment_status.php',
+];
+
+if (in_array($currentFile, $allowedDuringMaintenance, true)) {
+    return;
+}
+
+/*
+|--------------------------------------------------------------------------
+| 3. Allow authenticated administrator
+|--------------------------------------------------------------------------
+*/
+
 if (
     isset($_SESSION['dlink_admin_authenticated']) &&
     $_SESSION['dlink_admin_authenticated'] === true
@@ -59,17 +57,23 @@ if (
     return;
 }
 
-/**
- * Check maintenance status.
- */
+/*
+|--------------------------------------------------------------------------
+| 4. Establish database connection
+|--------------------------------------------------------------------------
+*/
+
 if (!isset($conn) || !($conn instanceof mysqli)) {
 
-    error_log(
-        'D-LINK Maintenance Gate: Database connection unavailable.'
-    );
+    require_once __DIR__ . '/../db.php';
 
-    return;
 }
+
+/*
+|--------------------------------------------------------------------------
+| 5. Check maintenance status
+|--------------------------------------------------------------------------
+*/
 
 $stmt = $conn->prepare("
     SELECT setting_value
@@ -81,7 +85,7 @@ $stmt = $conn->prepare("
 if (!$stmt) {
 
     error_log(
-        'D-LINK Maintenance Gate: Could not prepare database query.'
+        'D-LINK Maintenance: Database query preparation failed.'
     );
 
     return;
@@ -91,28 +95,32 @@ $stmt->execute();
 
 $result = $stmt->get_result();
 
-$maintenance = $result->fetch_assoc();
+$row = $result->fetch_assoc();
 
 $stmt->close();
 
-/**
- * Maintenance is active when value is 1.
- */
 $maintenanceEnabled = (
-    isset($maintenance['setting_value']) &&
-    $maintenance['setting_value'] === '1'
+    isset($row['setting_value']) &&
+    $row['setting_value'] === '1'
 );
 
-/**
- * Redirect visitors to the maintenance page.
- */
+/*
+|--------------------------------------------------------------------------
+| 6. Display maintenance page
+|--------------------------------------------------------------------------
+*/
+
 if ($maintenanceEnabled) {
 
     http_response_code(503);
 
-    header('Location: maintenance_page.php');
+    header('Retry-After: 1800');
+
+    require __DIR__ . '/../maintenance_page.php';
 
     exit();
+
 }
 
 ?>
+```
