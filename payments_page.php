@@ -1,4 +1,7 @@
 <?php
+// D-LINK ADMINISTRATOR SECURITY
+require_once __DIR__ . '/includes/admin_auth.php';
+
 // ================= DB CONNECTION =================
 
 $host = $_ENV['MYSQLHOST'];
