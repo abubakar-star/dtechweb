@@ -2,7 +2,8 @@
 // settings.php
 session_start();
 require_once 'includes/logger.php';
-
+// D-LINK WEBSITE MAINTENANCE PROTECTION
+require_once __DIR__ . '/includes/maintenance_gate.php';
 // For local testing only you can uncomment the following line and set a user id.
 // $_SESSION['user_id'] = 1;
 
