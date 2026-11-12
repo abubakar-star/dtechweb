@@ -133,6 +133,16 @@ Choose an admin module
 
 </a>
 
+   <!-- MAINTENANCE MODE -->
+<a href="maintenance.php"
+   class="relative block text-center
+          bg-orange-600 hover:bg-orange-700
+          transition py-4 rounded-lg font-semibold">
+
+🛠️ Maintenance Mode
+
+</a>
+
 <!-- SMS MANAGEMENT -->
 <a href="sms.php"
    class="relative block text-center
