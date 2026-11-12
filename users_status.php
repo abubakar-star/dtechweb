@@ -1,4 +1,6 @@
 <?php
+// D-LINK ADMINISTRATOR SECURITY
+require_once __DIR__ . '/includes/admin_auth.php';
 
 // ===============================
 // NO LOGIN REQUIRED
