@@ -1,26 +1,28 @@
 <?php
 
-/*
-=========================================
-CALLBACK CONNECTION TEST
-=========================================
-*/
+// TEMPORARY CALLBACK DIAGNOSTIC
+$debugMessage = date('Y-m-d H:i:s') .
+    " - D-LINK CALLBACK REACHED\n";
 
-$logMessage = date('Y-m-d H:i:s') .
-    " - D-LINK CALLBACK WAS REACHED\n";
+// Write to PHP server error log
+error_log($debugMessage);
 
-$logPath = sys_get_temp_dir() . '/dlink_callback_test.txt';
+// Try writing into the callback's directory
+$debugFile = __DIR__ . '/dlink_callback_test.txt';
 
-$result = file_put_contents(
-    $logPath,
-    $logMessage,
+$writeResult = file_put_contents(
+    $debugFile,
+    $debugMessage,
     FILE_APPEND | LOCK_EX
 );
 
 error_log(
-    "D-LINK CALLBACK TEST: " .
-    ($result === false ? "FILE WRITE FAILED" : "FILE WRITE SUCCESS")
+    $writeResult === false
+        ? "D-LINK DEBUG: Writing to callback directory FAILED"
+        : "D-LINK DEBUG: Writing to callback directory SUCCESS"
 );
+
+// ORIGINAL CODE CONTINUES BELOW
 
 include 'onasis_config.php';
 include 'includes/logger.php';
