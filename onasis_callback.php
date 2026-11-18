@@ -1,4 +1,24 @@
 <?php
+/*
+=========================================
+TEMPORARY ZETUPAY WEBHOOK DIAGNOSTICS
+=========================================
+*/
+
+$debugRaw = file_get_contents("php://input");
+
+file_put_contents(
+    __DIR__ . "/zetupay_debug.txt",
+    "\n\n====================================\n" .
+    "TIME: " . date('Y-m-d H:i:s') . "\n" .
+    "METHOD: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN') . "\n" .
+    "SIGNATURE HEADER PRESENT: " .
+    (isset($_SERVER['HTTP_X_ZETUPAY_SIGNATURE']) ? 'YES' : 'NO') . "\n" .
+    "RAW CALLBACK BODY:\n" .
+    $debugRaw .
+    "\n====================================\n",
+    FILE_APPEND | LOCK_EX
+);
 
 include 'onasis_config.php';
 include 'includes/logger.php';
