@@ -195,6 +195,155 @@ if (isset($data['event'])) {
 }
 
 /*
+=================================================
+PROCESS ZETUPAY FAILED / CANCELLED / TIMEOUT
+=================================================
+*/
+
+$gatewayStatus = strtolower(trim((string)($data['status'] ?? '')));
+
+if (in_array($gatewayStatus, [
+    'failed',
+    'failure',
+    'cancelled',
+    'canceled',
+    'timeout',
+    'timed_out'
+], true)) {
+
+    // D-LINK payment reference
+    $paymentReference = trim((string)($data['identifier'] ?? ''));
+
+    // Extract original ZetuPay error message
+    $failureReason = '';
+
+    foreach ([
+        'result_desc',
+        'message',
+        'description',
+        'error_description',
+        'reason'
+    ] as $reasonKey) {
+
+        if (
+            isset($data[$reasonKey]) &&
+            is_scalar($data[$reasonKey]) &&
+            trim((string)$data[$reasonKey]) !== ''
+        ) {
+            $failureReason = trim((string)$data[$reasonKey]);
+            break;
+        }
+    }
+
+    // Preserve error code if description is unavailable
+    if ($failureReason === '') {
+
+        $errorDetails = [];
+
+        foreach ([
+            'resultCode',
+            'errorCode',
+            'code',
+            'error'
+        ] as $errorKey) {
+
+            if (isset($data[$errorKey])) {
+                $errorDetails[$errorKey] = $data[$errorKey];
+            }
+        }
+
+        $failureReason = !empty($errorDetails)
+            ? json_encode($errorDetails)
+            : 'ZetuPay reported payment status: ' . $gatewayStatus;
+    }
+
+    // Map ZetuPay status to database status
+    $databaseStatus = 'failed';
+
+    if (in_array($gatewayStatus, ['cancelled', 'canceled'], true)) {
+        $databaseStatus = 'cancelled';
+    }
+
+    if (in_array($gatewayStatus, ['timeout', 'timed_out'], true)) {
+        $databaseStatus = 'timeout';
+    }
+
+    // Check payment reference
+    if ($paymentReference === '') {
+
+        file_put_contents(
+            'zetupay_callback_log.txt',
+            date('c') . " MISSING IDENTIFIER: " .
+            json_encode($data) . "\n",
+            FILE_APPEND
+        );
+
+        http_response_code(200);
+        exit("Missing payment identifier");
+    }
+
+    /*
+    =========================================
+    SAVE FAILURE REASON TO DATABASE
+    =========================================
+    */
+
+    $stmt = $conn->prepare("
+        UPDATE payments
+        SET
+            status = ?,
+            failure_reason = ?
+        WHERE reference = ?
+        AND status <> 'completed'
+    ");
+
+    if (!$stmt) {
+        http_response_code(500);
+        exit("Database prepare failed");
+    }
+
+    $stmt->bind_param(
+        "sss",
+        $databaseStatus,
+        $failureReason,
+        $paymentReference
+    );
+
+    if (!$stmt->execute()) {
+
+        file_put_contents(
+            'zetupay_callback_log.txt',
+            date('c') . " DATABASE ERROR: " .
+            $stmt->error . "\n",
+            FILE_APPEND
+        );
+
+        http_response_code(500);
+        exit("Failure update failed");
+    }
+
+    // Log saved failure
+    file_put_contents(
+        'zetupay_callback_log.txt',
+        date('c') .
+        " PAYMENT FAILURE SAVED\n" .
+        "REFERENCE: $paymentReference\n" .
+        "STATUS: $databaseStatus\n" .
+        "REASON: $failureReason\n" .
+        "ROWS: " . $stmt->affected_rows . "\n\n",
+        FILE_APPEND
+    );
+
+    $stmt->close();
+
+    http_response_code(200);
+    echo "Failure saved";
+
+    $conn->close();
+    exit;
+}
+
+/*
 =========================================
 ONLY PROCESS SUCCESSFUL PAYMENTS
 =========================================
