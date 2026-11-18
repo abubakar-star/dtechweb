@@ -1,23 +1,26 @@
 <?php
+<?php
+
 /*
 =========================================
-TEMPORARY ZETUPAY WEBHOOK DIAGNOSTICS
+CALLBACK CONNECTION TEST
 =========================================
 */
 
-$debugRaw = file_get_contents("php://input");
+$logMessage = date('Y-m-d H:i:s') .
+    " - D-LINK CALLBACK WAS REACHED\n";
 
-file_put_contents(
-    __DIR__ . "/zetupay_debug.txt",
-    "\n\n====================================\n" .
-    "TIME: " . date('Y-m-d H:i:s') . "\n" .
-    "METHOD: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN') . "\n" .
-    "SIGNATURE HEADER PRESENT: " .
-    (isset($_SERVER['HTTP_X_ZETUPAY_SIGNATURE']) ? 'YES' : 'NO') . "\n" .
-    "RAW CALLBACK BODY:\n" .
-    $debugRaw .
-    "\n====================================\n",
+$logPath = sys_get_temp_dir() . '/dlink_callback_test.txt';
+
+$result = file_put_contents(
+    $logPath,
+    $logMessage,
     FILE_APPEND | LOCK_EX
+);
+
+error_log(
+    "D-LINK CALLBACK TEST: " .
+    ($result === false ? "FILE WRITE FAILED" : "FILE WRITE SUCCESS")
 );
 
 include 'onasis_config.php';
