@@ -1,5 +1,10 @@
 <?php
 session_start();
+// =========================================
+// REMEMBER CUSTOMER USERNAME
+// =========================================
+
+$savedUsername = $_COOKIE['dlink_saved_username'] ?? '';
 
 include 'includes/logger.php';
 
@@ -118,6 +123,22 @@ if (empty($row['biometric_token'])) {
 
         $_SESSION['user_id'] = $row['id'];
         $_SESSION['username'] = $row['username'];
+
+        // =========================================
+// SAVE USERNAME FOR FUTURE LOGIN
+// =========================================
+
+setcookie(
+    "dlink_saved_username",
+    $row['username'],
+    [
+        'expires' => time() + (86400 * 365),
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]
+);
 
         createLog(
             $conn,
@@ -393,12 +414,18 @@ html.swal2-shown {
     <form class="space-y-6 <?php if($attempt) echo 'shake'; ?>" id="loginForm" action="" method="POST" novalidate>
       <div>
         <label for="username" class="block text-sm font-medium text-white/90">Username</label>
-        <input type="text" id="username" name="username" placeholder="Enter your username"
-          value="<?php echo isset($username) ? htmlspecialchars($username) : ''; ?>"
-          class="mt-1 block w-full px-4 py-3 rounded-md shadow-sm
-                 bg-white/15 text-white placeholder-white/60
-                 border border-white/20 focus:outline-none
-                 focus:ring-2 focus:ring-white/60 focus:border-white/60"/>
+  <input
+    type="text"
+    id="username"
+    name="username"
+    placeholder="Enter your username"
+    value="<?php echo htmlspecialchars($savedUsername, ENT_QUOTES, 'UTF-8'); ?>"
+    autocomplete="username"
+    class="mt-1 block w-full px-4 py-3 rounded-md shadow-sm
+           bg-white/15 text-white placeholder-white/60
+           border border-white/20 focus:outline-none
+           focus:ring-2 focus:ring-white/60 focus:border-white/60"
+/>
         <p id="usernameError" class="error-text hidden">Please enter your username.</p>
       </div>
 
@@ -410,6 +437,7 @@ html.swal2-shown {
       id="password"
       name="password"
       placeholder="••••••••"
+      autocomplete="current-password"
       class="mt-1 block w-full px-4 py-3 rounded-md shadow-sm
              bg-white/15 text-white placeholder-white/60
              border border-white/20 focus:outline-none
