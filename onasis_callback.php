@@ -60,6 +60,14 @@ READ RAW ZETUPAY WEBHOOK
 
 $raw = file_get_contents("php://input");
 
+// DEBUG: CONFIRM THAT THE CALLBACK REACHED THIS PHP FILE
+error_log(
+    "[ZETUPAY DEBUG] CALLBACK RECEIVED | " .
+    date('Y-m-d H:i:s') .
+    " | Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'unknown') .
+    " | Body length: " . strlen($raw)
+);
+
 // DEBUG: RECORD EVERY INCOMING ZETUPAY CALLBACK
 
 file_put_contents(
@@ -135,8 +143,10 @@ if (!hash_equals(
         FILE_APPEND | LOCK_EX
     );
 
-    http_response_code(401);
-    exit("Signature verification failed");
+   error_log("[ZETUPAY DEBUG] SIGNATURE VERIFICATION FAILED");
+
+http_response_code(401);
+exit("Signature verification failed");
 }
 
 /*
