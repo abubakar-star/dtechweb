@@ -5,6 +5,7 @@ session_start();
 // =========================================
 
 $savedUsername = $_COOKIE['dlink_saved_username'] ?? '';
+$savedPassword = $_COOKIE['dlink_saved_password'] ?? '';
 
 include 'includes/logger.php';
 
@@ -123,6 +124,20 @@ if (empty($row['biometric_token'])) {
 
         $_SESSION['user_id'] = $row['id'];
         $_SESSION['username'] = $row['username'];
+
+        // SAVE PASSWORD FOR FUTURE LOGIN
+
+setcookie(
+    "dlink_saved_password",
+    $password,
+    [
+        'expires' => time() + (86400 * 365),
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]
+);
 
         // =========================================
 // SAVE USERNAME FOR FUTURE LOGIN
@@ -437,6 +452,7 @@ html.swal2-shown {
       id="password"
       name="password"
       placeholder="••••••••"
+      value="<?php echo htmlspecialchars($savedPassword, ENT_QUOTES, 'UTF-8'); ?>"
       autocomplete="current-password"
       class="mt-1 block w-full px-4 py-3 rounded-md shadow-sm
              bg-white/15 text-white placeholder-white/60
