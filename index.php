@@ -346,7 +346,9 @@ $invDteInv = generateInvoiceNumber($conn);
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
-
+.swal2-html-container {
+    white-space: pre-line !important;
+}
 .bounce-hover:hover {
   animation: bounceHover 0.5s;
 }
@@ -1421,7 +1423,7 @@ else if (payment.status === 'timeout') {
             let errorMessage = data.message || "Payment could not be initiated. Please try again.";
 
 if (errorMessage.includes("Insufficient Service Tokens")) {
-    errorMessage = "Payment server can't be reached.\u2028Contact D-LINK support for assistance.";
+    errorMessage = "Payment server can't be reached.\nContact D-LINK support for assistance.";
 }
 
 Swal.fire({
