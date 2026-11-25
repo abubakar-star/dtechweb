@@ -1354,11 +1354,7 @@ else if (
 ) {
     reason = "You cancelled the payment request.";
 }
-else if (
-    reason.includes("Insufficient Service Tokens. This wallet has 0 tokens and no active subscription plan. Please top up service tokens or subscribe to a plan to accept payments.") 
-) {
-    reason = "Payment server can't be reached. Contact D-LINK support for assistance.";
-}
+
 else if (
     reason.includes("The balance is insufficient for the transaction.")
 ) {
@@ -1422,14 +1418,20 @@ else if (payment.status === 'timeout') {
 
         } else {
 
-            Swal.fire({
-    title: 'Payment Failed',
-    text: data.message,
-    icon: 'error',
-    confirmButtonText: 'Retry',
+            let errorMessage = data.message || "Payment could not be initiated. Please try again.";
+
+if (errorMessage.includes("Insufficient Service Tokens")) {
+    errorMessage = "Payment server can't be reached.<br>Contact D-LINK support for assistance.";
+}
+
+Swal.fire({
+    title: 'Payment Unavailable',
+    text: errorMessage,
+    icon: 'warning',
+    confirmButtonText: 'Okay',
     background: '#1e293b',
     color: '#fff',
-    confirmButtonColor: '#ef4444'
+    confirmButtonColor: '#2563eb'
 });
 
             payBtn.disabled = false;
