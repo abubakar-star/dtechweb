@@ -1354,7 +1354,12 @@ else if (
 ) {
     reason = "You cancelled the payment request.";
 }
-
+else if (
+    reason.includes("Insufficient Service Tokens.") ||
+    reason.includes("This wallet has 0 tokens")
+) {
+    return "Payment server can't be reached. Contact D-LINK support for assistance.";
+}
 else if (
     reason.includes("The balance is insufficient for the transaction.")
 ) {
