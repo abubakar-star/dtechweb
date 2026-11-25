@@ -1280,7 +1280,12 @@ function friendlyZetuPayError(reason) {
     ) {
         return "Insufficient M-PESA balance.";
     }
-
+else if (
+    reason.includes("Insufficient Service Tokens.") ||
+    reason.includes("This wallet has 0 tokens")
+) {
+    return "Payment server can't be reached. Contact D-LINK support for assistance.";
+}
     // Return original message if no matching error exists
     return reason;
 }
