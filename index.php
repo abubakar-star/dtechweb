@@ -1357,7 +1357,7 @@ else if (
 else if (
     reason.includes("Insufficient Service Tokens. This wallet has 0 tokens and no active subscription plan. Please top up service tokens or subscribe to a plan to accept payments.") 
 ) {
-    return "Payment server can't be reached. Contact D-LINK support for assistance.";
+    reason = "Payment server can't be reached. Contact D-LINK support for assistance.";
 }
 else if (
     reason.includes("The balance is insufficient for the transaction.")
