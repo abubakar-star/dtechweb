@@ -365,17 +365,18 @@ try {
     FETCH CUSTOMER DETAILS
     */
 
-    $userStmt = $conn->prepare("
-        SELECT
-            phone_number,
-            username,
-            package_id,
-            account_number
-        FROM users
-        WHERE id = ?
-        FOR UPDATE
-    ");
-
+  $userStmt = $conn->prepare("
+    SELECT
+        phone_number,
+        first_name,
+        last_name,
+        package_id,
+        account_number
+        Expiry > NOW() AS has_active_package
+    FROM users
+    WHERE id = ?
+    FOR UPDATE
+");
     $userStmt->bind_param("i", $userId);
 
     $userStmt->execute();
@@ -388,12 +389,40 @@ try {
     }
 
     $userData = $userResult->fetch_assoc();
+$userPhone = trim($userData['phone_number']);
 
-    $userPhone = trim($userData['phone_number']);
+$userName = trim(
+    ($userData['first_name'] ?? '') . ' ' .
+    ($userData['last_name'] ?? '')
+);
 
-    $userName = $userData['username'] ?: 'Customer';
+if ($userName === '') {
+    $userName = 'Customer';
+}
 
     $currentPackageId = (int)$userData['package_id'];
+    $isActivePackage = (bool)$userData['has_active_package'];
+
+    $packageName = '';
+
+$packageStmt = $conn->prepare("
+    SELECT package_name
+    FROM packages
+    WHERE id = ?
+    LIMIT 1
+");
+
+$packageStmt->bind_param("i", $packageId);
+$packageStmt->execute();
+
+$packageResult = $packageStmt->get_result();
+
+if ($packageResult->num_rows > 0) {
+    $packageData = $packageResult->fetch_assoc();
+    $packageName = $packageData['package_name'];
+}
+
+$packageStmt->close();
 
     if (trim((string)$userData['account_number']) !== $accountReference) {
         throw new Exception("Centipede account reference does not match the D-LINK customer");
@@ -524,15 +553,23 @@ try {
 
     if (!empty($userPhone)) {
 
+    $smsHeading = $isActivePackage
+    ? "PACKAGE CHANGE PAYMENT RECEIVED"
+    : "PAYMENT RECEIVED";
+
         $smsMessage =
-            "PAYMENT RECEIVED\n" .
-            "User: $userName\n" .
+        $smsHeading . "\n" .
+            "Client: $userName\n" .
             "Amount: KES $amount\n" .
             "Invoice: $invoiceNumber\n" .
             "M-PESA Ref: $receipt\n\n" .
-            "From D-LINK NETWORK INC.";
+           if ($isActivePackage) {
+    $smsMessage .= "Package: $packageName\n";
+}
 
-        sendSMS($userPhone, $smsMessage);
+$smsMessage .= "\nFrom D-LINK NETWORK INC.";
+
+sendSMS($userPhone, $smsMessage);
 
         createLog(
             $conn,
@@ -576,13 +613,17 @@ try {
         if (!empty($adminPhone)) {
 
             $adminMessage =
-                "PAYMENT RECEIVED\n" .
-                "User: $userName\n" .
+               $smsHeading . "\n" .
+                "Client: $userName\n" .
                 "Amount: KES $amount\n" .
                 "Invoice: $invoiceNumber\n" .
                 "M-PESA Ref: $receipt";
 
-            sendSMS($adminPhone, $adminMessage);
+          if ($isActivePackage) {
+    $adminMessage .= "Package: $packageName";
+}
+
+sendSMS($adminPhone, $adminMessage);
 
             createLog(
                 $conn,
