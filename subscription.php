@@ -1248,13 +1248,56 @@ function showStkSuccess(message, callback = null) {
   });
 }
 
+// Convert ZetuPay technical errors into customer-friendly messages
+function friendlyZetuPayError(reason) {
+
+    reason = String(reason || "Payment was unsuccessful.");
+
+    // WRONG M-PESA PIN
+    if (
+        reason.includes("The initiator information is invalid.")
+    ) {
+        return "Wrong M-PESA PIN entered.";
+    }
+
+    // PHONE UNREACHABLE
+    else if (
+        reason.includes("DS timeout user cannot be reached.")
+    ) {
+        return "Phone cannot be reached.";
+    }
+
+    // CUSTOMER CANCELLED
+    else if (
+        reason.includes("Request Cancelled by user.")
+    ) {
+        return "You cancelled the payment request.";
+    }
+
+    // INSUFFICIENT M-PESA BALANCE
+    else if (
+        reason.includes("The balance is insufficient for the transaction.")
+    ) {
+        return "Insufficient M-PESA balance.";
+    }
+
+    // Return original message if no matching error exists
+    return reason;
+}
+
+
+// Display customer-friendly payment errors
 function showStkError(message) {
-  Swal.fire({
-    icon: 'error',
-    title: 'Payment Failed',
-    text: message,
-    confirmButtonColor: '#dc2626'
-  });
+
+    const friendlyMessage = friendlyZetuPayError(message);
+
+    Swal.fire({
+        icon: 'error',
+        title: 'Payment Failed',
+        text: friendlyMessage,
+        confirmButtonColor: '#dc2626'
+    });
+
 }
 
   function showSpinner() {
