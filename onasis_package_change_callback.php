@@ -371,7 +371,7 @@ try {
         first_name,
         last_name,
         package_id,
-        account_number
+        account_number,
         Expiry > NOW() AS has_active_package
     FROM users
     WHERE id = ?
@@ -557,14 +557,15 @@ $packageStmt->close();
     ? "PACKAGE CHANGE PAYMENT RECEIVED"
     : "PAYMENT RECEIVED";
 
-        $smsMessage =
-        $smsHeading . "\n" .
-            "Client: $userName\n" .
-            "Amount: KES $amount\n" .
-            "Invoice: $invoiceNumber\n" .
-            "M-PESA Ref: $receipt\n\n" .
-           if ($isActivePackage) {
-    $smsMessage .= "Package: $packageName\n";
+       $smsMessage =
+    $smsHeading . "\n" .
+    "Client: $userName\n" .
+    "Amount: KES $amount\n" .
+    "Invoice: $invoiceNumber\n" .
+    "M-PESA Ref: $receipt\n";
+
+if ($isActivePackage) {
+    $smsMessage .= "Package: $packageName\n\n";
 }
 
 $smsMessage .= "\nFrom D-LINK NETWORK INC.";
