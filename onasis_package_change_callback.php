@@ -554,19 +554,19 @@ $packageStmt->close();
     if (!empty($userPhone)) {
 
     $smsHeading = $isActivePackage
-    ? "PACKAGE CHANGE PAYMENT RECEIVED"
+    ? "PACKAGE CHANGE PAYMENT"
     : "PAYMENT RECEIVED";
 
        $smsMessage =
     $smsHeading . "\n" .
     "Client: $userName\n" .
-    "Amount: KES $amount\n" .
-    "Invoice: $invoiceNumber\n" .
-    "M-PESA Ref: $receipt\n";
+    "Amount: KES $amount\n";
 
-if ($isActivePackage) {
+    if ($isActivePackage) {
     $smsMessage .= "Package: $packageName\n\n";
 }
+    "Invoice: $invoiceNumber\n" .
+    "M-PESA Ref: $receipt\n".
 
 $smsMessage .= "\nFrom D-LINK NETWORK INC.";
 
@@ -616,12 +616,13 @@ sendSMS($userPhone, $smsMessage);
             $adminMessage =
                $smsHeading . "\n" .
                 "Client: $userName\n" .
-                "Amount: KES $amount\n" .
+                "Amount: KES $amount\n";
+                
+                if ($isActivePackage) {
+    $adminMessage .= "Package: $packageName";
+
                 "Invoice: $invoiceNumber\n" .
                 "M-PESA Ref: $receipt";
-
-          if ($isActivePackage) {
-    $adminMessage .= "Package: $packageName";
 }
 
 sendSMS($adminPhone, $adminMessage);
