@@ -400,8 +400,11 @@ if ($userName === '') {
     $userName = 'Customer';
 }
 
-    $currentPackageId = (int)$userData['package_id'];
-    $isActivePackage = (bool)$userData['has_active_package'];
+   $currentPackageId = (int)$userData['package_id'];
+$isActivePackage = (bool)$userData['has_active_package'];
+
+// Determine whether the customer is changing to a different package
+$isPackageChange = ($currentPackageId !== $packageId);
 
     $packageName = '';
 
@@ -485,51 +488,51 @@ $packageStmt->close();
     =========================================
     */
 
-    if ($isActivePackage) {
+   if ($isPackageChange) {
 
-        // Preserve administrator verification for customers
-        // who still have an active package.
-        $packageUpdate = $conn->prepare("
-            UPDATE users
-            SET
-                status = 'queued',
-                updating = 'yes',
-                package_id = ?,
-                package_queue_popup = 0,
-                created_at = NULL
-            WHERE id = ?
-        ");
+    // Queue customers changing to a different package
+    // regardless of whether their previous subscription has expired.
+    $packageUpdate = $conn->prepare("
+        UPDATE users
+        SET
+            status = 'queued',
+            updating = 'yes',
+            package_id = ?,
+            package_queue_popup = 0,
+            created_at = NULL
+        WHERE id = ?
+    ");
 
-        $packageUpdate->bind_param("ii", $packageId, $userId);
+    $packageUpdate->bind_param("ii", $packageId, $userId);
 
-        $logTitle = 'Package change awaiting verification';
-        $logMessage = 'Payment received. Package ID: ' .
-            $packageId .
-            '. Waiting for administrator verification.';
+    $logTitle = 'Package change awaiting verification';
+    $logMessage = 'Payment received. Package ID: ' .
+        $packageId .
+        '. Waiting for administrator verification.';
 
-    } else {
+} else {
 
-        // Activate immediately for customers with no active package
-        // (new customers or customers whose previous package expired).
-        $packageUpdate = $conn->prepare("
-            UPDATE users
-            SET
-                status = 'active',
-                updating = 'no',
-                package_id = ?,
-                created_at = NOW(),
-                package_queue_popup = 0,
-                package_updated_popup = 0
-            WHERE id = ?
-        ");
+    // Activate immediately when purchasing or renewing
+    // the customer's existing package.
+    $packageUpdate = $conn->prepare("
+        UPDATE users
+        SET
+            status = 'active',
+            updating = 'no',
+            package_id = ?,
+            created_at = NOW(),
+            package_queue_popup = 0,
+            package_updated_popup = 0
+        WHERE id = ?
+    ");
 
-        $packageUpdate->bind_param("ii", $packageId, $userId);
+    $packageUpdate->bind_param("ii", $packageId, $userId);
 
-        $logTitle = 'Subscription activated immediately';
-        $logMessage = 'Payment received. Package ID: ' .
-            $packageId .
-            '. Subscription activated immediately.';
-    }
+    $logTitle = 'Subscription activated immediately';
+    $logMessage = 'Payment received. Package ID: ' .
+        $packageId .
+        '. Subscription activated immediately.';
+}
 
     if (!$packageUpdate->execute()) {
         throw new Exception("Package update failed: " . $packageUpdate->error);
