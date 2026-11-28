@@ -481,45 +481,68 @@ $packageStmt->close();
 
     /*
     =========================================
-    PACKAGE CHANGE
-    WAITING FOR ADMIN VERIFICATION
+    PACKAGE CHANGE / NEW SUBSCRIPTION
     =========================================
     */
 
-    $packageUpdate = $conn->prepare("
-        UPDATE users
-        SET
-            status = 'queued',
-            updating = 'yes',
-            package_id = ?,
-            package_queue_popup = 0,
-            created_at = NULL
-        WHERE id = ?
-    ");
+    if ($isActivePackage) {
 
-    $packageUpdate->bind_param(
-        "ii",
-        $packageId,
-        $userId
-    );
+        // Preserve administrator verification for customers
+        // who still have an active package.
+        $packageUpdate = $conn->prepare("
+            UPDATE users
+            SET
+                status = 'queued',
+                updating = 'yes',
+                package_id = ?,
+                package_queue_popup = 0,
+                created_at = NULL
+            WHERE id = ?
+        ");
 
-    if (!$packageUpdate->execute()) {
+        $packageUpdate->bind_param("ii", $packageId, $userId);
 
-        throw new Exception("Package update failed");
+        $logTitle = 'Package change awaiting verification';
+        $logMessage = 'Payment received. Package ID: ' .
+            $packageId .
+            '. Waiting for administrator verification.';
+
+    } else {
+
+        // Activate immediately for customers with no active package
+        // (new customers or customers whose previous package expired).
+        $packageUpdate = $conn->prepare("
+            UPDATE users
+            SET
+                status = 'active',
+                updating = 'no',
+                package_id = ?,
+                created_at = NOW(),
+                package_queue_popup = 0,
+                package_updated_popup = 0
+            WHERE id = ?
+        ");
+
+        $packageUpdate->bind_param("ii", $packageId, $userId);
+
+        $logTitle = 'Subscription activated immediately';
+        $logMessage = 'Payment received. Package ID: ' .
+            $packageId .
+            '. Subscription activated immediately.';
     }
 
-    /*
-    LOG PACKAGE CHANGE
-    */
+    if (!$packageUpdate->execute()) {
+        throw new Exception("Package update failed: " . $packageUpdate->error);
+    }
+
+    $packageUpdate->close();
 
     createLog(
         $conn,
         'subscription',
-        'Package change awaiting verification',
-        'Payment received. Package ID: ' .
-        $packageId .
-        '. Waiting for administrator verification.',
-        'info',
+        $logTitle,
+        $logMessage,
+        'success',
         $userId
     );
 
