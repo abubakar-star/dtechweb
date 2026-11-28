@@ -437,7 +437,7 @@ $packageStmt->close();
         throw new Exception("Invalid package ID");
     }
 
-    if ($currentPackageId === $packageId) {
+   if ($isActivePackage && $currentPackageId === $packageId) {
 
         throw new Exception("Selected package is already assigned to customer");
     }
