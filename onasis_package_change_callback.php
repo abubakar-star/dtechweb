@@ -579,7 +579,7 @@ $packageStmt->close();
 
     if (!empty($userPhone)) {
 
-    $smsHeading = $isActivePackage
+    $smsHeading = $isPackageChange
     ? "PACKAGE CHANGE PAYMENT"
     : "PAYMENT RECEIVED";
 
@@ -590,7 +590,7 @@ $packageStmt->close();
     "Invoice: $invoiceNumber\n" .
     "M-PESA Ref: $receipt\n";
 
-if ($isActivePackage) {
+if ($isPackageChange) {
     $smsMessage .= "Package Change: $packageName\n";
 }
 
@@ -647,7 +647,7 @@ sendSMS($userPhone, $smsMessage);
                 "Invoice: $invoiceNumber\n" .
                 "M-PESA Ref: $receipt";
 
-      if ($isActivePackage) {
+      if ($isPackageChange) {
     $adminMessage .= "\nPackage Change: $packageName";
 }
 
